@@ -49,9 +49,9 @@ static inline void reset_ds() {
 
 void mem_early_initialize() {
   memset(&mem, 0, sizeof(mem));
-  memset(&mem_page_directory, 0, PAGE_SIZE);
-  memset(&mem_page_table_0, 0, PAGE_SIZE);
-  memset(&mem_page_table_1, 0, PAGE_SIZE);
+  memset(mem_page_directory, 0, PAGE_SIZE);
+  memset(mem_page_table_0, 0, PAGE_SIZE);
+  memset(mem_page_table_1, 0, PAGE_SIZE);
 
   uint32_t *page_dir = (uint32_t*)mem_page_directory;
 

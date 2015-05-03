@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <kernel/kernel.h>
 #include <kernel/kstdlib.h>
@@ -12,6 +13,10 @@ typedef struct __attribute__((packed)) gdt_address {
   uint16_t size;
   uint32_t address;
 } gdt_address_t;
+
+void gdt_early_initialize() {
+  memset(gdt_table, 0, sizeof(gdt_table));
+}
 
 void gdt_early_set_entry(unsigned selector, gdt_entry_t source) {
   uint8_t* target  = gdt_table + selector;
@@ -50,7 +55,7 @@ void gdt_early_enable_segments() {
 
   volatile gdt_address_t gdt // needs volatile because some wierd optimization.
     = (gdt_address_t) { .address = (uint32_t)gdt_table,
-                        .size = sizeof(gdt_table) };
+                        .size = sizeof(gdt_table)-1 };
   asm ("lgdt (%%eax);"
        "ljmp %1, $1f;"
        "1:"

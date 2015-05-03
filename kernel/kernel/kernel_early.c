@@ -213,6 +213,8 @@ void kernel_early_finalize(kernel_early_t *early) {
 void kernel_early(uint32_t magic, multiboot_info_t *info) {
   mem_early_initialize();
   terminal_early_initialize();
+  gdt_early_initialize();
+  
 #ifdef DEBUG
     kprintf("kernel_early\n");
 #endif
