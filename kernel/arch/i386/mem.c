@@ -1,9 +1,9 @@
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include <kernel/kernel.h>
+#include <kernel/kstdlib.h>
+#include <kernel/kstdio.h>
 #include <kernel/mem.h>
 
 /*
@@ -11,8 +11,8 @@
   size = size + PAGE_SIZE - 1;
   size -= size % PAGE_SIZE;
   if (memory->early_memory_size < size) {
-    printf("Out of early kernel memory!\n");
-    abort();
+    kprintf("Out of early kernel memory!\n");
+    kabort();
   }
  */
 
@@ -80,7 +80,7 @@ void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements) {
       mem.free_pages = memory_map[i].base_addr_low;
     }
   }
-  printf("%u bytes available.\n", (unsigned)mem.free_size);
+  kprintf("%u bytes available.\n", (unsigned)mem.free_size);
   
   // TODO: build a map of virtual memory holes.
 }
@@ -89,18 +89,18 @@ void* mem_early_map_page(void* virtual, uintptr_t page, unsigned attributes) {
   uintptr_t address = (uintptr_t)virtual;
   // page directory and page tables are mapped as part of the kernel.
   if ((address % PAGE_SIZE) || (page % PAGE_SIZE)) {
-    printf("Address and page must be page aligned!\n");
-    abort();
+    kprintf("Address and page must be page aligned!\n");
+    kabort();
   }
   uint32_t *page_dir = (uint32_t*)mem_page_directory;
   uint32_t page_dir_index = address >> 22;
   uint32_t page_table_index = (address >> 12) & 0x3ff;
-  //printf("PDI = %u; PTI = %u; attr = %u\n",
+  //kprintf("PDI = %u; PTI = %u; attr = %u\n",
   //	 (unsigned)page_dir_index, (unsigned)page_table_index,
   //	 (unsigned)attributes);
   if ((page_dir[page_dir_index] & 1) == 0) {
-    printf("mem_early_map_page supports only the first 4MB region!\n");
-    abort();
+    kprintf("mem_early_map_page supports only the first 4MB region!\n");
+    kabort();
   }
   uint32_t *page_table = (uint32_t*)(page_dir[page_dir_index] & 0xfffff000);
   page_table[page_table_index] = (page & 0xfffff000) | attributes;
@@ -110,11 +110,11 @@ void* mem_early_map_page(void* virtual, uintptr_t page, unsigned attributes) {
 
 void* mem_early_map(void* virtual, uintptr_t physical,
                     size_t size, unsigned attributes) {
-  //printf("Mapping %u bytes\n", (unsigned)size);
+  //kprintf("Mapping %u bytes\n", (unsigned)size);
   uintptr_t address = (uintptr_t)virtual;
   if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
-    printf("Virtual and physical addresses must be page aligned!\n");
-    abort();
+    kprintf("Virtual and physical addresses must be page aligned!\n");
+    kabort();
   }
   for (uint32_t i = 0; i < size; i += PAGE_SIZE) {
     mem_early_map_page(virtual + i, physical + i, attributes);
@@ -123,7 +123,7 @@ void* mem_early_map(void* virtual, uintptr_t physical,
 }
 void mem_early_enable_paging() {
 #ifdef DEBUG
-  printf("mem_early_enable_paging\n");
+  kprintf("mem_early_enable_paging\n");
 #endif
   
   asm ("mov %%eax, %%cr3;"
@@ -139,7 +139,7 @@ void mem_early_enable_paging() {
 /*
 void kernel_early_reset_page_directory() {
 #ifdef DEBUG
-  printf("kernel_early_reset_page_directory\n");
+  kprintf("kernel_early_reset_page_directory\n");
 #endif
   
   asm ("mov %%cr3, %%eax;"
@@ -152,10 +152,10 @@ void kernel_early_reset_page_directory() {
 */
 
 uintptr_t mem_alloc_page() {
-  //printf("Allocating %u bytes\n", (unsigned)size);
+  //kprintf("Allocating %u bytes\n", (unsigned)size);
   if (mem.free_size < PAGE_SIZE) {
-    printf("Out of memory pages!");
-    abort();
+    kprintf("Out of memory pages!");
+    kabort();
   }
   uintptr_t address = mem.free_pages;
   mem.free_pages += PAGE_SIZE;
@@ -168,7 +168,7 @@ void* mem_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
 
-  //printf("PDI = %u; PTI = %u; attr = %u\n",
+  //kprintf("PDI = %u; PTI = %u; attr = %u\n",
   //	 (unsigned)page_dir_index, (unsigned)page_table_index,
   //	 (unsigned)attributes);
 
@@ -208,7 +208,7 @@ uintptr_t mem_unmap_page(void* virtual) {
     page_table[page_table_index] = 0;
     if (value & 1) {
       physical = value & 0xfffff000;
-      //printf("unmapping PDI=%x; PTI=%x, was %x\n",
+      //kprintf("unmapping PDI=%x; PTI=%x, was %x\n",
       //       (unsigned)page_dir_index, (unsigned)page_table_index,
       //       (unsigned)physical);
       asm volatile("invlpg (%0)" ::"r"(address) : "memory");
@@ -220,11 +220,11 @@ uintptr_t mem_unmap_page(void* virtual) {
 
 void* mem_map(void* virtual, uintptr_t physical,
               size_t size, unsigned attributes) {
-  //printf("Mapping %u bytes\n", (unsigned)size);
+  //kprintf("Mapping %u bytes\n", (unsigned)size);
   uintptr_t address = (uintptr_t)virtual;
   if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
-    printf("Virtual and physical addresses must be page aligned!\n");
-    abort();
+    kprintf("Virtual and physical addresses must be page aligned!\n");
+    kabort();
   }
   for (uint32_t i = 0; i < size; i += PAGE_SIZE) {
     mem_map_page(virtual + i, physical + i, attributes);

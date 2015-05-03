@@ -10,7 +10,7 @@ inline void swap(char *x, char *y) {
   *y = tmp;
 }
 
-char* utoa(unsigned value, char* str, int base) {
+char* _utoa(unsigned value, char* str, int base) {
   const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
   char *retval = str;
   if (base >= 2 && base <= 36) { 

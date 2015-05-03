@@ -12,7 +12,7 @@ __attribute__((__noreturn__))
 void abort(void);
 
 char* itoa(int value, char* str, int base);
-char* utoa(unsigned value, char* str, int base);
+char* _utoa(unsigned value, char* str, int base);
 
 void* malloc(size_t size);
   

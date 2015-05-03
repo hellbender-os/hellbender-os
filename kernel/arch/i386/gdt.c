@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <kernel/kernel.h>
+#include <kernel/kstdlib.h>
+#include <kernel/kstdio.h>
 #include <kernel/gdt.h>
 
 uint8_t gdt_table[SEL_COUNT*8];
@@ -17,8 +17,8 @@ void gdt_early_set_entry(unsigned selector, gdt_entry_t source) {
   uint8_t* target  = gdt_table + selector;
   // Check the limit to make sure that it can be encoded
   if ((source.limit > 65536) && ((source.limit & 0xFFF) != 0xFFF)) {
-    printf("Illegal segment limit!");
-    abort();
+    kprintf("Illegal segment limit!");
+    kabort();
   }
   if (source.limit > 65536) {
     // Adjust granularity if required
@@ -45,7 +45,7 @@ void gdt_early_set_entry(unsigned selector, gdt_entry_t source) {
 
 void gdt_early_enable_segments() {
 #ifdef DEBUG
-  printf("gdt_early_enable_segments\n");
+  kprintf("gdt_early_enable_segments\n");
 #endif
 
   volatile gdt_address_t gdt // needs volatile because some wierd optimization.

@@ -30,6 +30,8 @@ OBJS:=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel_early.o \
 kernel/kernel.o \
+kernel/kabort.o \
+kernel/kprintf.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

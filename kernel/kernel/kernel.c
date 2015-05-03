@@ -1,10 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include <kernel/kernel.h>
+#include <kernel/kstdio.h>
 
 kernel_t kernel;
 
@@ -21,5 +20,5 @@ void kernel_init_interrupts() {
 }
 
 void kernel_main(void) {
-  printf("Hello, kernel World!\n");
+  kprintf("Hello, kernel World!\n");
 }

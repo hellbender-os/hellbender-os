@@ -1,10 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include <kernel/kernel.h>
+#include <kernel/kstdlib.h>
+#include <kernel/kstdio.h>
 #include <kernel/tty.h>
 #include <kernel/mem.h>
 #include <kernel/gdt.h>
@@ -65,7 +65,7 @@ static uintptr_t max(uintptr_t a, uintptr_t b) {
 void kernel_early_process_info(kernel_early_t *kernel,
                                multiboot_info_t *info) {
 #ifdef DEBUG
-  printf("kernel_early_process_info\n");
+  kprintf("kernel_early_process_info\n");
 #endif
 
   // copy all available memory map elements into kernel structure.
@@ -73,15 +73,15 @@ void kernel_early_process_info(kernel_early_t *kernel,
   for (uintptr_t mm = info->mmap_addr; mm < mm_end; mm += sizeof(uint32_t)) {
     memory_map_t *map = (memory_map_t*)mm;
     /*
-      printf("Memory .type=%u; .base=%u; .size=%u\n",
+      kprintf("Memory .type=%u; .base=%u; .size=%u\n",
       (unsigned)map->type,
       (unsigned)map->base_addr_low,
       (unsigned)map->length_low);
     */
     if (map->type == 1) {
       if (kernel->memory_map_elements > MAX_MEMORY_MAP_ELEMENTS) {
-        printf("Maximum number of memory map elements exceeded!");
-        abort();
+        kprintf("Maximum number of memory map elements exceeded!");
+        kabort();
       }
       memcpy(&kernel->memory_map[kernel->memory_map_elements++],
              map, sizeof(memory_map_t));
@@ -105,7 +105,7 @@ void kernel_early_process_info(kernel_early_t *kernel,
         max_code = max(max_code, shdr[i].sh_addr + shdr[i].sh_size);
       }
       //const char *name = &((const char *)shdr[i].sh_name)[shstrtab];
-      //printf("Section %s at %u; %u bytes; type = %u\n",
+      //kprintf("Section %s at %u; %u bytes; type = %u\n",
       //     name,
       //     (unsigned)shdr[i].sh_addr,
       //     (unsigned)shdr[i].sh_size,
@@ -113,8 +113,8 @@ void kernel_early_process_info(kernel_early_t *kernel,
     }
   }
   if (min_code < KERNEL_OFFSET) {
-    printf("Kernel code loaded too low!");
-    abort();
+    kprintf("Kernel code loaded too low!");
+    kabort();
   }
 
   // these are the limits for the whole kernel, and kernel code.
@@ -126,7 +126,7 @@ void kernel_early_process_info(kernel_early_t *kernel,
 
 void kernel_early_init_paging(kernel_early_t *kernel) {
 #ifdef DEBUG
-  printf("kernel_early_init_paging\n");
+  kprintf("kernel_early_init_paging\n");
 #endif
   
   // map kernel code into CS section.
@@ -143,7 +143,7 @@ void kernel_early_init_paging(kernel_early_t *kernel) {
 
 void kernel_early_init_segments() {
 #ifdef DEBUG
-  printf("kernel_early_init_segments\n");
+  kprintf("kernel_early_init_segments\n");
 #endif
 
   gdt_entry_t gdt[SEL_COUNT] = {{0}};
@@ -192,7 +192,7 @@ void kernel_early_init_segments() {
 
 void kernel_early_finalize(kernel_early_t *early) {
 #ifdef DEBUG
-  printf("kernel_early_finalize\n");
+  kprintf("kernel_early_finalize\n");
 #endif
   
   // move the VGA text buffer.
@@ -214,7 +214,7 @@ void kernel_early(uint32_t magic, multiboot_info_t *info) {
   mem_early_initialize();
   terminal_early_initialize();
 #ifdef DEBUG
-    printf("kernel_early\n");
+    kprintf("kernel_early\n");
 #endif
     
   if (magic == MULTIBOOT_BOOTLOADER_MAGIC) {
@@ -224,10 +224,10 @@ void kernel_early(uint32_t magic, multiboot_info_t *info) {
     kernel_early_init_segments(&kernel);
     kernel_early_finalize(&kernel);
   } else {
-    printf("No multiboot!");
-    abort();
+    kprintf("No multiboot!");
+    kabort();
   }
 #ifdef DEBUG
-  printf("kernel_early DONE!\n");
+  kprintf("kernel_early DONE!\n");
 #endif
 }

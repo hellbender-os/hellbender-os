@@ -71,7 +71,7 @@ int printf(const char* restrict format, ...)
 			format++;
 			unsigned i = va_arg(parameters, unsigned);
 			char s[16];
-			utoa(i, s, 10);
+			_utoa(i, s, 10);
 			print(s, strlen(s));
 		}
 		else if ( *format == 'x')
@@ -79,7 +79,7 @@ int printf(const char* restrict format, ...)
 			format++;
 			unsigned i = va_arg(parameters, unsigned);
 			char s[10];
-			utoa(i, s, 16);
+			_utoa(i, s, 16);
 			print(s, strlen(s));
 		}
 		else
