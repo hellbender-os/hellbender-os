@@ -51,10 +51,8 @@ void gdt_early_enable_segments() {
   volatile gdt_address_t gdt // needs volatile because some wierd optimization.
     = (gdt_address_t) { .address = (uint32_t)gdt_table,
                         .size = sizeof(gdt_table) };
-  uintptr_t gdt_address = (uintptr_t)&gdt;
-  asm ("cli;"
-       "lgdt (%%eax);"
-       "ljmp $0x08, $1f;"
+  asm ("lgdt (%%eax);"
+       "ljmp %1, $1f;"
        "1:"
        "mov %2, %%ax;"
        "mov %%ax, %%ds;"
@@ -63,7 +61,7 @@ void gdt_early_enable_segments() {
        "mov %%ax, %%gs;"
        "mov %%ax, %%ss;"
        : /* no output registers */
-       : "a"(gdt_address), "n"(SEL_KERNEL_CODE), "n"(SEL_KERNEL_DATA)
+       : "a"(&gdt), "n"(SEL_KERNEL_CODE), "n"(SEL_KERNEL_DATA)
        : 
        );
 }
