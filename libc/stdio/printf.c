@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void print(const char* data, size_t data_length)
@@ -55,6 +56,30 @@ int printf(const char* restrict format, ...)
 		{
 			format++;
 			const char* s = va_arg(parameters, const char*);
+			print(s, strlen(s));
+		}
+		else if ( *format == 'd' || *format == 'i')
+		{
+			format++;
+			int i = va_arg(parameters, int);
+			char s[16];
+			itoa(i, s, 10);
+			print(s, strlen(s));
+		}
+		else if ( *format == 'u')
+		{
+			format++;
+			unsigned i = va_arg(parameters, unsigned);
+			char s[16];
+			utoa(i, s, 10);
+			print(s, strlen(s));
+		}
+		else if ( *format == 'x')
+		{
+			format++;
+			unsigned i = va_arg(parameters, unsigned);
+			char s[10];
+			utoa(i, s, 16);
 			print(s, strlen(s));
 		}
 		else

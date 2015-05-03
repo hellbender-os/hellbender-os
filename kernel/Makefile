@@ -1,7 +1,7 @@
 HOST?=$(shell ../default-host.sh)
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g
+CFLAGS?=-O2 -g0 -dDEBUG
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -16,7 +16,7 @@ CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
-
+LIB_DEPS:=$(DESTDIR)/usr/lib/libk.a
 ARCHDIR:=arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
@@ -28,6 +28,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 OBJS:=\
 $(KERNEL_ARCH_OBJS) \
+kernel/kernel_early.o \
 kernel/kernel.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
@@ -51,7 +52,7 @@ all: hellbender.kernel
 
 .PHONY: all clean install install-headers install-kernel
 
-hellbender.kernel: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld
+hellbender.kernel: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
 
 %.o: %.c

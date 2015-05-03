@@ -12,20 +12,22 @@
 .long FLAGS
 .long CHECKSUM
 
-# Reserve a stack for the initial thread.
-.section .bootstrap_stack, "aw", @nobits
-stack_bottom:
-.skip 16384 # 16 KiB
-stack_top:
-
+.extern kernel_stack
+.extern kernel_stack_size
+        
 # The kernel entry point.
 .section .text
 .global _start
 .type _start, @function
 _start:
-	movl $stack_top, %esp
+	movl $kernel_stack, %esp
+        movl $kernel_stack_size, %edx
+        mov (%edx), %edx
+        add %edx, %esp
     
 	# Initialize the core kernel before running the global constructors.
+	push %ebx
+	push %eax
 	call kernel_early
 
 	# Call the global constructors.
