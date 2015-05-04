@@ -6,16 +6,6 @@
 #include <kernel/kstdio.h>
 #include <kernel/mem.h>
 
-/*
-  // round to next page size.
-  size = size + PAGE_SIZE - 1;
-  size -= size % PAGE_SIZE;
-  if (memory->early_memory_size < size) {
-    kprintf("Out of early kernel memory!\n");
-    kabort();
-  }
- */
-
 typedef struct mem {
   // a range of free pages that we are consuming next.
   uintptr_t free_pages;
@@ -23,6 +13,8 @@ typedef struct mem {
   
   uint32_t *page_directory; // virtual address to the recursive page directory.
   uint32_t *page_tables; // virtual address to the recursive page tables.
+
+  uint8_t free_tables[64]; // bit map of 512 tables, free if bit = 1.
 } mem_t;
 mem_t mem;
 
@@ -30,25 +22,45 @@ uint8_t mem_page_directory[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mem_page_table_0[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mem_page_table_1[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
-static inline void set_ds_all() {
-    asm ("push %%ds;"
-         "mov %%ax, %%ds;"
-         : // no output
-         : "a"(SEL_ALL_DATA)
-         : "memory"
-         );
+extern unsigned long __force_order;
+static inline void invalidate(void *virtual) {
+  asm volatile("invlpg (%1)"
+               : "=m"(__force_order)
+               : "r"((uint32_t)virtual)
+               );
 }
 
-static inline void reset_ds() {
-    asm ("pop %%ds;"
-         : // no output
-         : // no input
-         : "memory"
-         );
+static inline void invalidate_all() {
+  asm volatile("mov %%cr3, %%eax;"
+               "mov %%eax, %%cr3;"
+               : "=m"(__force_order)
+               :
+               : "%eax"
+               );
+}
+
+static inline unsigned set_ds_all() {
+  unsigned old_ds;
+  asm volatile("mov %%ds, %0;"
+               "mov %2, %%ds;"
+               : "=&r"(old_ds), "=m"(__force_order)
+               : "r"(SEL_ALL_DATA)
+               : "memory"
+               );
+  return old_ds;
+}
+
+static inline void reset_ds(unsigned old_ds) {
+  asm volatile("mov %1, %%ds;"
+               : "=m"(__force_order)
+               : "r"(old_ds)
+               : "memory"
+               );
 }
 
 void mem_early_initialize() {
   memset(&mem, 0, sizeof(mem));
+  memset(mem.free_tables, 0xff, sizeof(mem.free_tables));
   memset(mem_page_directory, 0, PAGE_SIZE);
   memset(mem_page_table_0, 0, PAGE_SIZE);
   memset(mem_page_table_1, 0, PAGE_SIZE);
@@ -58,6 +70,7 @@ void mem_early_initialize() {
   // map the first two page tables for DS and CS segments.
   page_dir[0] = ((uint32_t)(mem_page_table_0)) | MEM_ATTRIB_KERNEL;
   page_dir[CS_BASE >> 22] = ((uint32_t)(mem_page_table_1)) | MEM_ATTRIB_KERNEL;
+  mem.free_tables[0] &= ~1;
   
   // recursive page directory is mapped to the last 4MB.
   // note that access requires SEL_ALL_DATA selector.
@@ -67,7 +80,8 @@ void mem_early_initialize() {
                                    + (uintptr_t)1023 * (uintptr_t)0x1000);
 }
 
-void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements) {
+void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements,
+                        uintptr_t kernel_bottom, uintptr_t kernel_top) {
   // hide page tables from the data segment.
   mem_unmap_page(&mem_page_directory);
   mem_unmap_page(&mem_page_table_0);
@@ -80,7 +94,18 @@ void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements) {
       mem.free_pages = memory_map[i].base_addr_low;
     }
   }
-  kprintf("%u bytes available.\n", (unsigned)mem.free_size);
+  kernel_bottom -= kernel_bottom % PAGE_SIZE;
+  if (kernel_bottom > mem.free_pages) {
+    kprintf("High memory is not available!\n");
+    kabort();
+  }
+  if (kernel_top % PAGE_SIZE) kernel_top += PAGE_SIZE - kernel_top % PAGE_SIZE;
+  if (kernel_top > mem.free_pages) {
+    mem.free_size -= (kernel_top - mem.free_pages);
+    mem.free_pages = kernel_top;
+  }
+  kprintf("%u bytes available, starting from %x.\n",
+          (unsigned)mem.free_size, (unsigned)mem.free_pages);
   
   // TODO: build a map of virtual memory holes.
 }
@@ -104,13 +129,13 @@ void* mem_early_map_page(void* virtual, uintptr_t page, unsigned attributes) {
   }
   uint32_t *page_table = (uint32_t*)(page_dir[page_dir_index] & 0xfffff000);
   page_table[page_table_index] = (page & 0xfffff000) | attributes;
-  asm volatile("invlpg (%0)" ::"r"(address) : "memory");
+  invalidate(virtual);
   return virtual;
 }
 
 void* mem_early_map(void* virtual, uintptr_t physical,
                     size_t size, unsigned attributes) {
-  //kprintf("Mapping %u bytes\n", (unsigned)size);
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   uintptr_t address = (uintptr_t)virtual;
   if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
     kprintf("Virtual and physical addresses must be page aligned!\n");
@@ -121,6 +146,7 @@ void* mem_early_map(void* virtual, uintptr_t physical,
   }
   return virtual;
 }
+
 void mem_early_enable_paging() {
 #ifdef DEBUG
   kprintf("mem_early_enable_paging\n");
@@ -132,27 +158,10 @@ void mem_early_enable_paging() {
        "mov %%eax, %%cr0;"
        : /* no output registers */
        : "a"(&mem_page_directory)
-       : 
        ); 
 }
-
-/*
-void kernel_early_reset_page_directory() {
-#ifdef DEBUG
-  kprintf("kernel_early_reset_page_directory\n");
-#endif
-  
-  asm ("mov %%cr3, %%eax;"
-       "mov %%eax, %%cr3;"
-       : // no output 
-       : // no input 
-       : "%eax"
-       ); 
-}
-*/
 
 uintptr_t mem_alloc_page() {
-  //kprintf("Allocating %u bytes\n", (unsigned)size);
   if (mem.free_size < PAGE_SIZE) {
     kprintf("Out of memory pages!");
     kabort();
@@ -168,28 +177,29 @@ void* mem_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
 
+  //kprintf("Mapping virtual address = %x\n", (unsigned)virtual);
   //kprintf("PDI = %u; PTI = %u; attr = %u\n",
-  //	 (unsigned)page_dir_index, (unsigned)page_table_index,
-  //	 (unsigned)attributes);
+  //        (unsigned)page_dir_index, (unsigned)page_table_index,
+  //        (unsigned)attributes);
 
-  uint32_t *page_table = NULL;
   uint32_t* page_dir = mem.page_directory;
   uint32_t* page_tables = mem.page_tables;
-  set_ds_all();
+  uint32_t *page_table = page_tables + page_dir_index * 0x400;
   
   // ensure that the is a page table.
+  unsigned old_ds = set_ds_all();
   if ((page_dir[page_dir_index] & 1) == 0) {
     uintptr_t new_table = mem_alloc_page();
     page_dir[page_dir_index] = new_table | attributes;
-    page_table = page_tables + page_dir_index * 0x400;
+    invalidate(page_table);
+    asm volatile("xchgw %%bx,%%bx;" : "=m"(__force_order));
     memset(page_table, 0, PAGE_SIZE);
-  } else {
-    page_table = page_tables + page_dir_index * 0x400;
   }
 
   // set the page table entry.
   page_table[page_table_index] = (physical & 0xfffff000) | attributes;
-  reset_ds();
+  invalidate(virtual);
+  reset_ds(old_ds);
   return virtual;
 }
 
@@ -197,13 +207,15 @@ uintptr_t mem_unmap_page(void* virtual) {
   uintptr_t address = (uintptr_t)virtual;
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
+
   uintptr_t physical = 0;
   uint32_t* page_dir = mem.page_directory;
   uint32_t* page_tables = mem.page_tables;
-  set_ds_all();
+  uint32_t *page_table = page_tables + page_dir_index * 0x400;
+
+  unsigned old_ds = set_ds_all();
   if (page_dir[page_dir_index] & 1) {
     // get and clear the page table entry.
-    uint32_t *page_table = page_tables + page_dir_index * 0x400;
     uint32_t value = page_table[page_table_index];
     page_table[page_table_index] = 0;
     if (value & 1) {
@@ -214,13 +226,13 @@ uintptr_t mem_unmap_page(void* virtual) {
       asm volatile("invlpg (%0)" ::"r"(address) : "memory");
     }
   }
-  reset_ds();
+  reset_ds(old_ds);
   return physical;
 }
 
 void* mem_map(void* virtual, uintptr_t physical,
               size_t size, unsigned attributes) {
-  //kprintf("Mapping %u bytes\n", (unsigned)size);
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   uintptr_t address = (uintptr_t)virtual;
   if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
     kprintf("Virtual and physical addresses must be page aligned!\n");
@@ -228,6 +240,39 @@ void* mem_map(void* virtual, uintptr_t physical,
   }
   for (uint32_t i = 0; i < size; i += PAGE_SIZE) {
     mem_map_page(virtual + i, physical + i, attributes);
+  }
+  return virtual;
+}
+
+void* mem_alloc_table() {
+  unsigned table = 0;
+  for (int i = 0; i < 64 && !table; ++i) {
+    uint8_t bits;
+    if ((bits = mem.free_tables[i])) {
+      if (bits &   1) { table = i*8+0; break; }
+      if (bits &   2) { table = i*8+1; break; }
+      if (bits &   4) { table = i*8+2; break; }
+      if (bits &   8) { table = i*8+3; break; }
+      if (bits &  16) { table = i*8+4; break; }
+      if (bits &  32) { table = i*8+5; break; }
+      if (bits &  64) { table = i*8+6; break; }
+      if (bits & 128) { table = i*8+7; break; }
+    }
+  }
+  if (table) {
+    mem.free_tables[table/8] &= ~(1<<(table%8));
+    return (void*)((uintptr_t)table * (uintptr_t)0x400000);
+  } else {
+    kprintf("Out of virtual memory tables!\n");
+    kabort();
+  }
+}
+
+void* mem_alloc_mapped(void *virtual, size_t size) {
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
+  for (; size; size -= PAGE_SIZE, virtual += PAGE_SIZE) {
+    uintptr_t physical = mem_alloc_page();
+    mem_map_page(virtual, physical, MEM_ATTRIB_USER);
   }
   return virtual;
 }

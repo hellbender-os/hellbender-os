@@ -7,7 +7,7 @@
 #include <kernel/kstdlib.h>
 #include <kernel/idt.h>
 #include <kernel/isr.h>
-#include <kernel/gdt.h>
+#include <kernel/domain.h>
 
 kernel_t kernel;
 tss_entry_t kernel_tss;
@@ -45,6 +45,12 @@ void kernel_main(void) {
   kernel_init_interrupts();
   
   kprintf("Hello, kernel World!\n");
+
+  domain_t *userspace = domain_create();
+  void *userspace_data = domain_alloc_data(userspace, PAGE_SIZE);
+  void *userspace_code = domain_alloc_code(userspace, PAGE_SIZE);
+  kprintf("domain.data = %x; domain.code = %x\n",
+          (unsigned)userspace_data, (unsigned)userspace_code);
   
   kernel_enter_ring3(SEL_USER_DATA|3, (uint32_t)(KERNEL_STACK_TOP),
                      SEL_USER_CODE|3, (uint32_t)&kernel_in_ring3);

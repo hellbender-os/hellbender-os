@@ -216,7 +216,8 @@ void kernel_early_finalize(kernel_early_t *early) {
   mem_unmap_page(kernel_stack + kernel_stack_size);
   
   // initialize mem allocator with free pages.
-  mem_early_finalize(early->memory_map, early->memory_map_elements);
+  mem_early_finalize(early->memory_map, early->memory_map_elements,
+                     early->kernel_bottom, early->kernel_top);
   // for each memory_map_element..
   // unmap early pages.
 }
