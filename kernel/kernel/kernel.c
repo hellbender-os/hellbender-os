@@ -22,8 +22,8 @@ kernel_t* kernel_ptr() {
 void kernel_init_interrupts() {
   idt_initialize();
   isr_initialize();
-  isr_pic_enable(32);
-  isr_pic_enable(33);
+  //isr_pic_enable(32); // timer0
+  isr_pic_enable(33); // keyboard
 
   idt_enable_interrupts();
 }
