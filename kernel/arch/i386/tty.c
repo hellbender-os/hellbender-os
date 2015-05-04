@@ -17,7 +17,8 @@ uint8_t terminal_mapped_vga[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 void terminal_early_initialize(void)
 {
   // direct-map also the VGA memory so that TTY works when paging is enabled.
-  mem_early_map_page((void*)VGA_MEMORY, (uintptr_t)VGA_MEMORY, 3);
+  mem_early_map_page((void*)VGA_MEMORY, (uintptr_t)VGA_MEMORY,
+                     MEM_ATTRIB_KERNEL);
   
   terminal_row = 0;
   terminal_column = 0;
@@ -35,7 +36,8 @@ void terminal_early_initialize(void)
 
 void terminal_early_finalize(void) {
   // we move VGA buffer from its physical location into kernel data area.
-  mem_early_map_page(terminal_mapped_vga, (uintptr_t)VGA_MEMORY, 3);
+  mem_early_map_page(terminal_mapped_vga, (uintptr_t)VGA_MEMORY,
+                     MEM_ATTRIB_KERNEL);
   mem_early_map_page((void*)VGA_MEMORY, 0, 0);
   terminal_buffer = (uint16_t*)&terminal_mapped_vga;
 }

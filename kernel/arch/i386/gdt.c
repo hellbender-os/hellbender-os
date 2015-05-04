@@ -67,6 +67,14 @@ void gdt_early_enable_segments() {
        "mov %%ax, %%ss;"
        : /* no output registers */
        : "a"(&gdt), "n"(SEL_KERNEL_CODE), "n"(SEL_KERNEL_DATA)
+       :
+       );
+}
+
+void gdt_update_tss() {
+  asm ("ltr %%ax"
+       : /* no output registers */
+       : "a"(SEL_TSS|3)
        : 
        );
 }

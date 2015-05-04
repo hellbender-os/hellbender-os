@@ -12,7 +12,13 @@
 isr_wrapper_\IDX\():
         pushal
         cld
+        mov %esp, %ebx        // stack pointer in a callee save register.
+        mov %esp, %eax        // pass (optional) ISR stack pointer parameter.
+        add $8*4, %eax        // skip the values pushed a above.
+        push %eax
         call isr_routine_\IDX
+        pop %eax              // rewind stack.
+        mov %ebx, %esp        // restore stack, in case parameter was not used.
         popal
         iret
         .endm

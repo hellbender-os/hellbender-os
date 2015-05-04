@@ -5,6 +5,13 @@
 
 #include <kernel/multiboot.h>
 
+#define MEM_ATTRIB_USERMODE 4
+#define MEM_ATTRIB_WRITEABLE 2
+#define MEM_ATTRIB_PRESENT 1
+#define MEM_ATTRIB_KERNEL (1|2|4)
+// TODO: kernel should be 1+2
+#define MEM_ATTRIB_USER (1|2|4)
+
 void mem_early_initialize();
 void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements);
 void* mem_early_map_page(void* address, uintptr_t page, unsigned attributes);

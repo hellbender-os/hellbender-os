@@ -92,6 +92,7 @@ void isr_initialize() {
   isr_set_idt(119);
 
   // set kernel interrupts
+  entry.dpl = 3;
   isr_set_idt(80);
   isr_set_idt(81);
   isr_set_idt(82);

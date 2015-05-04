@@ -71,13 +71,28 @@ void isr_routine_12() {
   kabort();
 }
 
-void isr_routine_13() {
-  kprintf("isr_routine_13\n");
+void isr_routine_13(uint8_t *stack) {
+  kprintf("isr_routine_13: GPF\n");
+  uint32_t error_code = *((uint32_t*)(stack));
+  kprintf("error code = %x\n", (unsigned)error_code);
+  uint32_t code_address = *((uint32_t*)(stack+4));
+  uint16_t code_selector = *((uint16_t*)(stack+8));
+  kprintf("at %x:%x\n", (unsigned)code_selector, (unsigned)code_address);
   kabort();
 }
 
-void isr_routine_14() {
-  kprintf("isr_routine_14\n");
+extern unsigned long __force_order;
+
+void isr_routine_14(uint8_t *stack) {
+  kprintf("isr_routine_14: page fault\n");
+  uint32_t error_code = *((uint32_t*)(stack));
+  kprintf("error code = %x\n", (unsigned)error_code);
+  uint32_t code_address = *((uint32_t*)(stack+4));
+  uint16_t code_selector = *((uint16_t*)(stack+8));
+  uint32_t data_address;
+  asm volatile("mov %%cr2,%0" : "=r"(data_address), "=m"(__force_order));
+  kprintf("at %x:%x\n", (unsigned)code_selector, (unsigned)code_address);
+  kprintf("reading %x\n", (unsigned)data_address);
   kabort();
 }
 

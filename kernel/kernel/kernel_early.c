@@ -8,12 +8,14 @@
 #include <kernel/tty.h>
 #include <kernel/mem.h>
 #include <kernel/gdt.h>
+#include <kernel/tss.h>
 
 #include <kernel/multiboot.h>
 #include <kernel/elf32.h>
 
 #define KERNEL_OFFSET 0x100000
 #define DEBUG
+
 
 /*
  * Convention:
@@ -35,10 +37,6 @@
  *    - kernel ELF pages are reserved.
  *
  */
-
-// memory for kernel_early initialization.
-#define EARLY_MEMORY_SIZE (16*PAGE_SIZE)
-uint8_t early_memory[EARLY_MEMORY_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 #define MAX_MEMORY_MAP_ELEMENTS 32
 
@@ -131,11 +129,13 @@ void kernel_early_init_paging(kernel_early_t *kernel) {
   
   // map kernel code into CS section.
   mem_early_map((void*)(CS_BASE + kernel->code_bottom), kernel->code_bottom,
-                kernel->code_top - kernel->code_bottom, 1);
+                kernel->code_top - kernel->code_bottom,
+                MEM_ATTRIB_KERNEL);
   
   // map the whole kernel into DS section for now, we'll remove code later.
   mem_early_map((void*)kernel->kernel_bottom, kernel->kernel_bottom,
-                kernel->kernel_top - kernel->kernel_bottom, 3);
+                kernel->kernel_top - kernel->kernel_bottom,
+                MEM_ATTRIB_KERNEL);
 
   // and enable paging.
   mem_early_enable_paging();
@@ -165,29 +165,36 @@ void kernel_early_init_segments() {
   gdt[SEL_USER_CODE/8] = (gdt_entry_t) {
     .base  = CS_BASE,
     .limit = 0xffbfffff-CS_BASE,
-    .type  = 0xF2
+    .type  = 0xFA
   };
   gdt[SEL_USER_DATA/8] = (gdt_entry_t) {
     .base  = 0x0,
     .limit = CS_BASE-1,
-    .type  = 0x92
+    .type  = 0xF2
   };
   gdt[SEL_ALL_DATA/8] = (gdt_entry_t) {
     .base  = 0x0,
     .limit = 0xffffffff,
     .type  = 0x92
   };
-  //gdt[5] = (gdt_entry_t) { // LTR(0x28)
-  //  .base=kernel->tss,
-  //  .limit=sizeof(task_switch_segment_t),
-  //  .type=0x89
-  //};
+
+  // also setup the TSS.
+  memset(&kernel_tss, 0, sizeof(kernel_tss));
+  kernel_tss.ss0  = SEL_KERNEL_DATA;
+  kernel_tss.esp0 = (uintptr_t)(KERNEL_STACK_TOP);
+  gdt[SEL_TSS/8] = (gdt_entry_t) {
+    .base = (uintptr_t)&kernel_tss,
+    .limit = sizeof(kernel_tss),
+    .type = 0x89
+  };
+
   for (int i = 0; i < SEL_COUNT; ++i) {
     gdt_early_set_entry(i*8, gdt[i]);
   }
 
   // switch to segmented mode.
   gdt_early_enable_segments();
+  gdt_update_tss();
 }
 
 void kernel_early_finalize(kernel_early_t *early) {
@@ -203,6 +210,10 @@ void kernel_early_finalize(kernel_early_t *early) {
        ptr < (void*)early->code_top; ptr += PAGE_SIZE) {
     mem_unmap_page(ptr);
   }
+
+  // protect stack my unmapping surrounding pages.
+  mem_unmap_page(kernel_stack);
+  mem_unmap_page(kernel_stack + kernel_stack_size);
   
   // initialize mem allocator with free pages.
   mem_early_finalize(early->memory_map, early->memory_map_elements);

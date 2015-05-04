@@ -32,7 +32,7 @@ uint8_t mem_page_table_1[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 static inline void set_ds_all() {
     asm ("push %%ds;"
-         "mov %%ax, %%dx;"
+         "mov %%ax, %%ds;"
          : // no output
          : "a"(SEL_ALL_DATA)
          : "memory"
@@ -56,12 +56,12 @@ void mem_early_initialize() {
   uint32_t *page_dir = (uint32_t*)mem_page_directory;
 
   // map the first two page tables for DS and CS segments.
-  page_dir[0] = ((uint32_t)(&mem_page_table_0)) | 3;
-  page_dir[CS_BASE >> 22] = ((uint32_t)(&mem_page_table_1)) | 3;
+  page_dir[0] = ((uint32_t)(mem_page_table_0)) | MEM_ATTRIB_KERNEL;
+  page_dir[CS_BASE >> 22] = ((uint32_t)(mem_page_table_1)) | MEM_ATTRIB_KERNEL;
   
   // recursive page directory is mapped to the last 4MB.
   // note that access requires SEL_ALL_DATA selector.
-  page_dir[1023] = ((uint32_t)page_dir) | 3;
+  page_dir[1023] = ((uint32_t)page_dir) | MEM_ATTRIB_KERNEL;
   mem.page_tables = (uint32_t*)((uintptr_t)1023 * (uintptr_t)0x400000);
   mem.page_directory = (uint32_t*)((uintptr_t)(mem.page_tables)
                                    + (uintptr_t)1023 * (uintptr_t)0x1000);
@@ -180,7 +180,7 @@ void* mem_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   // ensure that the is a page table.
   if ((page_dir[page_dir_index] & 1) == 0) {
     uintptr_t new_table = mem_alloc_page();
-    page_dir[page_dir_index] = new_table | 3;
+    page_dir[page_dir_index] = new_table | attributes;
     page_table = page_tables + page_dir_index * 0x400;
     memset(page_table, 0, PAGE_SIZE);
   } else {
