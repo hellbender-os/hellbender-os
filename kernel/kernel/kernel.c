@@ -6,6 +6,8 @@
 #include <kernel/kstdio.h>
 #include <kernel/kstdlib.h>
 #include <kernel/idt.h>
+#include <kernel/isr.h>
+#include <kernel/io.h>
 
 kernel_t kernel;
 
@@ -17,20 +19,12 @@ kernel_t* kernel_ptr() {
   return &kernel;
 }
 
-void kernel_int50() {
-  kprintf("Hello, interrupt World!\n");
-}
-
 void kernel_init_interrupts() {
   idt_initialize();
+  isr_initialize();
+  isr_pic_enable(32);
+  isr_pic_enable(33);
 
-  idt_entry_t int50 = (idt_entry_t) {
-    .offset = (uint32_t)&kernel_int50,
-    .type = IDT_TYPE_INTERRUPT_32,
-    .dpl = 0
-  };
-
-  idt_set_entry(0x50, int50);
   idt_enable_interrupts();
 }
 
@@ -42,6 +36,7 @@ void kernel_main(void) {
   kernel_init_interrupts();
   
   kprintf("Hello, kernel World!\n");
-  idt_send_interrupt(0x50);
-  kabort();
+  isr_interrupt(80);
+  khalt();
+  kprintf("kernel_main DONE!\n");
 }

@@ -30,7 +30,11 @@ OBJS:=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel_early.o \
 kernel/kernel.o \
+kernel/trap_isr.o \
+kernel/pic_isr.o \
+kernel/kernel_isr.o \
 kernel/kabort.o \
+kernel/khalt.o \
 kernel/kprintf.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o

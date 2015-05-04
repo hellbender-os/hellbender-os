@@ -8,9 +8,8 @@
 extern "C" {
 #endif
 
-__attribute__((__noreturn__))
-void kabort(void);
-
+__attribute__((__noreturn__)) void kabort(void);
+__attribute__((__noreturn__)) void khalt(void);
 void* kmalloc(size_t size);
   
 #ifdef __cplusplus
