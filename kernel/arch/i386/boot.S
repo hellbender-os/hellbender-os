@@ -13,17 +13,13 @@
 .long CHECKSUM
 
 .extern kernel_stack
-.extern kernel_stack_size
         
 # The kernel entry point.
 .section .text
 .global _start
 .type _start, @function
 _start:
-	movl $kernel_stack, %esp
-        movl $kernel_stack_size, %edx
-        mov (%edx), %edx
-        add %edx, %esp
+	movl $(kernel_stack+16384+4096), %esp
     
 	# Initialize the core kernel before running the global constructors.
 	push %ebx

@@ -7,9 +7,6 @@ kernel_enter_ring3:
         pop %edx // stack address
         pop %ebx // code selector
         pop %ecx // code address
-        movl $kernel_stack_size, %edx
-        mov (%edx), %edx
-        add $kernel_stack, %edx
         cli
         mov %ax, %ds
         mov %ax, %es

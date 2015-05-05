@@ -13,9 +13,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/elf32.h>
 
-#define KERNEL_OFFSET 0x100000
 #define DEBUG
-
 
 /*
  * Convention:
@@ -43,8 +41,12 @@
 typedef struct kernel_early {
   uintptr_t kernel_bottom;  // physical address range of kernel ELF.
   uintptr_t kernel_top;
-  uintptr_t code_bottom; // physical address range of kernel code.
-  uintptr_t code_top;
+  uintptr_t text_bottom; // physical address range of kernel code.
+  uintptr_t text_top;
+
+  uintptr_t core_bottom; // physical address range of core service.
+  uintptr_t core_top;
+  kernel_module_t core; // core segment sizes on disk image.
 
   // memory map information copied from multiboot header.
   unsigned memory_map_elements;
@@ -90,8 +92,8 @@ void kernel_early_process_info(kernel_early_t *kernel,
   // scan all elf sections to find kernel memory.
   uintptr_t min_data = 0xffffffff;
   uintptr_t max_data = 0;
-  uintptr_t min_code = 0xffffffff;
-  uintptr_t max_code = 0;
+  uintptr_t min_text = 0xffffffff;
+  uintptr_t max_text = 0;
   Elf32_Shdr *shdr = (Elf32_Shdr*)info->u.elf_sec.addr;
   //Elf32_Word shstrtab = shdr[info->u.elf_sec.shndx].sh_addr;
   for (unsigned i = 0; i < info->u.elf_sec.num; i++) {
@@ -99,8 +101,8 @@ void kernel_early_process_info(kernel_early_t *kernel,
       min_data = min(min_data, shdr[i].sh_addr);
       max_data = max(max_data, shdr[i].sh_addr + shdr[i].sh_size);
       if (shdr[i].sh_flags & SHF_EXECINSTR) {
-        min_code = min(min_code, shdr[i].sh_addr);
-        max_code = max(max_code, shdr[i].sh_addr + shdr[i].sh_size);
+        min_text = min(min_text, shdr[i].sh_addr);
+        max_text = max(max_text, shdr[i].sh_addr + shdr[i].sh_size);
       }
       //const char *name = &((const char *)shdr[i].sh_name)[shstrtab];
       //kprintf("Section %s at %u; %u bytes; type = %u\n",
@@ -110,16 +112,40 @@ void kernel_early_process_info(kernel_early_t *kernel,
       //     (unsigned)shdr[i].sh_type);
     }
   }
-  if (min_code < KERNEL_OFFSET) {
-    kprintf("Kernel code loaded too low!");
+  if (min_text < KERNEL_OFFSET) {
+    kprintf("Kernel loaded too low!");
     kabort();
   }
 
   // these are the limits for the whole kernel, and kernel code.
+  kprintf("Kernel found at %x - %x; code at %x - %x\n",
+          (unsigned)min_data, (unsigned)max_data,
+          (unsigned)min_text, (unsigned)max_text);
   kernel->kernel_bottom = min_data;
   kernel->kernel_top = max_data;
-  kernel->code_bottom = min_code;
-  kernel->code_top = max_code;
+  kernel->text_bottom = min_text;
+  kernel->text_top = max_text;
+
+  // find the core service module.
+  module_t *modules = (module_t*)info->mods_addr;
+  for (unsigned i = 0; i < info->mods_count; ++i) {
+    char *str = (char*)modules[i].string;
+    kprintf("Module: %s\n", str);
+    if (strcmp("--core", str) == 0) {
+      kprintf("Found core service at %x - %x\n",
+              (unsigned)modules[i].mod_start,
+              (unsigned)modules[i].mod_end);
+      kernel->core_bottom = modules[i].mod_start;
+      kernel->core_top = modules[i].mod_end;
+    }
+  }
+  if (!kernel->core_bottom) {
+    kprintf("Core service not found!\n");
+    kabort();
+  }
+  kernel_module_t* core_module = (kernel_module_t*)(kernel->core_bottom + 8);
+  kernel->core = *core_module;
+
 }
 
 void kernel_early_init_paging(kernel_early_t *kernel) {
@@ -128,8 +154,8 @@ void kernel_early_init_paging(kernel_early_t *kernel) {
 #endif
   
   // map kernel code into CS section.
-  mem_early_map((void*)(CS_BASE + kernel->code_bottom), kernel->code_bottom,
-                kernel->code_top - kernel->code_bottom,
+  mem_early_map((void*)(CS_BASE + kernel->text_bottom), kernel->text_bottom,
+                kernel->text_top - kernel->text_bottom,
                 MEM_ATTRIB_KERNEL);
   
   // map the whole kernel into DS section for now, we'll remove code later.
@@ -206,20 +232,24 @@ void kernel_early_finalize(kernel_early_t *early) {
   terminal_early_finalize();
 
   // remove executable pages from the DS segment.
-  for (void* ptr = (void*)early->code_bottom;
-       ptr < (void*)early->code_top; ptr += PAGE_SIZE) {
-    mem_unmap_page(ptr);
-  }
+  mem_unmap((void*)early->text_bottom, early->text_top - early->text_bottom);
 
   // protect stack my unmapping surrounding pages.
   mem_unmap_page(kernel_stack);
-  mem_unmap_page(kernel_stack + kernel_stack_size);
+  mem_unmap_page(KERNEL_STACK_TOP);
   
   // initialize mem allocator with free pages.
+  // TODO: unmap / free unneeded early kernel pages.
+  // TODO: properly initialize the memory allocator.
   mem_early_finalize(early->memory_map, early->memory_map_elements,
-                     early->kernel_bottom, early->kernel_top);
-  // for each memory_map_element..
-  // unmap early pages.
+                     early->kernel_bottom, early->kernel_top,
+                     early->core_bottom, early->core_top);
+
+  // map the core service image so that kernel can access it later.
+  mem_map((void*)(CORE_OFFSET), early->core_bottom,
+          early->core_top - early->core_bottom, MEM_ATTRIB_USER);
+  mem_map((void*)(CS_BASE + CORE_OFFSET), early->core_bottom,
+          early->core_top - early->core_bottom, MEM_ATTRIB_USER);
 }
 
 void kernel_early(uint32_t magic, multiboot_info_t *info) {

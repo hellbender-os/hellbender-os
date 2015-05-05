@@ -15,6 +15,7 @@ char* itoa(int value, char* str, int base);
 char* _utoa(unsigned value, char* str, int base);
 
 void* malloc(size_t size);
+void exit(int status);
   
 #ifdef __cplusplus
 }

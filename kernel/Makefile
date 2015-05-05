@@ -15,7 +15,7 @@ INCLUDEDIR?=$(PREFIX)/include
 CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
-LIBS:=$(LIBS) -nostdlib -lk -lgcc
+LIBS:=$(LIBS) -static -nostdlib -lk -lgcc
 LIB_DEPS:=$(DESTDIR)/usr/lib/libk.a
 ARCHDIR:=arch/$(HOSTARCH)
 
@@ -70,13 +70,14 @@ hellbender.kernel: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	rm -f hellbender.kernel $(OBJS) $(ALL_OUR_OBJS) *.o */*.o */*/*.o
+	rm -f hellbender.kernel $(OBJS) $(ALL_OUR_OBJS)
+#	rm -f *.o */*.o */*/*.o *~ */*~ */*/*~
 
 install: install-headers install-kernel
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
-	cp -RTv include $(DESTDIR)$(INCLUDEDIR)
+	cp -RT include $(DESTDIR)$(INCLUDEDIR)
 
 install-kernel: hellbender.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)

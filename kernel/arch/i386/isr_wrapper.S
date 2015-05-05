@@ -12,13 +12,22 @@
 isr_wrapper_\IDX\():
         pushal
         cld
-        mov %esp, %ebx        // stack pointer in a callee save register.
-        mov %esp, %eax        // pass (optional) ISR stack pointer parameter.
-        add $8*4, %eax        // skip the values pushed a above.
+        mov %esp, %eax        // pass (original) ISR stack pointer parameter.
+        add $8*4, %eax
+        mov %ds, %bx          // copy DS into other selector registers.
+        push %es
+        push %fs
+        push %gs
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
+        mov %esp, %ebp        // stack pointer in a callee save register.
         push %eax
         call isr_routine_\IDX
-        pop %eax              // rewind stack.
-        mov %ebx, %esp        // restore stack, in case parameter was not used.
+        mov %ebp, %esp        // restore stack, in case parameter was not used.
+        pop %gs
+        pop %fs
+        pop %es
         popal
         iret
         .endm

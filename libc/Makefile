@@ -36,6 +36,7 @@ string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
+string/strcmp.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
@@ -43,6 +44,8 @@ stdio/printf.o \
 stdio/putchar.o \
 stdio/puts.o \
 stdlib/abort.o \
+stdlib/exit.o \
+hellbender/syscall.o \
 
 OBJS:=\
 $(FREEOBJS) \
@@ -56,7 +59,7 @@ all: $(BINARIES)
 
 .PHONY: all clean install install-headers install-libs
 
-libc.a: $(OBJS)
+libc.a: $(OBJS) $(ARCH_INITOBJS)
 	$(AR) rcs $@ $(OBJS)
 
 libg.a:
@@ -78,14 +81,16 @@ libk.a: $(LIBK_OBJS)
 	$(CC) -c $< -o $@ $(LIBK_CFLAGS) $(LIBK_CPPFLAGS)
 
 clean:
-	rm -f $(BINARIES) $(OBJS) $(LIBK_OBJS) *.o */*.o */*/*.o
+	rm -f $(BINARIES) $(OBJS) $(ARCH_INITOBJS) $(LIBK_OBJS)
+#	rm -f *.o */*.o */*/*.o *~ */*~ */*/*~
 
 install: install-headers install-libs
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
-	cp -RTv include $(DESTDIR)$(INCLUDEDIR)
+	cp -RT include $(DESTDIR)$(INCLUDEDIR)
 
 install-libs: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
+	cp $(ARCH_INITOBJS) $(DESTDIR)$(LIBDIR)
