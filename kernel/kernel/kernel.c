@@ -7,10 +7,12 @@
 #include <kernel/kstdlib.h>
 #include <kernel/idt.h>
 #include <kernel/isr.h>
+#include <kernel/pic_isr.h>
 #include <kernel/vmem.h>
 #include <kernel/domain.h>
 #include <kernel/module.h>
 #include <kernel/thread.h>
+#include <kernel/scheduler.h>
 
 extern void kernel_enter_ring3(uint32_t data_selector,
                                uint32_t stack_address,
@@ -29,10 +31,8 @@ uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_
 void kernel_init_interrupts() {
   idt_initialize();
   isr_initialize();
-  //isr_pic_enable(32); // timer0
+  isr_pic_enable(32); // timer0
   isr_pic_enable(33); // keyboard
-
-  idt_enable_interrupts();
 }
 
 void kernel_main(void) {
@@ -41,6 +41,7 @@ void kernel_main(void) {
 #endif
 
   vmem_initialize();
+  scheduler_initialize();
   kernel_init_interrupts();
   
   kprintf("Hello, kernel World!\n");
@@ -49,9 +50,15 @@ void kernel_main(void) {
   // it is a special formatter binary, where entry point is at the beginning,
   // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
-  /*thread_t *thread =*/ thread_allocate(core->start);
-  khalt();
-  kernel_to_usermode();
+  thread_t *sys_thread = thread_allocate(NULL);
+  thread_t *usr_thread = thread_allocate(core->start);
+
+  pic_isr_initialize(sys_thread);
+  idt_enable_interrupts();
+
+  scheduler_add_thread(sys_thread);
+  scheduler_add_thread(usr_thread);
+  scheduler_goto_next();
 }
 
 __attribute__((__noreturn__))

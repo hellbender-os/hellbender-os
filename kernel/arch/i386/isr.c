@@ -105,8 +105,8 @@ void isr_initialize() {
 #define PIC2_DATA	(PIC2+1)
 #define PIC_EOI		0x20		/* End-of-interrupt command code */
  
-void isr_pic_eoi(unsigned interrupt) {
-  if (interrupt > 40) {
+void isr_pic_eoi(unsigned line) {
+  if (line > 8) {
     outb(PIC2_COMMAND, PIC_EOI);
   }
   outb(PIC1_COMMAND, PIC_EOI);

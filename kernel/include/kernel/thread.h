@@ -7,8 +7,9 @@
 #define THREAD_OFFSET 0x800000
 
 // NEW for just created thread, OLD for threads that have been running.
-#define THREAD_STATE_NEW 0xA11B00b5
-#define THREAD_STATE_OLD 0xC001D00d
+#define THREAD_STATE_NEW  0xA11B00b5
+#define THREAD_STATE_OLD  0xC001D00d
+#define THREAD_STATE_DEAD 0xDeadBeef
 
 // each thread has a page table.
 // the page table is mapped to THREAD_OFFSET when the thread is running.
@@ -27,7 +28,7 @@ typedef struct thread {
   uint32_t thread_id; // unique identifier.
   uint32_t state; // new or old, depending if thread has been running.
   void* start_address; // start address for new threads.
-  unsigned pic_processor; // set for PIC interrupt handler threads.
+  unsigned pic_line; // one based PIC line number; for PIC interrupt handlers.
 
   struct thread *this; // logical address of this structure in kernel memory.
   uintptr_t page_table; // physical address to the thread page table.
@@ -40,6 +41,7 @@ typedef struct thread {
 #define CURRENT_THREAD ((thread_t*)THREAD_OFFSET)
 
 thread_t* thread_allocate(void *start_address);
+void thread_set_current(thread_t* thread);
 
 void* thread_grow_stack(thread_t *thread, size_t size); // returns new bottom.
 

@@ -7,7 +7,9 @@
 #include <kernel/kstdio.h>
 #include <kernel/kstdlib.h>
 #include <kernel/isr.h>
+#include <kernel/pic_isr.h>
 #include <kernel/thread.h>
+#include <kernel/scheduler.h>
 
 #include <stdint.h>
 
@@ -38,26 +40,24 @@ void isr_routine_80(void* isr_stack, void *stack) {
     break;
   case SYSCALL_EXIT:
     kprintf("Exit: %x\n", (unsigned)params->edx);
-    // TODO: RUN SCHEDULING.
-    khalt();
+    CURRENT_THREAD->state = THREAD_STATE_DEAD;
     break;
   default:
     kprintf("unsupported isr_routine_80: eax=%x\n", (unsigned)params->eax);
     kabort();
   }
-  
-  // TODO: RUN SCHEDULING.
-  kernel_to_usermode();
+
+  scheduler_goto_next();
 }
 
 void isr_routine_81() {
   // interrupt request completed.
-  //kprintf("isr_routine_81: %u\n", CURRENT_THREAD->pic_processor);
-  if (CURRENT_THREAD->pic_processor) {
-    isr_pic_eoi(CURRENT_THREAD->pic_processor);
-    CURRENT_THREAD->pic_processor = 0;
-    // TODO: RUN SCHEDULING.
-    khalt();
+  //kprintf("isr_routine_81: %u\n", CURRENT_THREAD->pic_line);
+  if (CURRENT_THREAD->pic_line) {
+    isr_pic_eoi(CURRENT_THREAD->pic_line - 1);
+    CURRENT_THREAD->pic_line = 0;
+    CURRENT_THREAD->state = THREAD_STATE_DEAD;
+    pic_isr_process_next();
     
   } else {
     kprintf("Non-interrupt thread called IRET!\n");

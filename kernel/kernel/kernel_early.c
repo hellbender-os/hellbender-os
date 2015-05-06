@@ -10,6 +10,7 @@
 #include <kernel/gdt.h>
 #include <kernel/tss.h>
 #include <kernel/module.h>
+#include <kernel/thread.h>
 
 #include <kernel/multiboot.h>
 #include <kernel/elf32.h>
@@ -207,7 +208,10 @@ void kernel_early_init_segments() {
 
   // also setup the TSS.
   memset(&kernel_tss, 0, sizeof(kernel_tss));
-  kernel_tss.ss0  = SEL_KERNEL_DATA; // esp0 will be set when thread created.
+  // TSS stack is always mapped at a fixed address.
+  // it is used just to store the context data.
+  kernel_tss.ss0  = SEL_KERNEL_DATA;
+  kernel_tss.esp0 = THREAD_OFFSET + 2*PAGE_SIZE;
   gdt[SEL_TSS/8] = (gdt_entry_t) {
     .base = (uintptr_t)&kernel_tss,
     .limit = sizeof(kernel_tss),
@@ -220,6 +224,7 @@ void kernel_early_init_segments() {
 
   // switch to segmented mode.
   gdt_early_enable_segments();
+  tss_update();
 }
 
 void kernel_early_finalize(kernel_early_t *early) {

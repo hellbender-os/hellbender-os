@@ -9,26 +9,64 @@
 #include <kernel/io.h>
 #include <kernel/thread.h>
 #include <kernel/module.h>
+#include <kernel/scheduler.h>
+
+typedef struct pic_isr {
+  thread_t* thread;
+  uint32_t pending;
+
+  void* routines[16];
+} pic_isr_t;
+
+pic_isr_t pic_isr;
+
+void pic_isr_initialize(thread_t *thread) {
+  memset(&pic_isr, 0, sizeof(pic_isr));
+  pic_isr.thread = thread;
+  pic_isr.routines[0] = (void*)CORE_SERVICE->timer_isr;
+  pic_isr.routines[1] = (void*)CORE_SERVICE->keyboard_isr;
+}
+
+__attribute__((__noreturn__))
+void pic_isr_process_next() {
+  while (pic_isr.pending && pic_isr.thread->state == THREAD_STATE_DEAD) {
+    // find the pending interrupt with highest priority.
+    unsigned pic_idx = 0;
+    for (unsigned i = 0; i < 16; ++i) {
+      if (pic_isr.pending & (1<<i)) {
+        pic_idx = i;
+        pic_isr.pending &= ~(1<<i);
+        break;
+      }
+    }
+    pic_isr.thread->pic_line = pic_idx + 1;
+    pic_isr.thread->start_address = pic_isr.routines[pic_idx];
+    if (pic_isr.thread->start_address) {
+      pic_isr.thread->state = THREAD_STATE_NEW;
+    }
+  }
+
+  scheduler_goto_next();
+}
+
+void pic_isr_process(unsigned int_num) {
+  // interrupt numbers are 32..39 and 112..119
+  int_num -= 32;
+  if (int_num > 8) int_num -= 96;
+
+  // now int_num is from 0..15
+  pic_isr.pending |= (1<<int_num);
+  pic_isr_process_next();
+}
 
 void isr_routine_32() {
-  kprintf("isr_routine_32\n");
-  isr_pic_eoi(32);
+  //kprintf("isr_routine_32\n");
+  pic_isr_process(32);
 }
 
 void isr_routine_33() {
-  kprintf("isr_routine_33\n");
-  // Make thread33 current context.
-  // TODO: if pic_processor still set, queue interrupt!
-  
-  CURRENT_THREAD->state = THREAD_STATE_NEW;
-  CURRENT_THREAD->start_address = (void*)CORE_SERVICE->keyboard_isr;
-  CURRENT_THREAD->pic_processor = 33;
-  kernel_to_usermode();
-  
-  /*
-  unsigned key = inb(0x60);
-  kprintf("KEY=%u\n", key);
-  */
+  //kprintf("isr_routine_33\n");
+  pic_isr_process(33);
 }
 
 void isr_routine_34() {

@@ -3,7 +3,6 @@
 
 __attribute__((__noreturn__))
 void khalt(void) {
-  kprintf("Kernel halted\n");
-  while (1) { asm("hlt"); }
+  while (1) { asm("sti; hlt"); }
   __builtin_unreachable();
 }
