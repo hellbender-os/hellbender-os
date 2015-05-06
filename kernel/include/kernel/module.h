@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+// core module is mapped at a fixed address at the top of the address space.
+#define CORE_OFFSET 0x7F800000
+
 typedef struct kernel_module {
   uint32_t magic; // 0x1337c0de;
   uint32_t bottom;

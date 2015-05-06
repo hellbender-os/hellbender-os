@@ -207,8 +207,7 @@ void kernel_early_init_segments() {
 
   // also setup the TSS.
   memset(&kernel_tss, 0, sizeof(kernel_tss));
-  kernel_tss.ss0  = SEL_KERNEL_DATA;
-  kernel_tss.esp0 = (uintptr_t)(KERNEL_STACK_TOP);
+  kernel_tss.ss0  = SEL_KERNEL_DATA; // esp0 will be set when thread created.
   gdt[SEL_TSS/8] = (gdt_entry_t) {
     .base = (uintptr_t)&kernel_tss,
     .limit = sizeof(kernel_tss),
@@ -221,7 +220,6 @@ void kernel_early_init_segments() {
 
   // switch to segmented mode.
   gdt_early_enable_segments();
-  gdt_update_tss();
 }
 
 void kernel_early_finalize(kernel_early_t *early) {

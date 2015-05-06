@@ -13,8 +13,6 @@ typedef struct mem {
   
   uint32_t *page_directory; // virtual address to the recursive page directory.
   uint32_t *page_tables; // virtual address to the recursive page tables.
-
-  uint8_t free_tables[64]; // bit map of 512 tables, free if bit = 1.
 } mem_t;
 mem_t mem;
 
@@ -62,7 +60,6 @@ static inline void reset_ds(unsigned old_ds) {
 
 void mem_early_initialize() {
   memset(&mem, 0, sizeof(mem));
-  memset(mem.free_tables, 0xff, sizeof(mem.free_tables));
   memset(mem_page_directory, 0, PAGE_SIZE);
   memset(mem_page_table_0, 0, PAGE_SIZE);
   memset(mem_page_table_1, 0, PAGE_SIZE);
@@ -79,10 +76,6 @@ void mem_early_initialize() {
   mem.page_tables = (uint32_t*)((uintptr_t)1023 * (uintptr_t)0x400000);
   mem.page_directory = (uint32_t*)((uintptr_t)(mem.page_tables)
                                    + (uintptr_t)1023 * (uintptr_t)0x1000);
-
-  // first table for kernel, last for recursive page directory.
-  mem.free_tables[0] &= ~1;
-  mem.free_tables[511/8] &= ~128; 
 }
 
 void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements,
@@ -268,66 +261,27 @@ void mem_unmap(void* virtual, size_t size) {
   }
 }
 
-void* mem_alloc_table(unsigned table) {
-  if (table) {
-    mem.free_tables[table/8] &= ~(1<<(table%8));
-    return (void*)((uintptr_t)table * (uintptr_t)0x400000);
-  } else {
-    kprintf("Out of virtual memory tables!\n");
-    kabort();
-  }
-}
-
-void* mem_alloc_bottom_table() {
-  unsigned table = 0;
-  for (int i = 0; i < 64 && !table; ++i) {
-    uint8_t bits;
-    if ((bits = mem.free_tables[i])) {
-      if (bits &   1) { table = i*8+0; break; }
-      if (bits &   2) { table = i*8+1; break; }
-      if (bits &   4) { table = i*8+2; break; }
-      if (bits &   8) { table = i*8+3; break; }
-      if (bits &  16) { table = i*8+4; break; }
-      if (bits &  32) { table = i*8+5; break; }
-      if (bits &  64) { table = i*8+6; break; }
-      if (bits & 128) { table = i*8+7; break; }
-    }
-  }
-  return mem_alloc_table(table);
-}
-
-void* mem_alloc_top_table() {
-  unsigned table = 0;
-  for (int i = 64; i >= 0 && !table; --i) {
-    uint8_t bits;
-    if ((bits = mem.free_tables[i])) {
-      if (bits & 128) { table = i*8+7; break; }
-      if (bits &  64) { table = i*8+6; break; }
-      if (bits &  32) { table = i*8+5; break; }
-      if (bits &  16) { table = i*8+4; break; }
-      if (bits &   8) { table = i*8+3; break; }
-      if (bits &   4) { table = i*8+2; break; }
-      if (bits &   2) { table = i*8+1; break; }
-      if (bits &   1) { table = i*8+0; break; }
-    }
-  }
-  return mem_alloc_table(table);
-}
-
-void* mem_alloc_existing_table(void* existing) {
-  unsigned table = (uintptr_t)existing / (uintptr_t)TABLE_SIZE;
-  if (!(mem.free_tables[table/8] & (1<<(table%8)))) {
-    kprintf("Conflicting page table allocations!\n");
-    kabort();
-  }
-  return mem_alloc_table(table);
-}
-
 void* mem_alloc_mapped(void *virtual, size_t size) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   for (; size; size -= PAGE_SIZE, virtual += PAGE_SIZE) {
     uintptr_t physical = mem_alloc_page();
     mem_map_page(virtual, physical, MEM_ATTRIB_USER);
   }
+  return virtual;
+}
+
+void* mem_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
+  uintptr_t address = (uintptr_t)virtual;
+  if (address & 0x3fffff) {
+    kprintf("Page table must be mapped at table boundary.\n");
+    kabort();
+  }
+  unsigned page_dir_index = address >> 22;
+  uint32_t* page_dir = mem.page_directory;
+
+  unsigned old_ds = set_ds_all();
+  page_dir[page_dir_index] = page_table | attributes;
+  reset_ds(old_ds);
+  invalidate_all(); // TODO: or just all pages in the page table.
   return virtual;
 }

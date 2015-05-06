@@ -7,10 +7,15 @@
 #include <kernel/kstdlib.h>
 #include <kernel/idt.h>
 #include <kernel/isr.h>
+#include <kernel/vmem.h>
 #include <kernel/domain.h>
+#include <kernel/module.h>
+#include <kernel/thread.h>
+
+typedef struct kernel {
+} kernel_t;
 
 kernel_t kernel;
-tss_entry_t kernel_tss;
 
 uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
@@ -28,6 +33,7 @@ void kernel_main(void) {
   kprintf("kernel_main\n");
 #endif
 
+  vmem_initialize();
   kernel_init_interrupts();
   
   kprintf("Hello, kernel World!\n");
@@ -36,7 +42,9 @@ void kernel_main(void) {
   // it is a special formatter binary, where entry point is at the beginning,
   // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
-  domain_enter_ring3(core);
+  /*thread_t *thread =*/ thread_allocate(core->start);
 
-  khalt();
+  kernel_enter_ring3(SEL_USER_DATA|3, (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
+                     SEL_USER_CODE|3, (uint32_t)CURRENT_THREAD->start_address);
+  __builtin_unreachable();
 }

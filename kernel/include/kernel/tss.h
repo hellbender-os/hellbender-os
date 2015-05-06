@@ -37,4 +37,8 @@ struct tss_entry
  
 typedef struct tss_entry tss_entry_t;
 
+extern tss_entry_t kernel_tss;
+
+void tss_update();
+
 #endif

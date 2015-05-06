@@ -15,6 +15,4 @@ void gdt_early_initialize();
 void gdt_early_set_entry(unsigned selector, gdt_entry_t source);
 void gdt_early_enable_segments();
 
-void gdt_update_tss();
-
 #endif

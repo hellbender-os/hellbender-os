@@ -70,11 +70,3 @@ void gdt_early_enable_segments() {
        :
        );
 }
-
-void gdt_update_tss() {
-  asm ("ltr %%ax"
-       : /* no output registers */
-       : "a"(SEL_TSS|3)
-       : 
-       );
-}

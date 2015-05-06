@@ -2,14 +2,12 @@
 #define _KERNEL_MEM_H
 
 #include <stdint.h>
-
 #include <kernel/multiboot.h>
 
 #define MEM_ATTRIB_USERMODE 4
 #define MEM_ATTRIB_WRITEABLE 2
 #define MEM_ATTRIB_PRESENT 1
-#define MEM_ATTRIB_KERNEL (1|2|4)
-// TODO: kernel should be 1+2
+#define MEM_ATTRIB_KERNEL (1|2)
 #define MEM_ATTRIB_USER (1|2|4)
 
 void mem_early_initialize();
@@ -28,11 +26,8 @@ uintptr_t mem_unmap_page(void* address);
 void* mem_map(void* virtual, uintptr_t physical,
               size_t size, unsigned attributes);
 void mem_unmap(void* virtual, size_t size);
-
-// allocates TABLE_SIZE of unmapped virtual memory.
-void* mem_alloc_bottom_table();
-void* mem_alloc_top_table();
-void* mem_alloc_existing_table(void* existing);
-
 void* mem_alloc_mapped(void *virtual, size_t size);
+
+void* mem_map_table(void* virtual, uintptr_t page_table, unsigned attributes);
+
 #endif

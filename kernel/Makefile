@@ -40,6 +40,8 @@ kernel/khalt.o \
 kernel/kprintf.o \
 kernel/domain.o \
 kernel/module.o \
+kernel/thread.o \
+kernel/tss.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

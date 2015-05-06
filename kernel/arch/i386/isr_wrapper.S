@@ -10,26 +10,28 @@
         .global isr_wrapper_\IDX
         .balign 4
 isr_wrapper_\IDX\():
+        // save the state to active thread kernel stack.
         pushal
-        cld
-        mov %esp, %eax        // pass (original) ISR stack pointer parameter.
-        add $8*4, %eax
-        mov %ds, %bx          // copy DS into other selector registers.
+        push %ds
         push %es
         push %fs
         push %gs
+        mov %esp, %eax        // remember the thread kernel stack pointer.
+        mov %eax, (0x800000)  // current thread structure is there.
+        
+        // now the context has been saved. time to switch to kernel stack.
+	movl $(kernel_stack+16384+4096), %esp
+        mov %ss, %bx          // copy kernel data selector into all registers.
+        mov %bx, %ds
         mov %bx, %es
         mov %bx, %fs
         mov %bx, %gs
-        mov %esp, %ebp        // stack pointer in a callee save register.
+
+        // and then we jump to the interrupt service routine -routine.
+        add $(8*4+4*2), %eax  // pass the original ISR stack pointer.
         push %eax
-        call isr_routine_\IDX
-        mov %ebp, %esp        // restore stack, in case parameter was not used.
-        pop %gs
-        pop %fs
-        pop %es
-        popal
-        iret
+        cld
+        jmp isr_routine_\IDX  // we use kernel_return_ring3 to go back.
         .endm
 
         // protected mode traps
