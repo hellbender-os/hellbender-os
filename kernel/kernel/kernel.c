@@ -50,6 +50,7 @@ void kernel_main(void) {
   // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
   /*thread_t *thread =*/ thread_allocate(core->start);
+  khalt();
   kernel_to_usermode();
 }
 

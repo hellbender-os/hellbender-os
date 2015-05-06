@@ -16,6 +16,15 @@ typedef struct kernel_module {
   uint32_t checksum; // cast structure as uint16_t array, excluding the checksum field. checksum == the sum of the array.
 } __attribute__((packed)) kernel_module_t;
 
+typedef struct core_service {
+  uint32_t keyboard_isr;
+  uint32_t timer_isr;
+} __attribute__((packed)) core_service_t;
+
+#define CORE_MODULE ((kernel_module_t*)CORE_OFFSET)
+#define CORE_SERVICE ((core_service_t*)(CORE_OFFSET + sizeof(kernel_module_t)))
+
+
 int module_check_header(kernel_module_t *module);
 
 #endif

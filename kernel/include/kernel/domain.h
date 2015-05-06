@@ -5,7 +5,6 @@
 
 #include <kernel/kernel.h>
 
-
 typedef struct domain {
   void* table_base; // address of the page table.
   size_t table_size; // virtual address space size; multiples of TABLE_SIZE.

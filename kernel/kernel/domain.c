@@ -71,6 +71,10 @@ domain_t* domain_allocate_module(void* module_table) {
     kabort();
   }
   void* relative = base - module->bottom;
+  if (relative) {
+    kprintf("Module not loaded at expected address.\n");
+    kabort();
+  }
   domain->module_bottom = base;
   domain->module_top = relative + module->top;
   domain->text_bottom = relative + module->text_bottom;
@@ -83,17 +87,6 @@ domain_t* domain_allocate_module(void* module_table) {
             MEM_ATTRIB_PRESENT | MEM_ATTRIB_USERMODE);
   return domain;
 }
-
-/*
-void domain_enter_ring3(domain_t *domain) {
-  if (!domain->start) {
-    kprintf("Domain doesn't have an entry function.\n");
-    kabort();
-  }
-  kernel_enter_ring3(SEL_USER_DATA|3, (uint32_t)domain->stack_top,
-                     SEL_USER_CODE|3, (uint32_t)domain->start);
-}
-*/
 
 /*
 void* domain_alloc_data(domain_t *domain, size_t size) {

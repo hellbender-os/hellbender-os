@@ -4,7 +4,8 @@
         .macro define_wrapper IDX
         __define_wrapper %IDX
         .endm
-        
+
+        // Context saving ISR wrappers.
         .macro __define_wrapper IDX
         .extern isr_routine_\IDX
         .global isr_wrapper_\IDX
@@ -36,6 +37,30 @@ isr_wrapper_\IDX\():
         jmp isr_routine_\IDX  // we use kernel_return_ring3 to go back.
         .endm
 
+
+        // Context discarding ISR wrappers.
+        .macro define_wrapper2 IDX
+        .extern isr_routine_\IDX
+        .global isr_wrapper_\IDX
+        .balign 4
+isr_wrapper_\IDX\():
+        // don't save the state because we are not returning.
+        // time to switch to kernel stack.
+	movl $(kernel_stack+16384+4096), %esp
+        mov %ss, %bx          // copy kernel data selector into all registers.
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
+
+        // and then we jump to the interrupt service routine -routine.
+        push %eax             // 1st parameter: interrupt specific
+        cld
+        push $0               // fake return address because
+        jmp isr_routine_\IDX  // we use kernel_return_ring3 to go back.
+        .endm
+
+        
         // protected mode traps
         .set idx, 0
         .rept 32
@@ -58,9 +83,6 @@ isr_wrapper_\IDX\():
         .endr
         
         // kernel interrupts
-        .set idx, 80
-        .rept 8
-        define_wrapper idx
-        .set idx, (idx+1)
-        .endr
+        define_wrapper 80
+        define_wrapper2 81
 

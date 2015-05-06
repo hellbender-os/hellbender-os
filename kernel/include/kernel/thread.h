@@ -27,6 +27,7 @@ typedef struct thread {
   uint32_t thread_id; // unique identifier.
   uint32_t state; // new or old, depending if thread has been running.
   void* start_address; // start address for new threads.
+  unsigned pic_processor; // set for PIC interrupt handler threads.
 
   struct thread *this; // logical address of this structure in kernel memory.
   uintptr_t page_table; // physical address to the thread page table.

@@ -95,12 +95,6 @@ void isr_initialize() {
   entry.dpl = 3;
   isr_set_idt(80);
   isr_set_idt(81);
-  isr_set_idt(82);
-  isr_set_idt(83);
-  isr_set_idt(84);
-  isr_set_idt(85);
-  isr_set_idt(86);
-  isr_set_idt(87);
 }
 
 #define PIC1		0x20		/* IO base address for master PIC */

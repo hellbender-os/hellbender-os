@@ -7,6 +7,8 @@
 #include <kernel/kstdlib.h>
 #include <kernel/isr.h>
 #include <kernel/io.h>
+#include <kernel/thread.h>
+#include <kernel/module.h>
 
 void isr_routine_32() {
   kprintf("isr_routine_32\n");
@@ -15,9 +17,18 @@ void isr_routine_32() {
 
 void isr_routine_33() {
   kprintf("isr_routine_33\n");
+  // Make thread33 current context.
+  // TODO: if pic_processor still set, queue interrupt!
+  
+  CURRENT_THREAD->state = THREAD_STATE_NEW;
+  CURRENT_THREAD->start_address = (void*)CORE_SERVICE->keyboard_isr;
+  CURRENT_THREAD->pic_processor = 33;
+  kernel_to_usermode();
+  
+  /*
   unsigned key = inb(0x60);
   kprintf("KEY=%u\n", key);
-  isr_pic_eoi(33);
+  */
 }
 
 void isr_routine_34() {
