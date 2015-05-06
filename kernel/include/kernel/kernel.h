@@ -25,13 +25,6 @@ extern unsigned long __force_order;
 #define SEL_LAST        0x30
 #define SEL_COUNT       ((SEL_LAST/8)+1)
 
-typedef struct kernel_module {
-  uint32_t bottom;
-  uint32_t top;
-  uint32_t text_bottom;
-  uint32_t text_top;
-} __attribute__((packed)) kernel_module_t;
-
 typedef struct kernel {
 } kernel_t;
 

@@ -9,6 +9,7 @@
 #include <kernel/mem.h>
 #include <kernel/gdt.h>
 #include <kernel/tss.h>
+#include <kernel/module.h>
 
 #include <kernel/multiboot.h>
 #include <kernel/elf32.h>
@@ -143,7 +144,7 @@ void kernel_early_process_info(kernel_early_t *kernel,
     kprintf("Core service not found!\n");
     kabort();
   }
-  kernel_module_t* core_module = (kernel_module_t*)(kernel->core_bottom + 8);
+  kernel_module_t* core_module = (kernel_module_t*)kernel->core_bottom;
   kernel->core = *core_module;
 
 }

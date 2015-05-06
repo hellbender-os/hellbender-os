@@ -11,12 +11,13 @@ PREFIX?=/usr/local
 EXEC_PREFIX?=$(PREFIX)
 BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
+LIBDIR?=$(EXEC_PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -static -nostdlib -lk -lgcc
-LIB_DEPS:=$(DESTDIR)/usr/lib/libk.a
+LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libk.a
 ARCHDIR:=arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
@@ -38,6 +39,7 @@ kernel/kabort.o \
 kernel/khalt.o \
 kernel/kprintf.o \
 kernel/domain.o \
+kernel/module.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

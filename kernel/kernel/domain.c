@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include <kernel/domain.h>
+#include <kernel/module.h>
 #include <kernel/mem.h>
 #include <kernel/kstdio.h>
 #include <kernel/kstdlib.h>
@@ -78,32 +79,36 @@ domain_t* domain_prepare(domain_t *domain, void* base, size_t size) {
   return domain;
 }
 
-domain_t* domain_create_bottom() {
+domain_t* domain_allocate_bottom() {
   domain_t *domain = domain_allocate();
   void *base = mem_alloc_bottom_table();
   return domain_prepare(domain, base, TABLE_SIZE);
 }
 
-domain_t* domain_create_top() {
+domain_t* domain_allocate_top() {
   domain_t *domain = domain_allocate();
   void *base = mem_alloc_top_table();
   return domain_prepare(domain, base, TABLE_SIZE);
 }
 
-domain_t* domain_create_existing(void* module_table, void* start) {
+domain_t* domain_allocate_module(void* module_table) {
   domain_t *domain = domain_allocate();
   void* base = mem_alloc_existing_table(module_table);
   domain_prepare(domain, base, TABLE_SIZE);
 
   // module is already fully mapped in CS and DS.
-  kernel_module_t *module = (kernel_module_t*)(module_table+8);
+  kernel_module_t *module = (kernel_module_t*)module_table;
+  if (!module_check_header(module)) {
+    kprintf("invalid core module!\n");
+    kabort();
+  }
   void* relative = base - module->bottom;
   domain->module_bottom = base;
   domain->module_top = relative + module->top;
   domain->text_bottom = relative + module->text_bottom;
   domain->text_top = relative + module->text_top;
   domain->heap_bottom = domain->heap_top = ceil_page(domain->module_top);
-  domain->start = start;
+  domain->start = relative + module->start;
 
   // protect text segment by unmapping it from DS.
   mem_unmap(domain->text_bottom, domain->text_top - domain->text_bottom);

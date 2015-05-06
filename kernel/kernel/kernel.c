@@ -35,8 +35,7 @@ void kernel_main(void) {
   // core service has been mapped to the DS and CS by kernel_early.
   // it is a special formatter binary, where entry point is at the beginning,
   // and it includes a special module_t header at offset 8.
-  domain_t *core = domain_create_existing((void*)CORE_OFFSET,  // table address
-                                          (void*)CORE_OFFSET); // start address
+  domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
   domain_enter_ring3(core);
 
   khalt();

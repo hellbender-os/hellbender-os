@@ -1,7 +1,7 @@
 OUTPUT_FORMAT("binary")
 
-/* Entry point located at the beginning of the file. */
-start = 0;
+/* Entry point */
+ENTRY(_start)
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
@@ -12,10 +12,11 @@ SECTIONS
         _hellbender_module_bottom = .;
         _hellbender_text_bottom = .;
 
-	/* The service entry code must be first, 
+	/* The module header must be first,
            followed by the standard .text section. */
 	.text BLOCK(4K) : ALIGN(4K)
 	{
+                *(.module_header)
 		*(.text)
 	}
 
@@ -41,4 +42,6 @@ SECTIONS
 	}
 
         _hellbender_module_top = .;
+
+        _hellbender_checksum = 0x1337 + 0xc0de + (_hellbender_module_bottom>>16) + (_hellbender_module_bottom&0xffff) + (_hellbender_module_top>>16) + (_hellbender_module_top&0xffff) + (_hellbender_text_bottom>>16) + (_hellbender_text_bottom&0xffff) + (_hellbender_text_top>>16) + (_hellbender_text_top&0xffff) + (_start>>16) + (_start&0xffff);
 }
