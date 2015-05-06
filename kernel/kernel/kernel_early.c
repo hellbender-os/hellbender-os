@@ -230,8 +230,9 @@ void kernel_early_finalize(kernel_early_t *early) {
   // move the VGA text buffer.
   terminal_early_finalize();
 
-  // remove executable pages from the DS segment.
-  mem_unmap((void*)early->text_bottom, early->text_top - early->text_bottom);
+  // remove write permissions from executable pages in the DS segment.
+  mem_remap((void*)early->text_bottom, early->text_top - early->text_bottom,
+            MEM_ATTRIB_PRESENT | MEM_ATTRIB_USERMODE);
 
   // protect stack my unmapping surrounding pages.
   mem_unmap_page(kernel_stack);

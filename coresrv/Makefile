@@ -29,7 +29,9 @@ LIBS:=$(LIBS) $(ARCH_LIBS)
 
 OBJS:=\
 $(ARCH_OBJS) \
-src/core_main.o \
+src/main.o \
+src/keyboard.o \
+src/timer.o \
 
 HEADER_OBJ:=$(ARCHDIR)/module_header.o
 

@@ -3,8 +3,7 @@
 
 extern void _fini();
 
-void exit(int __attribute__((unused)) status) {
+void exit(int status) {
   _fini();
-  syscall();
-  __builtin_unreachable();
+  syscall_exit(status);
 }

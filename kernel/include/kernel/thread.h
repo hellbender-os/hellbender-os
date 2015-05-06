@@ -8,7 +8,7 @@
 
 // NEW for just created thread, OLD for threads that have been running.
 #define THREAD_STATE_NEW 0xA11B00b5
-#define THREAD_STATE_OLD 0xC00lD00d
+#define THREAD_STATE_OLD 0xC001D00d
 
 // each thread has a page table.
 // the page table is mapped to THREAD_OFFSET when the thread is running.

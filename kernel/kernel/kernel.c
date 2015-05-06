@@ -12,6 +12,13 @@
 #include <kernel/module.h>
 #include <kernel/thread.h>
 
+extern void kernel_enter_ring3(uint32_t data_selector,
+                               uint32_t stack_address,
+                               uint32_t code_selector,
+                               uint32_t code_address);
+
+extern void kernel_return_ring3();
+
 typedef struct kernel {
 } kernel_t;
 
@@ -43,8 +50,19 @@ void kernel_main(void) {
   // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
   /*thread_t *thread =*/ thread_allocate(core->start);
+  kernel_to_usermode();
+}
 
-  kernel_enter_ring3(SEL_USER_DATA|3, (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
-                     SEL_USER_CODE|3, (uint32_t)CURRENT_THREAD->start_address);
+__attribute__((__noreturn__))
+void kernel_to_usermode() {
+  if (CURRENT_THREAD->state == THREAD_STATE_NEW) {
+    CURRENT_THREAD->state = THREAD_STATE_OLD;
+    kernel_enter_ring3(SEL_USER_DATA|3,
+                       (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
+                       SEL_USER_CODE|3,
+                       (uint32_t)CURRENT_THREAD->start_address);
+  } else {
+    kernel_return_ring3();
+  }
   __builtin_unreachable();
 }

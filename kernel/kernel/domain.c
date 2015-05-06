@@ -78,8 +78,9 @@ domain_t* domain_allocate_module(void* module_table) {
   domain->heap_bottom = domain->heap_top = ceil_page(domain->module_top);
   domain->start = relative + module->start;
 
-  // protect text segment by unmapping it from DS.
-  mem_unmap(domain->text_bottom, domain->text_top - domain->text_bottom);
+  // protect text segment by making it read only in DS.
+  mem_remap(domain->text_bottom, domain->text_top - domain->text_bottom,
+            MEM_ATTRIB_PRESENT | MEM_ATTRIB_USERMODE);
   return domain;
 }
 

@@ -222,12 +222,37 @@ uintptr_t mem_unmap_page(void* virtual) {
   if (page_dir[page_dir_index] & 1) {
     // get and clear the page table entry.
     uint32_t value = page_table[page_table_index];
-    page_table[page_table_index] = 0;
     if (value & 1) {
       physical = value & 0xfffff000;
+      page_table[page_table_index] = 0;
       //kprintf("unmapping PDI=%x; PTI=%x, was %x\n",
       //       (unsigned)page_dir_index, (unsigned)page_table_index,
       //       (unsigned)physical);
+      asm volatile("invlpg (%0)" ::"r"(address) : "memory");
+    }
+  }
+  reset_ds(old_ds);
+  return physical;
+}
+
+uintptr_t mem_remap_page(void* virtual, unsigned attributes) {
+  //kprintf("Remapping virtual address = %x\n", (unsigned)virtual);
+  uintptr_t address = (uintptr_t)virtual;
+  unsigned page_dir_index = address >> 22;
+  unsigned page_table_index = (address >> 12) & 0x3ff;
+
+  uintptr_t physical = 0;
+  uint32_t* page_dir = mem.page_directory;
+  uint32_t* page_tables = mem.page_tables;
+  uint32_t *page_table = page_tables + page_dir_index * 0x400;
+
+  unsigned old_ds = set_ds_all();
+  if (page_dir[page_dir_index] & 1) {
+    // get and clear the page table entry.
+    uint32_t value = page_table[page_table_index];
+    if (value & 1) {
+      physical = value & 0xfffff000;
+      page_table[page_table_index] = physical | attributes;
       asm volatile("invlpg (%0)" ::"r"(address) : "memory");
     }
   }
@@ -250,14 +275,26 @@ void* mem_map(void* virtual, uintptr_t physical,
 }
 
 void mem_unmap(void* virtual, size_t size) {
-  // round address downwards, take that into account in size, round size up.
-  intptr_t address = (intptr_t)virtual;
-  size += address % PAGE_SIZE;
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  address -= address % PAGE_SIZE;
-  for (void* ptr = (void*)address; size > 0;
-       ptr += PAGE_SIZE, size -= PAGE_SIZE) {
-    mem_unmap_page(ptr);
+  uintptr_t address = (uintptr_t)virtual;
+  if ((address % PAGE_SIZE)) {
+    kprintf("Virtual address must be page aligned!\n");
+    kabort();
+  }
+  for (size_t i = 0; i < size; i += PAGE_SIZE) {
+    mem_unmap_page(virtual + i);
+  }
+}
+
+void mem_remap(void* virtual, size_t size, unsigned attributes) {
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
+  uintptr_t address = (uintptr_t)virtual;
+  if ((address % PAGE_SIZE)) {
+    kprintf("Virtual address must be page aligned!\n");
+    kabort();
+  }
+  for (size_t i = 0; i < size; i += PAGE_SIZE) {
+    mem_remap_page(virtual + i, attributes);
   }
 }
 

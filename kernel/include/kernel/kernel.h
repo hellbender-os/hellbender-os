@@ -37,10 +37,8 @@ extern uint8_t kernel_stack[];
 #define KERNEL_STACK_BOTTOM (kernel_stack + PAGE_SIZE)
 #define KERNEL_STACK_TOP (kernel_stack + KERNEL_STACK_SIZE + PAGE_SIZE)
 
-extern void kernel_enter_ring3(uint32_t data_selector,
-                               uint32_t stack_address,
-                               uint32_t code_selector,
-                               uint32_t code_address);
+__attribute__((__noreturn__))
+void kernel_to_usermode();
 
 static inline void* ceil_page(void* address) {
   return address + (uintptr_t)address % PAGE_SIZE;

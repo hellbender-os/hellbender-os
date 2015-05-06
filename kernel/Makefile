@@ -31,7 +31,6 @@ OBJS:=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel_early.o \
 kernel/kernel.o \
-kernel/kernel_asm.o \
 kernel/trap_isr.o \
 kernel/pic_isr.o \
 kernel/kernel_isr.o \

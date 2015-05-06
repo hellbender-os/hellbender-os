@@ -1,6 +1,6 @@
         .section .text
-        .extern kernel_in_ring3
         .global kernel_enter_ring3
+        .global kernel_return_ring3
 kernel_enter_ring3: // use when current thread state == NEW.
         pop %eax // return address not needed
         pop %eax // data selector
