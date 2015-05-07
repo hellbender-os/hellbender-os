@@ -7,6 +7,7 @@
 #include <kernel/kstdio.h>
 #include <kernel/tty.h>
 #include <kernel/mem.h>
+#include <kernel/mmap.h>
 #include <kernel/gdt.h>
 #include <kernel/tss.h>
 #include <kernel/module.h>
@@ -156,17 +157,17 @@ void kernel_early_init_paging(kernel_early_t *kernel) {
 #endif
   
   // map kernel code into CS section.
-  mem_early_map((void*)(CS_BASE + kernel->text_bottom), kernel->text_bottom,
-                kernel->text_top - kernel->text_bottom,
-                MEM_ATTRIB_KERNEL);
+  mmap_early_map((void*)(CS_BASE + kernel->text_bottom), kernel->text_bottom,
+                 kernel->text_top - kernel->text_bottom,
+                 MMAP_ATTRIB_KERNEL);
   
   // map the whole kernel into DS section for now, we'll remove code later.
-  mem_early_map((void*)kernel->kernel_bottom, kernel->kernel_bottom,
-                kernel->kernel_top - kernel->kernel_bottom,
-                MEM_ATTRIB_KERNEL);
+  mmap_early_map((void*)kernel->kernel_bottom, kernel->kernel_bottom,
+                 kernel->kernel_top - kernel->kernel_bottom,
+                 MMAP_ATTRIB_KERNEL);
 
   // and enable paging.
-  mem_early_enable_paging();
+  mmap_early_enable_paging();
 }
 
 void kernel_early_init_segments() {
@@ -231,34 +232,37 @@ void kernel_early_finalize(kernel_early_t *early) {
 #ifdef DEBUG
   kprintf("kernel_early_finalize\n");
 #endif
+
+  // prepare the pages tables for actual use.
+  mmap_early_finalize();
+
+  mem_early_initialize(early->memory_map, early->memory_map_elements,
+                       early->kernel_bottom, early->kernel_top,
+                       early->core_bottom, early->core_top);
   
-  // move the VGA text buffer.
-  terminal_early_finalize();
+  // NOW WE CAN USE NON-EARLY FUNCTIONS!
+  
+  // move the VGA text buffer to free up the virtual address space under 1MB.
+  terminal_finalize();
 
   // remove write permissions from executable pages in the DS segment.
-  mem_remap((void*)early->text_bottom, early->text_top - early->text_bottom,
-            MEM_ATTRIB_PRESENT | MEM_ATTRIB_USERMODE);
+  mmap_remap((void*)early->text_bottom, early->text_top - early->text_bottom,
+             MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
 
-  // protect stack my unmapping surrounding pages.
-  mem_unmap_page(kernel_stack);
-  mem_unmap_page(KERNEL_STACK_TOP);
-  
-  // initialize mem allocator with free pages.
-  // TODO: unmap / free unneeded early kernel pages.
-  // TODO: properly initialize the memory allocator.
-  mem_early_finalize(early->memory_map, early->memory_map_elements,
-                     early->kernel_bottom, early->kernel_top,
-                     early->core_bottom, early->core_top);
+  // protect stack by unmapping surrounding pages,
+  // and make those guard pages available for use.
+  mem_free_page(mmap_unmap_page(kernel_stack));
+  mem_free_page(mmap_unmap_page(KERNEL_STACK_TOP));
 
   // map the core service image so that kernel can access it later.
-  mem_map((void*)(CORE_OFFSET), early->core_bottom,
-          early->core_top - early->core_bottom, MEM_ATTRIB_USER);
-  mem_map((void*)(CS_BASE + CORE_OFFSET), early->core_bottom,
-          early->core_top - early->core_bottom, MEM_ATTRIB_USER);
+  mmap_map((void*)(CORE_OFFSET), early->core_bottom,
+           early->core_top - early->core_bottom, MMAP_ATTRIB_USER);
+  mmap_map((void*)(CS_BASE + CORE_OFFSET), early->core_bottom,
+           early->core_top - early->core_bottom, MMAP_ATTRIB_USER);
 }
 
 void kernel_early(uint32_t magic, multiboot_info_t *info) {
-  mem_early_initialize();
+  mmap_early_initialize();
   terminal_early_initialize();
   gdt_early_initialize();
   

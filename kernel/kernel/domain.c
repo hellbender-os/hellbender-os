@@ -3,6 +3,7 @@
 #include <kernel/domain.h>
 #include <kernel/module.h>
 #include <kernel/mem.h>
+#include <kernel/mmap.h>
 #include <kernel/vmem.h>
 #include <kernel/kstdio.h>
 #include <kernel/kstdlib.h>
@@ -83,8 +84,8 @@ domain_t* domain_allocate_module(void* module_table) {
   domain->start = relative + module->start;
 
   // protect text segment by making it read only in DS.
-  mem_remap(domain->text_bottom, domain->text_top - domain->text_bottom,
-            MEM_ATTRIB_PRESENT | MEM_ATTRIB_USERMODE);
+  mmap_remap(domain->text_bottom, domain->text_top - domain->text_bottom,
+             MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
   return domain;
 }
 

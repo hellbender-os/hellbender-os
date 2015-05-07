@@ -5,320 +5,193 @@
 #include <kernel/kstdlib.h>
 #include <kernel/kstdio.h>
 #include <kernel/mem.h>
+#include <kernel/mmap.h>
+
+#define MEM_MAX_RANGES 16
+
+/* We keep free pages in a "linked directory list".
+ * Each directory contains up to DIRECTORY_SIZE free pages.
+ * directories form a single linked list.
+ * Two top-most entries of the linked list are always mapped
+ * at fixed virtual addresses.
+ * When those two directories become full/emptry, we either
+ * push a new directory into the list, or pop one from the list.
+ */
+struct __attribute__((packed)) directory_header {
+  uintptr_t this; // physical address of this directory.
+  uintptr_t next; // physical address of the next directory.
+  unsigned free; // number of free pages in the pages array.
+};
+
+#define DIRECTORY_SIZE ((PAGE_SIZE-sizeof(struct directory_header))/sizeof(uintptr_t))
+
+// Must have: sizeof(free_directory_t) == PAGE_SIZE
+typedef struct free_directory {
+  struct directory_header header;
+  uintptr_t pages[DIRECTORY_SIZE]; // physical addresses of free pages.
+} __attribute__((packed)) free_directory_t;
 
 typedef struct mem {
-  // a range of free pages that we are consuming next.
-  uintptr_t free_pages;
-  size_t free_size;
+  // list of the free page ranges:
+  struct range {
+    uintptr_t base;
+    size_t size;
+  } ranges[MEM_MAX_RANGES];
+  unsigned range; // range currently in use.
+  uintptr_t range_base; // data for the current range for faster access.
+  size_t range_size;
+
+  size_t total_memory;
+  size_t available_memory;
+
+  // two first free page directories of the linked list.
+  free_directory_t* first;
+  free_directory_t* second;
   
-  uint32_t *page_directory; // virtual address to the recursive page directory.
-  uint32_t *page_tables; // virtual address to the recursive page tables.
 } mem_t;
 mem_t mem;
 
-uint8_t mem_page_directory[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
-uint8_t mem_page_table_0[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
-uint8_t mem_page_table_1[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+// These allocation provide us the first two directory pages.
+// We also keep mapping the head of the links to these virtual addresses.
+uint8_t mem_free_pages1[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint8_t mem_free_pages2[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
-extern unsigned long __force_order;
-static inline void invalidate(void *virtual) {
-  asm volatile("invlpg (%1)"
-               : "=m"(__force_order)
-               : "r"((uint32_t)virtual)
-               );
-}
-
-static inline void invalidate_all() {
-  asm volatile("mov %%cr3, %%eax;"
-               "mov %%eax, %%cr3;"
-               : "=m"(__force_order)
-               :
-               : "%eax"
-               );
-}
-
-static inline unsigned set_ds_all() {
-  unsigned old_ds;
-  asm volatile("mov %%ds, %0;"
-               "mov %2, %%ds;"
-               "mov %2, %%es;"
-               : "=&r"(old_ds), "=m"(__force_order)
-               : "r"(SEL_ALL_DATA)
-               : "memory"
-               );
-  return old_ds;
-}
-
-static inline void reset_ds(unsigned old_ds) {
-  asm volatile("mov %1, %%ds;"
-               "mov %1, %%es;"
-               : "=m"(__force_order)
-               : "r"(old_ds)
-               : "memory"
-               );
-}
-
-void mem_early_initialize() {
+/**
+ * Initializes the free memory information based on GRUB memory maps.
+ * Kernel and core service module area are excluded.
+ */
+void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
+                          uintptr_t kernel_bottom, uintptr_t kernel_top,
+                          uintptr_t core_bottom, uintptr_t core_top) {
   memset(&mem, 0, sizeof(mem));
-  memset(mem_page_directory, 0, PAGE_SIZE);
-  memset(mem_page_table_0, 0, PAGE_SIZE);
-  memset(mem_page_table_1, 0, PAGE_SIZE);
-
-  uint32_t *page_dir = (uint32_t*)mem_page_directory;
-
-  // map the first two page tables for DS and CS segments.
-  page_dir[0] = ((uint32_t)(mem_page_table_0)) | MEM_ATTRIB_KERNEL;
-  page_dir[CS_BASE >> 22] = ((uint32_t)(mem_page_table_1)) | MEM_ATTRIB_KERNEL;
+  memset(mem_free_pages1, 0, PAGE_SIZE);
+  memset(mem_free_pages2, 0, PAGE_SIZE);
   
-  // recursive page directory is mapped to the last 4MB.
-  // note that access requires SEL_ALL_DATA selector.
-  page_dir[1023] = ((uint32_t)page_dir) | MEM_ATTRIB_KERNEL;
-  mem.page_tables = (uint32_t*)((uintptr_t)1023 * (uintptr_t)0x400000);
-  mem.page_directory = (uint32_t*)((uintptr_t)(mem.page_tables)
-                                   + (uintptr_t)1023 * (uintptr_t)0x1000);
-}
+  mem.first = (free_directory_t*)mem_free_pages1;
+  mem.second = (free_directory_t*)mem_free_pages2;
+  mem.first->header.this = (uintptr_t)mem_free_pages1;
+  mem.first->header.next = (uintptr_t)mem_free_pages2;
+  mem.second->header.this = (uintptr_t)mem_free_pages2;
 
-void mem_early_finalize(memory_map_t *memory_map, unsigned map_elements,
-                        uintptr_t kernel_bottom, uintptr_t kernel_top,
-                        uintptr_t core_bottom, uintptr_t core_top) {
-  // hide page tables from the data segment.
-  mem_unmap_page(&mem_page_directory);
-  mem_unmap_page(&mem_page_table_0);
-  mem_unmap_page(&mem_page_table_1);
+  // round the input values to page boundaries.
+  kernel_bottom -= kernel_bottom % PAGE_SIZE;
+  if (kernel_top % PAGE_SIZE) kernel_top += PAGE_SIZE - kernel_top % PAGE_SIZE;
+  core_bottom -= core_bottom % PAGE_SIZE;
+  if (core_top % PAGE_SIZE) core_top += PAGE_SIZE - core_top % PAGE_SIZE;
 
-  // TODO: build a map of free/allocated/reserved physical pages.
+  // process memory map information provided by GRUB:
+  unsigned j = 0;
   for (unsigned i = 0; i < map_elements; ++i) {
-    if (memory_map[i].length_low > mem.free_size) {
-      mem.free_size = memory_map[i].length_low;
-      mem.free_pages = memory_map[i].base_addr_low;
+    uintptr_t base = memory_map[i].base_addr_low;
+    size_t size = memory_map[i].length_low;
+    mem.total_memory += size;
+
+    // first 4MB is recorded as free pages.
+    while (base < TABLE_SIZE && size >= PAGE_SIZE) {
+      // skip pages reserved for kernel and core service.
+      uintptr_t top = base+size;
+      if ((top <= kernel_bottom && top <= core_bottom)
+          || (base >= kernel_top && base >= core_top)) {
+        mem_free_page(base);
+      }
+      base += PAGE_SIZE;
+      size -= PAGE_SIZE;
+    }
+    // anything above 4MB is added as a range.
+    if (size >= PAGE_SIZE) {
+      if (j >= MEM_MAX_RANGES) {
+        kprintf("maximum number of memory ranges exceeded!\n");
+        kabort();
+      }
+      mem.ranges[j].base = base;
+      mem.ranges[j].size = size;
+      mem.available_memory += size;
+      ++j;
     }
   }
 
-  // remove kernel pages from the allocator.
-  kernel_bottom -= kernel_bottom % PAGE_SIZE;
-  if (kernel_top % PAGE_SIZE) kernel_top += PAGE_SIZE - kernel_top % PAGE_SIZE;
-  if (kernel_top > mem.free_pages) {
-    mem.free_size -= (kernel_top - mem.free_pages);
-    mem.free_pages = kernel_top;
-  }
-
-  // remove core server pages from the allocator.
-  core_bottom -= core_bottom % PAGE_SIZE;
-  if (core_top % PAGE_SIZE) core_top += PAGE_SIZE - core_top % PAGE_SIZE;
-  if (core_top > mem.free_pages) {
-    mem.free_size -= (core_top - mem.free_pages);
-    mem.free_pages = core_top;
-  }
-  kprintf("%u bytes available, starting from %x.\n",
-          (unsigned)mem.free_size, (unsigned)mem.free_pages);
-  
-  // TODO: build a map of virtual memory holes.
-}
-
-void* mem_early_map_page(void* virtual, uintptr_t page, unsigned attributes) {
-  uintptr_t address = (uintptr_t)virtual;
-  // page directory and page tables are mapped as part of the kernel.
-  if ((address % PAGE_SIZE) || (page % PAGE_SIZE)) {
-    kprintf("Address and page must be page aligned!\n");
-    kabort();
-  }
-  uint32_t *page_dir = (uint32_t*)mem_page_directory;
-  uint32_t page_dir_index = address >> 22;
-  uint32_t page_table_index = (address >> 12) & 0x3ff;
-  //kprintf("PDI = %u; PTI = %u; attr = %u\n",
-  //	 (unsigned)page_dir_index, (unsigned)page_table_index,
-  //	 (unsigned)attributes);
-  if ((page_dir[page_dir_index] & 1) == 0) {
-    kprintf("mem_early_map_page supports only the first 4MB region!\n");
-    kabort();
-  }
-  uint32_t *page_table = (uint32_t*)(page_dir[page_dir_index] & 0xfffff000);
-  page_table[page_table_index] = (page & 0xfffff000) | attributes;
-  invalidate(virtual);
-  return virtual;
-}
-
-void* mem_early_map(void* virtual, uintptr_t physical,
-                    size_t size, unsigned attributes) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
-    kprintf("Virtual and physical addresses must be page aligned!\n");
-    kabort();
-  }
-  for (uint32_t i = 0; i < size; i += PAGE_SIZE) {
-    mem_early_map_page(virtual + i, physical + i, attributes);
-  }
-  return virtual;
-}
-
-void mem_early_enable_paging() {
-#ifdef DEBUG
-  kprintf("mem_early_enable_paging\n");
-#endif
-  
-  asm ("mov %%eax, %%cr3;"
-       "mov %%cr0, %%eax;"
-       "or $0x80000000, %%eax;"
-       "mov %%eax, %%cr0;"
-       : /* no output registers */
-       : "a"(&mem_page_directory)
-       ); 
+  kprintf("%u bytes of memory, %u bytes free.\n",
+          (unsigned)mem.total_memory, (unsigned)mem.available_memory);
 }
 
 uintptr_t mem_alloc_page() {
-  if (mem.free_size < PAGE_SIZE) {
-    kprintf("Out of memory pages!");
-    kabort();
+  // if current directories are empty, try to get a pages from ranges:
+  if (mem.first->header.free == 0 && mem.second->header.free == 0
+      && mem.range_size) {
+    uintptr_t page = mem.range_base;
+    mem.range_base += PAGE_SIZE;
+    mem.range_size -= PAGE_SIZE;
+    // switch to the next range if this became empty.
+    if (mem.range_size == 0 && mem.range < MEM_MAX_RANGES) {
+      ++mem.range;
+      mem.range_base = mem.ranges[mem.range].base;
+      mem.range_size = mem.ranges[mem.range].size;
+    }
+    return page;
   }
-  uintptr_t address = mem.free_pages;
-  mem.free_pages += PAGE_SIZE;
-  mem.free_size -= PAGE_SIZE;
-  return address;
-}
-
-void* mem_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
-  uintptr_t address = (uintptr_t)virtual;
-  unsigned page_dir_index = address >> 22;
-  unsigned page_table_index = (address >> 12) & 0x3ff;
-
-  //kprintf("Mapping virtual address = %x\n", (unsigned)virtual);
-  //kprintf("PDI = %u; PTI = %u; attr = %u\n",
-  //        (unsigned)page_dir_index, (unsigned)page_table_index,
-  //        (unsigned)attributes);
-
-  uint32_t* page_dir = mem.page_directory;
-  uint32_t* page_tables = mem.page_tables;
-  uint32_t *page_table = page_tables + page_dir_index * 0x400;
   
-  // ensure that the is a page table.
-  unsigned old_ds = set_ds_all();
-  if ((page_dir[page_dir_index] & 1) == 0) {
-    uintptr_t new_table = mem_alloc_page();
-    page_dir[page_dir_index] = new_table | attributes;
-    invalidate(page_table);
-    memset(page_table, 0, PAGE_SIZE);
+  // try to get free pages from the visible directories:
+  if (mem.first->header.free) {
+    return mem.first->pages[--mem.first->header.free];
+  } else if (mem.second->header.free) {
+    return mem.second->pages[--mem.second->header.free];
+  }
+  
+  // now we don't have any choise but to pop the linked list.
+  if (mem.second->header.next) {
+    // the first empty page can be returned to the application.
+    uintptr_t page = mem.first->header.this;
+
+    // the new directory page is be mapped to replace of the old one.
+    mmap_map_page(mem.first, mem.second->header.next, MMAP_ATTRIB_KERNEL);
+
+    // and the old "second" becomes the new "first".
+    free_directory_t* tmp = mem.first;
+    mem.first = mem.second;
+    mem.second = tmp;
+
+    return page;
   }
 
-  // set the page table entry.
-  page_table[page_table_index] = (physical & 0xfffff000) | attributes;
-  invalidate(virtual);
-  reset_ds(old_ds);
-  return virtual;
+  // we have run out of memory..
+  kprintf("Out of memory!\n");
+  kabort();
 }
 
-uintptr_t mem_unmap_page(void* virtual) {
-  //kprintf("Unmapping virtual address = %x\n", (unsigned)virtual);
-  uintptr_t address = (uintptr_t)virtual;
-  unsigned page_dir_index = address >> 22;
-  unsigned page_table_index = (address >> 12) & 0x3ff;
-
-  uintptr_t physical = 0;
-  uint32_t* page_dir = mem.page_directory;
-  uint32_t* page_tables = mem.page_tables;
-  uint32_t *page_table = page_tables + page_dir_index * 0x400;
-
-  unsigned old_ds = set_ds_all();
-  if (page_dir[page_dir_index] & 1) {
-    // get and clear the page table entry.
-    uint32_t value = page_table[page_table_index];
-    if (value & 1) {
-      physical = value & 0xfffff000;
-      page_table[page_table_index] = 0;
-      //kprintf("unmapping PDI=%x; PTI=%x, was %x\n",
-      //       (unsigned)page_dir_index, (unsigned)page_table_index,
-      //       (unsigned)physical);
-      asm volatile("invlpg (%0)" ::"r"(address) : "memory");
-    }
+void mem_free_page(uintptr_t page) {
+  // TODO: use a magic token to check that the page is not mapped!
+  
+  // try to put the page into the second directory.
+  if (mem.second->header.free < DIRECTORY_SIZE) {
+    mem.second->pages[mem.second->header.free++] = page;
+    return;
   }
-  reset_ds(old_ds);
-  return physical;
-}
+  
+  // try to put the page into the first directory.
+  if (mem.first->header.free < DIRECTORY_SIZE) {
+    mem.first->pages[mem.first->header.free++] = page;
+    return;
+  }
 
-uintptr_t mem_remap_page(void* virtual, unsigned attributes) {
-  //kprintf("Remapping virtual address = %x\n", (unsigned)virtual);
-  uintptr_t address = (uintptr_t)virtual;
-  unsigned page_dir_index = address >> 22;
-  unsigned page_table_index = (address >> 12) & 0x3ff;
+  // we have to push the linked list.
+  // the new page becomes our new directory, replacing the second directory.
+  mmap_map_page(mem.second, page, MMAP_ATTRIB_KERNEL);
+  mem.second->header.this = page;
+  mem.second->header.next = mem.first->header.this;
+  mem.second->header.free = 0;
 
-  uintptr_t physical = 0;
-  uint32_t* page_dir = mem.page_directory;
-  uint32_t* page_tables = mem.page_tables;
-  uint32_t *page_table = page_tables + page_dir_index * 0x400;
-
-  unsigned old_ds = set_ds_all();
-  if (page_dir[page_dir_index] & 1) {
-    // get and clear the page table entry.
-    uint32_t value = page_table[page_table_index];
-    if (value & 1) {
-      physical = value & 0xfffff000;
-      page_table[page_table_index] = physical | attributes;
-      asm volatile("invlpg (%0)" ::"r"(address) : "memory");
-    }
-  }
-  reset_ds(old_ds);
-  return physical;
-}
-
-void* mem_map(void* virtual, uintptr_t physical,
-              size_t size, unsigned attributes) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
-    kprintf("Virtual and physical addresses must be page aligned!\n");
-    kabort();
-  }
-  for (size_t i = 0; i < size; i += PAGE_SIZE) {
-    mem_map_page(virtual + i, physical + i, attributes);
-  }
-  return virtual;
-}
-
-void mem_unmap(void* virtual, size_t size) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE)) {
-    kprintf("Virtual address must be page aligned!\n");
-    kabort();
-  }
-  for (size_t i = 0; i < size; i += PAGE_SIZE) {
-    mem_unmap_page(virtual + i);
-  }
-}
-
-void mem_remap(void* virtual, size_t size, unsigned attributes) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE)) {
-    kprintf("Virtual address must be page aligned!\n");
-    kabort();
-  }
-  for (size_t i = 0; i < size; i += PAGE_SIZE) {
-    mem_remap_page(virtual + i, attributes);
-  }
+  // and the old "first" becomes the new "second".
+  free_directory_t* tmp = mem.first;
+  mem.first = mem.second;
+  mem.second = tmp;
 }
 
 void* mem_alloc_mapped(void *virtual, size_t size) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   for (; size; size -= PAGE_SIZE, virtual += PAGE_SIZE) {
     uintptr_t physical = mem_alloc_page();
-    mem_map_page(virtual, physical, MEM_ATTRIB_USER);
+    mmap_map_page(virtual, physical, MMAP_ATTRIB_USER);
   }
   return virtual;
 }
 
-void* mem_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
-  uintptr_t address = (uintptr_t)virtual;
-  if (address & 0x3fffff) {
-    kprintf("Page table must be mapped at table boundary.\n");
-    kabort();
-  }
-  unsigned page_dir_index = address >> 22;
-  uint32_t* page_dir = mem.page_directory;
-
-  unsigned old_ds = set_ds_all();
-  page_dir[page_dir_index] = page_table | attributes;
-  reset_ds(old_ds);
-  invalidate_all(); // TODO: or just all pages in the page table.
-  return virtual;
-}

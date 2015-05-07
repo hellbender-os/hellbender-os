@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <hellbender.h>
 #include <kernel/io.h>
 
