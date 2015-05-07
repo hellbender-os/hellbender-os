@@ -12,17 +12,20 @@
 #include <kernel/scheduler.h>
 
 typedef struct pic_isr {
+  thread_t* timer_thread;
   thread_t* thread;
-  uint32_t pending;
+  uint32_t pending; // boolean flags telling which interrupts are pending.
+  uint32_t count[16]; // how many of said interrupts are pending.
 
   void* routines[16];
 } pic_isr_t;
 
 pic_isr_t pic_isr;
 
-void pic_isr_initialize(thread_t *thread) {
+void pic_isr_initialize(thread_t *timer_thread, thread_t *other_thread) {
   memset(&pic_isr, 0, sizeof(pic_isr));
-  pic_isr.thread = thread;
+  pic_isr.timer_thread = timer_thread;
+  pic_isr.thread = other_thread;
   pic_isr.routines[0] = (void*)CORE_SERVICE->timer_isr;
   pic_isr.routines[1] = (void*)CORE_SERVICE->keyboard_isr;
 }
@@ -35,7 +38,9 @@ void pic_isr_process_next() {
     for (unsigned i = 0; i < 16; ++i) {
       if (pic_isr.pending & (1<<i)) {
         pic_idx = i;
-        pic_isr.pending &= ~(1<<i);
+        if (--pic_isr.count[i] == 0) {
+          pic_isr.pending &= ~(1<<i);
+        }
         break;
       }
     }
@@ -51,17 +56,23 @@ void pic_isr_process_next() {
 
 void pic_isr_process(unsigned int_num) {
   // interrupt numbers are 32..39 and 112..119
+  kprintf("interrupt %u\n", int_num);
   int_num -= 32;
   if (int_num > 8) int_num -= 96;
 
   // now int_num is from 0..15
   pic_isr.pending |= (1<<int_num);
+  ++pic_isr.count[int_num];
   pic_isr_process_next();
 }
 
 void isr_routine_32() {
   //kprintf("isr_routine_32\n");
-  pic_isr_process(32);
+  pic_isr.timer_thread->pic_line = 1;
+  pic_isr.timer_thread->start_address = pic_isr.routines[0];
+  pic_isr.timer_thread->state = THREAD_STATE_NEW;
+  thread_set_current(pic_isr.timer_thread);
+  kernel_to_usermode();
 }
 
 void isr_routine_33() {

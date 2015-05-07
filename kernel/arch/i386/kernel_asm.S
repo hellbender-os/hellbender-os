@@ -17,6 +17,7 @@ kernel_enter_ring3: // use when current thread state == NEW.
         pushf
         push %ebx  // CS
         push %ecx // EIP
+        orl $0x200, 8(%esp)    // enable interrupts after iret
         iret
 
 kernel_return_ring3: // use when current thread state == OLD.
@@ -29,4 +30,5 @@ kernel_return_ring3: // use when current thread state == OLD.
         pop %es
         pop %ds
         popal
+        orl $0x200, 8(%esp)    // enable interrupts after iret
         iret

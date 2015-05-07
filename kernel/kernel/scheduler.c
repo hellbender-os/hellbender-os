@@ -6,6 +6,7 @@
 #include <string.h>
 
 typedef struct scheduler {
+  thread_t* realtime;
   thread_t* threads[16];
   unsigned num_threads;
   unsigned next_thread;
@@ -15,6 +16,10 @@ scheduler_t scheduler;
 
 void scheduler_initialize() {
   memset(&scheduler, 0, sizeof(scheduler));
+}
+
+void scheduler_set_realtime_thread(thread_t *thread) {
+  scheduler.realtime = thread;
 }
 
 void scheduler_add_thread(thread_t *thread) {
@@ -28,7 +33,10 @@ void scheduler_add_thread(thread_t *thread) {
 __attribute__((__noreturn__))
 void scheduler_goto_next() {
   thread_t *thread = NULL;
-  for (unsigned i = 0; i < scheduler.num_threads; ++i) {
+  if (scheduler.realtime->state != THREAD_STATE_DEAD) {
+    thread = scheduler.realtime;
+  }
+  for (unsigned i = 0; thread == NULL && i < scheduler.num_threads; ++i) {
     if (++scheduler.next_thread >= scheduler.num_threads) {
       scheduler.next_thread = 0;
     }

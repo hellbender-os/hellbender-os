@@ -42,6 +42,7 @@ kernel/module.o \
 kernel/thread.o \
 kernel/tss.o \
 kernel/scheduler.o \
+kernel/pit.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

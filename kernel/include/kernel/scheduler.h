@@ -4,6 +4,7 @@
 #include <kernel/thread.h>
 
 void scheduler_initialize();
+void scheduler_set_realtime_thread(thread_t *thread);
 void scheduler_add_thread(thread_t *thread);
 
 __attribute__((__noreturn__))

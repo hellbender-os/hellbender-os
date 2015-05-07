@@ -7,6 +7,7 @@
 #include <kernel/kstdlib.h>
 #include <kernel/idt.h>
 #include <kernel/isr.h>
+#include <kernel/pit.h>
 #include <kernel/pic_isr.h>
 #include <kernel/vmem.h>
 #include <kernel/domain.h>
@@ -29,6 +30,7 @@ kernel_t kernel;
 uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 void kernel_init_interrupts() {
+  pit_initialize();
   idt_initialize();
   isr_initialize();
   isr_pic_enable(32); // timer0
@@ -50,14 +52,18 @@ void kernel_main(void) {
   // it is a special formatter binary, where entry point is at the beginning,
   // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
-  thread_t *sys_thread = thread_allocate(NULL);
-  thread_t *usr_thread = thread_allocate(core->start);
+  thread_t *sys1_thread = thread_allocate(NULL);
+  thread_t *sys2_thread = thread_allocate(NULL);
+  thread_t *usr1_thread = thread_allocate(core->start);
+  thread_t *usr2_thread = thread_allocate(core->start);
 
-  pic_isr_initialize(sys_thread);
+  thread_set_current(sys1_thread); // so that something is mapped in the memory.
+  pic_isr_initialize(sys1_thread, sys2_thread);
   idt_enable_interrupts();
-
-  scheduler_add_thread(sys_thread);
-  scheduler_add_thread(usr_thread);
+  scheduler_set_realtime_thread(sys1_thread);
+  scheduler_add_thread(sys2_thread);
+  scheduler_add_thread(usr1_thread);
+  scheduler_add_thread(usr2_thread);
   scheduler_goto_next();
 }
 
