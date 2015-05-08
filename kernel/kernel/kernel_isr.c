@@ -10,6 +10,7 @@
 #include <kernel/pic_isr.h>
 #include <kernel/thread.h>
 #include <kernel/scheduler.h>
+#include <kernel/mem.h>
 
 #include <stdint.h>
 
@@ -36,7 +37,12 @@ void isr_routine_80(void* isr_stack, void *stack) {
 
   switch(params->eax) {
   case SYSCALL_PRINT:
+    // TODO: limit string length, don't write out of screen.
     kprintf((const char*)params->edx);
+    break;
+  case SYSCALL_ALLOC:
+    // TODO: memory must by contained within thread address space.
+    mem_alloc_mapped((void*)params->edx, params->ecx);
     break;
   case SYSCALL_EXIT:
     kprintf("Exit: %x\n", (unsigned)params->edx);

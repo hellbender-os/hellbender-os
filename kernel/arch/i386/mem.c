@@ -86,6 +86,14 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
     size_t size = memory_map[i].length_low;
     mem.total_memory += size;
 
+    // avoid partially mapped pages.
+    if (base % PAGE_SIZE) {
+      size_t delta = PAGE_SIZE - base % PAGE_SIZE;
+      base += delta;
+      size -= delta;
+      size -= size % PAGE_SIZE;
+    }
+
     // first 4MB is recorded as free pages.
     while (base < TABLE_SIZE && size >= PAGE_SIZE) {
       // skip pages reserved for kernel and core service.

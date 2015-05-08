@@ -31,12 +31,17 @@ $(ARCH_FREEOBJS) \
 stdio/sprintf.o \
 stdlib/itoa.o \
 stdlib/utoa.o \
+stdlib/calloc.o \
+stdlib/free.o \
+stdlib/malloc.o \
+stdlib/realloc.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
 string/strcmp.o \
+heap/heap.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \

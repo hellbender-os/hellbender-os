@@ -14,7 +14,11 @@ void abort(void);
 char* itoa(int value, char* str, int base);
 char* _utoa(unsigned value, char* str, int base);
 
+void* calloc(size_t num, size_t size);
+void free(void* ptr);
 void* malloc(size_t size);
+void* realloc(void* ptr, size_t size);
+  
 void exit(int status);
   
 #ifdef __cplusplus

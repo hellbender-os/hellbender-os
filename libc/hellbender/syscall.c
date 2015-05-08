@@ -6,6 +6,11 @@ void syscall_print(const char* str) {
       : "a"(SYSCALL_PRINT), "d"(str));
 }
 
+void syscall_allocate(void* address, unsigned size) {
+  asm(SYSCALL : "=m"(__force_order)
+      : "a"(SYSCALL_ALLOC), "d"(address), "c"(size));
+}
+
 __attribute__((__noreturn__)) void syscall_exit(int status) {
   asm(SYSCALL : "=m"(__force_order)
       : "a"(SYSCALL_EXIT), "d"(status));
