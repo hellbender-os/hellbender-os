@@ -1,10 +1,13 @@
 #ifndef _KERNEL_THREAD_H
 #define _KERNEL_THREAD_H
 
-#include <stddef.h>
+#include <kernel/kernel.h>
 
 // current thread page table is mapped into this address.
 #define THREAD_OFFSET 0x800000
+
+#define THREAD_HEAP_BOTTOM (THREAD_OFFSET+2*PAGE_SIZE)
+#define THREAD_HEAP_TOP (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
 
 // NEW for just created thread, OLD for threads that have been running.
 #define THREAD_STATE_NEW  0xA11B00b5

@@ -68,7 +68,7 @@ void* thread_grow_stack(thread_t *thread, size_t size) {
     kabort();
   }
   // thread stack has 1MB limit.
-  if (thread->stack_bottom > (void*)(THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)) {
+  if (thread->stack_bottom > (void*)THREAD_HEAP_TOP) {
     thread->stack_bottom -= size;
     mem_alloc_mapped(thread->stack_bottom, size);
   } else {

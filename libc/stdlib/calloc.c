@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include <sys/heap.h>
 
 void* calloc(size_t num, size_t size) {
   void* ptr = malloc(num * size);

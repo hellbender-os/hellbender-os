@@ -1,24 +1,11 @@
 #include <sys/heap.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int kprintf(const char* restrict format, ...)
-{
-  printf("somethign\n");
-  return 0;
-}
-
-void kabort() {
-  printf("error\n");
-}
-
-void heap_sanity_check(heap_t *heap);
+void heap_debug_small(smallheap_t *heap);
 
 uint8_t memory[256*1024];
-
-void mem_alloc_mapped(void* address, size_t size) {
-  memset(address, 0, size);
-}
 
 #define MAX_ALLOC_SIZE 250
 
@@ -57,10 +44,10 @@ void check_data(data_t* ptr, data_t *array, int size) {
 
 int main() {
   wilderness_t wild;
-  wild_init(&wild, memory, memory + sizeof(memory), 4096);
+  heap_init_wilderness(&wild, memory, memory + sizeof(memory), 4096);
 
-  heap_t heap;
-  heap_init(&heap, &wild);
+  smallheap_t heap;
+  heap_init_small(&heap, &wild);
   unsigned max_alloc = 0;
   unsigned total_alloc = 0;
 
@@ -73,8 +60,8 @@ int main() {
     data[i].size = test;
     total_alloc += data[i].size;
     if (total_alloc > max_alloc) max_alloc = total_alloc;
-    data[i].ptr = heap_malloc(&heap, data[i].size);
-    heap_sanity_check(&heap);
+    data[i].ptr = heap_malloc_small(&heap, data[i].size);
+    heap_debug_small(&heap);
     data[i].start = (unsigned)(((uint8_t*)data[i].ptr) - memory);
     data[i].end = data[i].start + data[i].size;
     printf("allocated %4u bytes @ %6u - %6u\n", (unsigned)data[i].size,
@@ -90,13 +77,13 @@ int main() {
     if (j == 82) {
       printf("test\n");
     }
-    heap_free(&heap, data[idx].ptr);
-    heap_sanity_check(&heap);
+    heap_free_small(&heap, data[idx].ptr);
+    heap_debug_small(&heap);
     data[idx].size = rand() % MAX_ALLOC_SIZE + 1;
     total_alloc += data[idx].size;
     if (total_alloc > max_alloc) max_alloc = total_alloc;
-    data[idx].ptr = heap_malloc(&heap, data[idx].size);
-    heap_sanity_check(&heap);
+    data[idx].ptr = heap_malloc_small(&heap, data[idx].size);
+    heap_debug_small(&heap);
     data[idx].start = (unsigned)(((uint8_t*)data[idx].ptr) - memory);
     data[idx].end = data[idx].start + data[idx].size;
     printf("allocated %4u bytes @ %6u - %6u\n", (unsigned)data[idx].size,

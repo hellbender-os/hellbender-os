@@ -41,7 +41,11 @@ string/memmove.o \
 string/memset.o \
 string/strlen.o \
 string/strcmp.o \
-heap/heap.o \
+heap/heap_init.o \
+heap/heap_grow.o \
+heap/heap_free.o \
+heap/heap_malloc.o \
+heap/heap_realloc.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
@@ -51,6 +55,7 @@ stdio/puts.o \
 stdlib/abort.o \
 stdlib/exit.o \
 hellbender/syscall.o \
+hellbender/libc_init.o \
 
 OBJS:=\
 $(FREEOBJS) \

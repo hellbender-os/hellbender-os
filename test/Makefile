@@ -27,7 +27,12 @@ TESTCASES:=\
 test_heap
 
 LIBC_OBJS:=\
-../libc/heap/heap.o \
+../libc/heap/heap_init.o \
+../libc/heap/heap_grow.o \
+../libc/heap/heap_free.o \
+../libc/heap/heap_malloc.o \
+../libc/heap/heap_realloc.o \
+../libc/heap/heap_debug.o \
 
 HOST_OBJS:=$(LIBC_OBJS:.o=.host.o)
 
