@@ -3,10 +3,10 @@
 
 #include <stdint.h>
 #include <kernel/multiboot.h>
+#include <kernel/module.h>
 
 void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
-                          uintptr_t kernel_bottom, uintptr_t kernel_top,
-                          uintptr_t core_bottom, uintptr_t core_top);
+                          module_binary_t *binaries, unsigned nof_binaries);
 
 uintptr_t mem_alloc_page();
 void mem_free_page(uintptr_t page);

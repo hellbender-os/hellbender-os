@@ -22,9 +22,6 @@ extern void kernel_enter_ring3(uint32_t data_selector,
 
 extern void kernel_return_ring3();
 
-typedef struct kernel {
-} kernel_t;
-
 kernel_t kernel;
 
 uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
@@ -49,8 +46,6 @@ void kernel_main(void) {
   kprintf("Hello, kernel World!\n");
 
   // core service has been mapped to the DS and CS by kernel_early.
-  // it is a special formatter binary, where entry point is at the beginning,
-  // and it includes a special module_t header at offset 8.
   domain_t *core = domain_allocate_module((void*)CORE_OFFSET);
   thread_t *sys1_thread = thread_allocate(NULL);
   thread_t *sys2_thread = thread_allocate(NULL);
@@ -58,7 +53,8 @@ void kernel_main(void) {
   thread_t *usr2_thread = thread_allocate(core->start);
 
   thread_set_current(sys1_thread); // so that something is mapped in the memory.
-  pic_isr_initialize(sys1_thread, sys2_thread);
+  core_service_t *core_info = (core_service_t*)(CORE_MODULE->module_info);
+  pic_isr_initialize(sys1_thread, sys2_thread, core_info);
   idt_enable_interrupts();
   scheduler_set_realtime_thread(sys1_thread);
   scheduler_add_thread(sys2_thread);

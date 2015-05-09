@@ -61,8 +61,7 @@ uint8_t mem_free_pages2[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
  * Kernel and core service module area are excluded.
  */
 void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
-                          uintptr_t kernel_bottom, uintptr_t kernel_top,
-                          uintptr_t core_bottom, uintptr_t core_top) {
+                          module_binary_t *binaries, unsigned nof_binaries) {
   memset(&mem, 0, sizeof(mem));
   memset(mem_free_pages1, 0, PAGE_SIZE);
   memset(mem_free_pages2, 0, PAGE_SIZE);
@@ -74,10 +73,12 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
   mem.second->header.this = (uintptr_t)mem_free_pages2;
 
   // round the input values to page boundaries.
-  kernel_bottom -= kernel_bottom % PAGE_SIZE;
-  if (kernel_top % PAGE_SIZE) kernel_top += PAGE_SIZE - kernel_top % PAGE_SIZE;
-  core_bottom -= core_bottom % PAGE_SIZE;
-  if (core_top % PAGE_SIZE) core_top += PAGE_SIZE - core_top % PAGE_SIZE;
+  for (unsigned j = 0; j < nof_binaries; ++j) {
+    binaries[j].bottom -= binaries[j].bottom % PAGE_SIZE;
+    if (binaries[j].top % PAGE_SIZE) {
+      binaries[j].top += PAGE_SIZE - binaries[j].top % PAGE_SIZE;
+    }
+  }
 
   // process memory map information provided by GRUB:
   unsigned j = 0;
@@ -97,9 +98,18 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
     // first 4MB is recorded as free pages.
     while (base < TABLE_SIZE && size >= PAGE_SIZE) {
       // skip pages reserved for kernel and core service.
-      uintptr_t top = base+size;
-      if ((top <= kernel_bottom && top <= core_bottom)
-          || (base >= kernel_top && base >= core_top)) {
+      uintptr_t top = base+PAGE_SIZE;
+      int in_module = 0;
+      for (unsigned k = 0; k < nof_binaries; ++k) {
+        if ((top > binaries[k].bottom && top <= binaries[k].top)
+            || (base >= binaries[k].bottom && base < binaries[k].top)) {
+          in_module = 1;
+          //kprintf("page %x-%x collides with binary %x-%x\n",
+          //        (unsigned)base,(unsigned)top,
+          //        (unsigned)binaries[k].bottom, (unsigned)binaries[k].top);
+        }
+      }
+      if (!in_module) {
         mem_free_page(base);
       }
       base += PAGE_SIZE;

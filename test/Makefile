@@ -24,29 +24,31 @@ LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS)
 
 TESTCASES:=\
-test_heap
+test_heap \
+test_mem \
 
-LIBC_OBJS:=\
-../libc/heap/heap_init.o \
-../libc/heap/heap_grow.o \
-../libc/heap/heap_free.o \
-../libc/heap/heap_malloc.o \
-../libc/heap/heap_realloc.o \
-../libc/heap/heap_debug.o \
-
-HOST_OBJS:=$(LIBC_OBJS:.o=.host.o)
-
-OBJS:=\
-$(HOST_OBJS) \
+TEST_HEAP_OBJS:=\
+../libc/heap/heap_init.host.o \
+../libc/heap/heap_grow.host.o \
+../libc/heap/heap_free.host.o \
+../libc/heap/heap_malloc.host.o \
+../libc/heap/heap_realloc.host.o \
+../libc/heap/heap_debug.host.o \
 test_heap.o \
 
+TEST_MEM_OBJS:=\
+../kernel/arch/i386/mem.host.o \
+test_mem.o \
 
 all: install
 
 .PHONY: all clean install
 
-test_heap: $(OBJS) $(LIB_DEPS)
-	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(LIBS)
+test_heap: $(TEST_HEAP_OBJS) $(LIB_DEPS)
+	$(CC) -o $@ $(CFLAGS) $(TEST_HEAP_OBJS) $(LDFLAGS) $(LIBS)
+
+test_mem: $(TEST_MEM_OBJS) $(LIB_DEPS)
+	$(CC) -o $@ $(CFLAGS) $(TEST_MEM_OBJS) $(LDFLAGS) $(LIBS)
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
@@ -65,5 +67,6 @@ clean:
 #	rm -f *.o */*.o */*/*.o *~ */*~ */*/*~
 
 install: $(TESTCASES)
-	./test_heap
+	./test_mem
+#	./test_heap
 # TODO: run test cases

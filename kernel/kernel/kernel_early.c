@@ -42,15 +42,11 @@
 #define MAX_MEMORY_MAP_ELEMENTS 32
 
 typedef struct kernel_early {
-  uintptr_t kernel_bottom;  // physical address range of kernel ELF.
-  uintptr_t kernel_top;
-  uintptr_t text_bottom; // physical address range of kernel code.
-  uintptr_t text_top;
-
-  uintptr_t core_bottom; // physical address range of core service.
-  uintptr_t core_top;
-  kernel_module_t core; // core segment sizes on disk image.
-
+  // physical address ranges where kernel modules are loaded.
+  // the first one is the actual kernel.
+  unsigned nof_binaries;
+  module_binary_t binaries[MAX_MODULES];
+  
   // memory map information copied from multiboot header.
   unsigned memory_map_elements;
   memory_map_t memory_map[MAX_MEMORY_MAP_ELEMENTS];
@@ -65,7 +61,7 @@ static uintptr_t max(uintptr_t a, uintptr_t b) {
   return a < b ? b : a;
 }
 
-void kernel_early_process_info(kernel_early_t *kernel,
+void kernel_early_process_info(kernel_early_t *early,
                                multiboot_info_t *info) {
 #ifdef DEBUG
   kprintf("kernel_early_process_info\n");
@@ -82,11 +78,11 @@ void kernel_early_process_info(kernel_early_t *kernel,
       (unsigned)map->length_low);
     */
     if (map->type == 1) {
-      if (kernel->memory_map_elements > MAX_MEMORY_MAP_ELEMENTS) {
+      if (early->memory_map_elements > MAX_MEMORY_MAP_ELEMENTS) {
         kprintf("Maximum number of memory map elements exceeded!");
         kabort();
       }
-      memcpy(&kernel->memory_map[kernel->memory_map_elements++],
+      memcpy(&early->memory_map[early->memory_map_elements++],
              map, sizeof(memory_map_t));
     }
     mm += map->size;
@@ -121,49 +117,68 @@ void kernel_early_process_info(kernel_early_t *kernel,
   }
 
   // these are the limits for the whole kernel, and kernel code.
-  kprintf("Kernel found at %x - %x; code at %x - %x\n",
-          (unsigned)min_data, (unsigned)max_data,
-          (unsigned)min_text, (unsigned)max_text);
-  kernel->kernel_bottom = min_data;
-  kernel->kernel_top = max_data;
-  kernel->text_bottom = min_text;
-  kernel->text_top = max_text;
-
-  // find the core service module.
+  {
+    kprintf("Kernel found at %x - %x; code at %x - %x\n",
+            (unsigned)min_data, (unsigned)max_data,
+            (unsigned)min_text, (unsigned)max_text);
+    module_binary_t binary;
+    binary.bottom = min_data;
+    binary.top = max_data;
+    kernel_module_t module = {0};  
+    module.bottom = min_data;
+    module.top = max_data;
+    module.text_bottom = min_text;
+    module.text_top = max_text;
+    // we put kernel and module data into these arrays.
+    early->binaries[0] = binary;
+    early->nof_binaries = 1;
+    kernel.modules[0] = module;
+    kernel.nof_modules = 1;
+  }
+  
+  // find all modules, make sure core is one of them.
+  int core_found = 0;
   module_t *modules = (module_t*)info->mods_addr;
   for (unsigned i = 0; i < info->mods_count; ++i) {
-    char *str = (char*)modules[i].string;
-    kprintf("Module: %s\n", str);
-    if (strcmp("--core", str) == 0) {
+    module_binary_t binary;
+    binary.bottom = (uintptr_t)modules[i].mod_start;
+    binary.top = (uintptr_t)modules[i].mod_end;
+    kernel_module_t *mod_ptr = (kernel_module_t*)binary.bottom;
+    int idx = early->nof_binaries++;
+    early->binaries[idx] = binary;
+    kernel.modules[idx] = *mod_ptr;
+    kernel.nof_modules = early->nof_binaries;
+
+    if (mod_ptr->bottom == CORE_OFFSET) {
+      core_found = 1;
       kprintf("Found core service at %x - %x\n",
-              (unsigned)modules[i].mod_start,
-              (unsigned)modules[i].mod_end);
-      kernel->core_bottom = modules[i].mod_start;
-      kernel->core_top = modules[i].mod_end;
+              binary.bottom, binary.top);
+    } else {
+      kprintf("Found a module at %x - %x\n",
+              binary.bottom, binary.top);
     }
+    kprintf("Mapped into %x - %x\n", mod_ptr->bottom, mod_ptr->top);
   }
-  if (!kernel->core_bottom) {
+  if (!core_found) {
     kprintf("Core service not found!\n");
     kabort();
   }
-  kernel_module_t* core_module = (kernel_module_t*)kernel->core_bottom;
-  kernel->core = *core_module;
-
 }
 
-void kernel_early_init_paging(kernel_early_t *kernel) {
+void kernel_early_init_paging() {
 #ifdef DEBUG
   kprintf("kernel_early_init_paging\n");
 #endif
   
   // map kernel code into CS section.
-  mmap_early_map((void*)(CS_BASE + kernel->text_bottom), kernel->text_bottom,
-                 kernel->text_top - kernel->text_bottom,
+  mmap_early_map((void*)(CS_BASE + kernel.modules[0].text_bottom),
+                 kernel.modules[0].text_bottom,
+                 kernel.modules[0].text_top - kernel.modules[0].text_bottom,
                  MMAP_ATTRIB_KERNEL);
   
   // map the whole kernel into DS section for now, we'll remove code later.
-  mmap_early_map((void*)kernel->kernel_bottom, kernel->kernel_bottom,
-                 kernel->kernel_top - kernel->kernel_bottom,
+  mmap_early_map((void*)kernel.modules[0].bottom, kernel.modules[0].bottom,
+                 kernel.modules[0].top - kernel.modules[0].bottom,
                  MMAP_ATTRIB_KERNEL);
 
   // and enable paging.
@@ -237,28 +252,41 @@ void kernel_early_finalize(kernel_early_t *early) {
   mmap_early_finalize();
 
   mem_early_initialize(early->memory_map, early->memory_map_elements,
-                       early->kernel_bottom, early->kernel_top,
-                       early->core_bottom, early->core_top);
+                       early->binaries, early->nof_binaries);
   
   // NOW WE CAN USE NON-EARLY FUNCTIONS!
   
   // move the VGA text buffer to free up the virtual address space under 1MB.
   terminal_finalize();
 
-  // remove write permissions from executable pages in the DS segment.
-  mmap_remap((void*)early->text_bottom, early->text_top - early->text_bottom,
-             MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
-
   // protect stack by unmapping surrounding pages,
   // and make those guard pages available for use.
   mem_free_page(mmap_unmap_page(kernel_stack));
   mem_free_page(mmap_unmap_page(KERNEL_STACK_TOP));
 
-  // map the core service image so that kernel can access it later.
-  mmap_map((void*)(CORE_OFFSET), early->core_bottom,
-           early->core_top - early->core_bottom, MMAP_ATTRIB_USER);
-  mmap_map((void*)(CS_BASE + CORE_OFFSET), early->core_bottom,
-           early->core_top - early->core_bottom, MMAP_ATTRIB_USER);
+  // map modules so that kernel can access them later.
+  for (unsigned i = 1; i < early->nof_binaries; ++i) {
+    mmap_map((void*)(kernel.modules[i].bottom), early->binaries[i].bottom,
+             kernel.modules[i].top - kernel.modules[i].bottom,
+             MMAP_ATTRIB_USER);
+    unsigned text_offset =
+      kernel.modules[i].text_bottom - kernel.modules[i].bottom;
+    unsigned text_size =
+      kernel.modules[i].text_top - kernel.modules[i].text_bottom;
+    mmap_map((void*)(CS_BASE + kernel.modules[i].text_bottom),
+             early->binaries[i].bottom + text_offset,
+             text_size, MMAP_ATTRIB_PRESENT|MMAP_ATTRIB_USERMODE);
+  }
+
+  // remove write permissions from executable pages in the DS segment.
+  mmap_remap((void*)kernel.modules[0].text_bottom,
+             kernel.modules[0].text_top - kernel.modules[0].text_bottom,
+             MMAP_ATTRIB_PRESENT);
+  for (unsigned i = 0; i < early->nof_binaries; ++i) {
+    mmap_remap((void*)kernel.modules[i].text_bottom,
+               kernel.modules[i].text_top - kernel.modules[i].text_bottom,
+               MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
+  }
 }
 
 void kernel_early(uint32_t magic, multiboot_info_t *info) {
@@ -271,11 +299,11 @@ void kernel_early(uint32_t magic, multiboot_info_t *info) {
 #endif
     
   if (magic == MULTIBOOT_BOOTLOADER_MAGIC) {
-    kernel_early_t kernel = {0};
-    kernel_early_process_info(&kernel, info);
-    kernel_early_init_paging(&kernel);
-    kernel_early_init_segments(&kernel);
-    kernel_early_finalize(&kernel);
+    kernel_early_t early = {0};
+    kernel_early_process_info(&early, info);
+    kernel_early_init_paging();
+    kernel_early_init_segments(&early);
+    kernel_early_finalize(&early);
   } else {
     kprintf("No multiboot!");
     kabort();

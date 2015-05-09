@@ -8,9 +8,5 @@
         .long _hellbender_text_bottom
         .long _hellbender_text_top
         .long _start
+        .long _hellbender_module_info
         .long _hellbender_checksum
-
-        # core service isr functions.
-        .long keyboard_isr
-        .long timer_isr
-        

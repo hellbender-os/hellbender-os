@@ -40,13 +40,17 @@ void terminal_early_initialize(void)
 
 void terminal_finalize(void) {
   // we move VGA buffer from its physical location into kernel data area.
+
+  // make the underlying RAM avaiable again (unmap also the guard pages).
+  mem_free_page(mmap_unmap_page(terminal_mapped_vga));
+  mem_free_page(mmap_unmap_page(terminal_mapped_vga + 1*PAGE_SIZE));
+  mem_free_page(mmap_unmap_page(terminal_mapped_vga + 2*PAGE_SIZE));
+
+  // then just move the terminal memory area.
   mmap_map_page(terminal_mapped_vga + PAGE_SIZE, (uintptr_t)VGA_MEMORY,
                 MMAP_ATTRIB_KERNEL);
-  mem_free_page(mmap_unmap_page((void*)VGA_MEMORY));
+  mmap_unmap_page((void*)VGA_MEMORY);
 
-  // unmap also the guard pages.
-  mem_free_page(mmap_unmap_page(terminal_mapped_vga));
-  mem_free_page(mmap_unmap_page(terminal_mapped_vga + 2*PAGE_SIZE));
   terminal_buffer = (uint16_t*)(terminal_mapped_vga + PAGE_SIZE);
 }
 

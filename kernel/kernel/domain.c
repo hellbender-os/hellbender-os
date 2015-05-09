@@ -68,7 +68,7 @@ domain_t* domain_allocate_module(void* module_table) {
   // module is already fully mapped in CS and DS.
   kernel_module_t *module = (kernel_module_t*)module_table;
   if (!module_check_header(module)) {
-    kprintf("invalid core module!\n");
+    kprintf("invalid kernel module!\n");
     kabort();
   }
   void* relative = base - module->bottom;
@@ -82,10 +82,6 @@ domain_t* domain_allocate_module(void* module_table) {
   domain->text_top = relative + module->text_top;
   domain->heap_bottom = domain->heap_top = ceil_page(domain->module_top);
   domain->start = relative + module->start;
-
-  // protect text segment by making it read only in DS.
-  mmap_remap(domain->text_bottom, domain->text_top - domain->text_bottom,
-             MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
   return domain;
 }
 

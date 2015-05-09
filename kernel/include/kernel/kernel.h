@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 
+#include <kernel/module.h>
 #include <kernel/tss.h>
 
 extern unsigned long __force_order;
@@ -28,7 +29,17 @@ extern unsigned long __force_order;
 #define SEL_LAST        0x30
 #define SEL_COUNT       ((SEL_LAST/8)+1)
 
-typedef struct kernel kernel_t;
+// maximum number of modules that can be loaded by GRUB (kernel included).
+#define MAX_MODULES 4
+
+typedef struct kernel {
+  // text and data address ranges for all modules.
+  // the first one is the actual kernel.
+  unsigned nof_modules;
+  kernel_module_t modules[MAX_MODULES];
+} kernel_t;
+
+extern kernel_t kernel;
 
 // kernel stack is proceted by two unmapped pages.
 // actual top address is kernel_stack + kernel_stack_size.

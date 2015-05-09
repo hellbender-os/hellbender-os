@@ -22,12 +22,13 @@ typedef struct pic_isr {
 
 pic_isr_t pic_isr;
 
-void pic_isr_initialize(thread_t *timer_thread, thread_t *other_thread) {
+void pic_isr_initialize(thread_t *timer_thread, thread_t *other_thread,
+                        core_service_t *core) {
   memset(&pic_isr, 0, sizeof(pic_isr));
   pic_isr.timer_thread = timer_thread;
   pic_isr.thread = other_thread;
-  pic_isr.routines[0] = (void*)CORE_SERVICE->timer_isr;
-  pic_isr.routines[1] = (void*)CORE_SERVICE->keyboard_isr;
+  pic_isr.routines[0] = (void*)core->timer_isr;
+  pic_isr.routines[1] = (void*)core->keyboard_isr;
 }
 
 __attribute__((__noreturn__))

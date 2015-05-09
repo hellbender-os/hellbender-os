@@ -24,7 +24,6 @@ thread_t* thread_allocate(void *start_address) {
   uintptr_t page_table = mem_alloc_page();
   uintptr_t thread_page = mem_alloc_page();
   uintptr_t stack_page = mem_alloc_page();
-  
   // we have a virtual memory slot for this thread at thread_id*PAGE_SIZE.
   // first we use that slot to clear the page table:
   void* tmp = (thread_t*)mmap_map_page((void*)(thread_id * PAGE_SIZE),
