@@ -1,9 +1,6 @@
 # hellbender-os
 Hellbender Operating System - research project
-==============================================
-
-What we currently have
-----------------------
+----------------------------------------------
 
 ###  basic features:
   * micro-kernel approach.
