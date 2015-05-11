@@ -1,14 +1,15 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdio.h>
-#include <kernel/kstdlib.h>
 #include <kernel/isr.h>
-#include <kernel/io.h>
+#include <kernel/pic.h>
 #include <kernel/thread.h>
 #include <kernel/module.h>
+#include <kernel/process.h>
 #include <kernel/scheduler.h>
 
 typedef struct pic_isr {
@@ -22,13 +23,28 @@ typedef struct pic_isr {
 
 pic_isr_t pic_isr;
 
-void pic_isr_initialize(thread_t *timer_thread, thread_t *other_thread,
-                        core_service_t *core) {
+void pic_isr_stage_4_init() {
+  memset(&pic_isr, 0, sizeof(pic_isr));
+  process_t *core_process = kernel.processes[kernel.core_module];
+  
+  // we need 2 threads: one to process timer events (ensuring proper scheduing),
+  // and the other one for processing all other interrupts.
+  thread_t *timer_thread = thread_create(core_process->domain, NULL);
+  thread_t *other_thread = thread_create(core_process->domain, NULL);
+  scheduler_set_realtime_thread(timer_thread);
+  scheduler_add_thread(other_thread);
+
   memset(&pic_isr, 0, sizeof(pic_isr));
   pic_isr.timer_thread = timer_thread;
   pic_isr.thread = other_thread;
-  pic_isr.routines[0] = (void*)core->timer_isr;
-  pic_isr.routines[1] = (void*)core->keyboard_isr;
+  //TODO: core needs to be active for this!
+  //core_service_t *core =
+  //  (core_service_t*)kernel.modules[kernel.core_module].module_info;
+  //pic_isr.routines[0] = (void*)core->timer_isr;
+  //pic_isr.routines[1] = (void*)core->keyboard_isr;
+
+  pic_enable(32); // timer0
+  pic_enable(33); // keyboard
 }
 
 __attribute__((__noreturn__))
@@ -57,7 +73,7 @@ void pic_isr_process_next() {
 
 void pic_isr_process(unsigned int_num) {
   // interrupt numbers are 32..39 and 112..119
-  kprintf("interrupt %u\n", int_num);
+  printf("interrupt %u\n", int_num);
   int_num -= 32;
   if (int_num > 8) int_num -= 96;
 
@@ -68,7 +84,7 @@ void pic_isr_process(unsigned int_num) {
 }
 
 void isr_routine_32() {
-  //kprintf("isr_routine_32\n");
+  //printf("isr_routine_32\n");
   pic_isr.timer_thread->pic_line = 1;
   pic_isr.timer_thread->start_address = pic_isr.routines[0];
   pic_isr.timer_thread->state = THREAD_STATE_NEW;
@@ -77,63 +93,63 @@ void isr_routine_32() {
 }
 
 void isr_routine_33() {
-  //kprintf("isr_routine_33\n");
+  //printf("isr_routine_33\n");
   pic_isr_process(33);
 }
 
 void isr_routine_34() {
-  kprintf("isr_routine_34\n");
+  printf("isr_routine_34\n");
 }
 
 void isr_routine_35() {
-  kprintf("isr_routine_35\n");
+  printf("isr_routine_35\n");
 }
 
 void isr_routine_36() {
-  kprintf("isr_routine_36\n");
+  printf("isr_routine_36\n");
 }
 
 void isr_routine_37() {
-  kprintf("isr_routine_37\n");
+  printf("isr_routine_37\n");
 }
 
 void isr_routine_38() {
-  kprintf("isr_routine_38\n");
+  printf("isr_routine_38\n");
 }
 
 void isr_routine_39() {
-  if (!isr_pic_check_39()) return;
-  kprintf("isr_routine_39\n");
+  //if (!isr_pic_check_39()) return;
+  printf("isr_routine_39\n");
 }
 
 void isr_routine_112() {
-  kprintf("isr_routine_112\n");
+  printf("isr_routine_112\n");
 }
 
 void isr_routine_113() {
-  kprintf("isr_routine_113\n");
+  printf("isr_routine_113\n");
 }
 
 void isr_routine_114() {
-  kprintf("isr_routine_114\n");
+  printf("isr_routine_114\n");
 }
 
 void isr_routine_115() {
-  kprintf("isr_routine_115\n");
+  printf("isr_routine_115\n");
 }
 
 void isr_routine_116() {
-  kprintf("isr_routine_116\n");
+  printf("isr_routine_116\n");
 }
 
 void isr_routine_117() {
-  kprintf("isr_routine_117\n");
+  printf("isr_routine_117\n");
 }
 
 void isr_routine_118() {
-  kprintf("isr_routine_118\n");
+  printf("isr_routine_118\n");
 }
 
 void isr_routine_119() {
-  kprintf("isr_routine_119\n");
+  printf("isr_routine_119\n");
 }

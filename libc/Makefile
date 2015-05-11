@@ -29,33 +29,45 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
 stdio/sprintf.o \
+stdio/printf.o \
+stdio/puts.o \
+stdio/putchar.o \
 stdlib/itoa.o \
 stdlib/utoa.o \
 stdlib/calloc.o \
 stdlib/free.o \
 stdlib/malloc.o \
 stdlib/realloc.o \
+stdlib/labs.o \
+stdlib/abs.o \
+stdlib/ldiv.o \
+stdlib/div.o \
+stdlib/qsort.o \
+stdlib/bsearch.o \
+stdlib/system.o \
+stdlib/getenv.o \
+stdlib/abort.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
 string/strcmp.o \
+sched/sched_yield.o \
+semaphore/sem_open.o \
+semaphore/sem_post.o \
+semaphore/sem_wait.o \
 heap/heap_init.o \
 heap/heap_grow.o \
 heap/heap_free.o \
 heap/heap_malloc.o \
 heap/heap_realloc.o \
+hellbender/libc_init.o \
+hellbender/syscall.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
-stdio/printf.o \
-stdio/putchar.o \
-stdio/puts.o \
-stdlib/abort.o \
 stdlib/exit.o \
-hellbender/syscall.o \
-hellbender/libc_init.o \
 
 OBJS:=\
 $(FREEOBJS) \

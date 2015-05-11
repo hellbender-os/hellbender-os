@@ -7,11 +7,9 @@ extern unsigned long __force_order;
 #define isr_interrupt(interrupt) \
   asm volatile("int $" #interrupt : "=m"(__force_order));
 
-void isr_initialize();
-
-void isr_pic_eoi(unsigned interrupt);
-int isr_pic_check_39();
-void isr_pic_enable(unsigned interrupt);
-void isr_pic_disable(unsigned interrupt);
+void isr_stage_1_debugger();
+void isr_stage_3_trap();
+void isr_stage_3_syscall();
+void isr_stage_4_pic();
 
 #endif

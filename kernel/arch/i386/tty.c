@@ -18,12 +18,7 @@ uint16_t* terminal_buffer;
 // The two pages are guard pages that will be unmapped.
 uint8_t terminal_mapped_vga[3*PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
-void terminal_early_initialize(void)
-{
-  // direct-map also the VGA memory so that TTY works when paging is enabled.
-  mmap_early_map_page((void*)VGA_MEMORY, (uintptr_t)VGA_MEMORY,
-                      MMAP_ATTRIB_KERNEL);
-  
+void terminal_stage_1_init() {
   terminal_row = 0;
   terminal_column = 0;
   terminal_color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
@@ -38,7 +33,14 @@ void terminal_early_initialize(void)
     }
 }
 
-void terminal_finalize(void) {
+void terminal_stage_2_remap() {
+  // direct-map the VGA memory so that TTY works when paging is enabled.
+  mmap_stage_2_map_page((void*)VGA_MEMORY, (uintptr_t)VGA_MEMORY,
+                        MMAP_ATTRIB_KERNEL_RW);
+  
+}
+
+void terminal_stage_3_cleanup() {
   // we move VGA buffer from its physical location into kernel data area.
 
   // make the underlying RAM avaiable again (unmap also the guard pages).
@@ -48,7 +50,7 @@ void terminal_finalize(void) {
 
   // then just move the terminal memory area.
   mmap_map_page(terminal_mapped_vga + PAGE_SIZE, (uintptr_t)VGA_MEMORY,
-                MMAP_ATTRIB_KERNEL);
+                MMAP_ATTRIB_KERNEL_RW);
   mmap_unmap_page((void*)VGA_MEMORY);
 
   terminal_buffer = (uint16_t*)(terminal_mapped_vga + PAGE_SIZE);

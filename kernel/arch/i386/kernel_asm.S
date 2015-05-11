@@ -21,7 +21,8 @@ kernel_enter_ring3: // use when current thread state == NEW.
         iret
 
 kernel_return_ring3: // use when current thread state == OLD.
-        mov (0x800000), %eax  // current thread structure is there.
+        //xchg %bx,%bx
+        mov (0x400000), %eax  // current thread structure is there.
         mov %eax, %esp        // restore the thread kernel stack pointer.
 
         // restore the context.

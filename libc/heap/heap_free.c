@@ -10,7 +10,7 @@
 
 #include "heap_impl.h"
 
-void tinyheap_free_tiny(tinyheap_t *heap, void* ptr) {
+void heap_free_tiny(tinyheap_t *heap, void* ptr) {
   tinyblock_t* block = (tinyblock_t*)(((uint8_t*)ptr)-1);
   if (block->used.tag != 0xff) {
     printf("not a tinyheap block!\n");

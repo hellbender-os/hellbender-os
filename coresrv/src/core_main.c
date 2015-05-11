@@ -1,26 +1,26 @@
-#include <hellbender.h>
-
-extern volatile unsigned counter;
-int odd_even = 0;
-
-void even() {
-  while (counter < 200) {
-    if (counter % 20 == 0) {
-      syscall_print("even\n");
-    }
-  }
-}
-
-void odd() {
-  while (counter < 200) {
-    if (counter % 20 == 10) {
-      syscall_print("odd\n");
-    }
-  }
-}
+#include <stdio.h>
+#include <sched.h>
+#include <semaphore.h>
 
 int main(void) {
-  syscall_print("Hello, user World!\n");
-  if (odd_even++) even(); else odd();
-  return 0x1234;
+  printf("Core pre-init begins!\n");
+  sem_t* to_core = sem_open("kernel_to_core", 0);
+  sem_t* to_kernel = sem_open("core_to_kernel", 0);
+
+  // do initialization without interrupts.
+  
+  printf("Core pre-init done.\n");
+  sem_post(to_kernel);
+  
+  // kernel will enable interrupts.
+  
+  sem_wait(to_core);
+  printf("Core post-init begins.\n");
+
+  // do initialization with interrupts.
+  
+  printf("Core pose-init done.\n");
+  sem_post(to_kernel);
+
+  while (1) sched_yield();
 }

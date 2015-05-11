@@ -5,6 +5,32 @@
         __define_wrapper %IDX
         .endm
 
+        // ISR to use before system is ready for real action.
+        .extern isr_debugger
+        .global isr_wrapper_debug
+        .balign 4
+isr_wrapper_debug:
+        // save the state for debugging
+        xchg %bx,%bx
+        pushal
+        push %ds
+        push %es
+        push %fs
+        push %gs
+        mov %esp, %eax        // remember the thread kernel stack pointer.
+        
+        // we can use the botton of the stack in this emergency.
+	movl $(kernel_stack+2048+4096-8), %esp
+
+        // and then we jump to the debugging routine.
+        push %eax             // 2nd parameter: all registers.
+        add $(12*4), %eax
+        push %eax             // 1st parameter: interrupt specific
+        cld
+        push $0               // fake return address because we don't live this.
+        jmp isr_debugger
+        
+        
         // Context saving ISR wrappers.
         .macro __define_wrapper IDX
         .extern isr_routine_\IDX
@@ -12,16 +38,17 @@
         .balign 4
 isr_wrapper_\IDX\():
         // save the state to active thread kernel stack.
+        //xchg %bx,%bx
         pushal
         push %ds
         push %es
         push %fs
         push %gs
         mov %esp, %eax        // remember the thread kernel stack pointer.
-        mov %eax, (0x800000)  // current thread structure is there.
+        mov %eax, (0x400000)  // current thread structure is there.
         
         // now the context has been saved. time to switch to kernel stack.
-	movl $(kernel_stack+16384+4096), %esp
+	movl $(kernel_stack+16384+4096-8), %esp
         mov %ss, %bx          // copy kernel data selector into all registers.
         mov %bx, %ds
         mov %bx, %es
@@ -45,8 +72,8 @@ isr_wrapper_\IDX\():
         .balign 4
 isr_wrapper_\IDX\():
         // don't save the state because we are not returning.
-        // time to switch to kernel stack.
-	movl $(kernel_stack+16384+4096), %esp
+        //xchg %bx,%bx
+	movl $(kernel_stack+16384+4096-12), %esp
         mov %ss, %bx          // copy kernel data selector into all registers.
         mov %bx, %ds
         mov %bx, %es

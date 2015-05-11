@@ -29,20 +29,26 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 OBJS:=\
 $(KERNEL_ARCH_OBJS) \
-kernel/kernel_early.o \
+early/stage_1.o \
+early/stage_2.o \
+early/stage_3.o \
+early/stage_4.o \
+early/stage_5.o \
 kernel/kernel.o \
+kernel/isr_debugger.o \
 kernel/trap_isr.o \
 kernel/pic_isr.o \
 kernel/kernel_isr.o \
-kernel/kabort.o \
 kernel/khalt.o \
-kernel/kprintf.o \
 kernel/domain.o \
 kernel/module.o \
 kernel/thread.o \
 kernel/tss.o \
 kernel/scheduler.o \
 kernel/pit.o \
+kernel/pic.o \
+kernel/process.o \
+kernel/semaphore.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

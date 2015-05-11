@@ -7,12 +7,14 @@
 
 #if defined(__is_hellbender_kernel)
 #include <kernel/mem.h>
+#include <kernel/mmap.h>
 
 static inline void* do_allocate(void* address, size_t size) {
   // kernel can directly map stuff.
   // TODO: check virtual address space limits!
   uintptr_t end_ptr = (uintptr_t)address + size;
-  mem_alloc_mapped(address, size);
+  printf("Reserved heap space: %x - %x\n", (unsigned)address, (unsigned)end_ptr);
+  mem_alloc_mapped(address, size, MMAP_ATTRIB_USER_RW);
   return (void*)end_ptr;
 }
 
@@ -22,6 +24,7 @@ static inline void* do_allocate(void* address, size_t size) {
 static inline void* do_allocate(void* address, size_t size) {
   // libc must use syscall to allocate and map pages.
   uintptr_t end_ptr = (uintptr_t)address + size;
+  printf("Reserved heap space: %x - %x\n", (unsigned)address, (unsigned)end_ptr);
   syscall_allocate(address, size);
   return (void*)end_ptr;
 }

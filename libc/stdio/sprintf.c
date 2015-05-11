@@ -65,7 +65,7 @@ int sprintf(char *str, const char* restrict format, ...)
           format++;
           int i = va_arg(parameters, int);
           char s[16];
-          itoa(i, s, 10);
+          _itoa(i, s, 10);
           str = print(str, s, strlen(s));
         }
       else if ( *format == 'u')

@@ -63,7 +63,7 @@ int printf(const char* restrict format, ...)
 			format++;
 			int i = va_arg(parameters, int);
 			char s[16];
-			itoa(i, s, 10);
+			_itoa(i, s, 10);
 			print(s, strlen(s));
 		}
 		else if ( *format == 'u')

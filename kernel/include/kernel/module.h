@@ -19,10 +19,8 @@ typedef struct kernel_module {
   uint32_t checksum; // cast structure as uint16_t array, excluding the checksum field. checksum == the sum of the array.
 } __attribute__((packed)) kernel_module_t;
 
-
-// core module is mapped at a fixed address at the top of the address space.
-#define CORE_OFFSET 0x7F800000
-
+// core service module is loaded by GRUB.
+// core provides some basic services to get things running.
 typedef struct core_service {
   uint32_t this_size;
   uint32_t keyboard_isr;

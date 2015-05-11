@@ -10,7 +10,7 @@
 
 #include "heap_impl.h"
 
-void* tinyheap_malloc_small(tinyheap_t *heap, size_t size) {
+void* heap_malloc_tiny(tinyheap_t *heap, size_t size) {
   if (size == 0) return NULL;
   if (size > 7) {
     printf("too large allocation for tiny heap.\n");

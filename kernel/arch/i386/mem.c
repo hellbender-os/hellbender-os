@@ -1,9 +1,9 @@
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdlib.h>
-#include <kernel/kstdio.h>
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 
@@ -60,8 +60,8 @@ uint8_t mem_free_pages2[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
  * Initializes the free memory information based on GRUB memory maps.
  * Kernel and core service module area are excluded.
  */
-void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
-                          module_binary_t *binaries, unsigned nof_binaries) {
+void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
+                      module_binary_t *binaries, unsigned nof_binaries) {
   memset(&mem, 0, sizeof(mem));
   memset(mem_free_pages1, 0, PAGE_SIZE);
   memset(mem_free_pages2, 0, PAGE_SIZE);
@@ -104,7 +104,7 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
         if ((top > binaries[k].bottom && top <= binaries[k].top)
             || (base >= binaries[k].bottom && base < binaries[k].top)) {
           in_module = 1;
-          //kprintf("page %x-%x collides with binary %x-%x\n",
+          //printf("page %x-%x collides with binary %x-%x\n",
           //        (unsigned)base,(unsigned)top,
           //        (unsigned)binaries[k].bottom, (unsigned)binaries[k].top);
         }
@@ -118,8 +118,8 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
     // anything above 4MB is added as a range.
     if (size >= PAGE_SIZE) {
       if (j >= MEM_MAX_RANGES) {
-        kprintf("maximum number of memory ranges exceeded!\n");
-        kabort();
+        printf("maximum number of memory ranges exceeded!\n");
+        abort();
       }
       mem.ranges[j].base = base;
       mem.ranges[j].size = size;
@@ -128,7 +128,7 @@ void mem_early_initialize(memory_map_t *memory_map, unsigned map_elements,
     }
   }
 
-  kprintf("%u bytes of memory, %u bytes free.\n",
+  printf("%u bytes of memory, %u bytes free.\n",
           (unsigned)mem.total_memory, (unsigned)mem.available_memory);
 }
 
@@ -161,7 +161,7 @@ uintptr_t mem_alloc_page() {
     uintptr_t page = mem.first->header.this;
 
     // the new directory page is be mapped to replace of the old one.
-    mmap_map_page(mem.first, mem.second->header.next, MMAP_ATTRIB_KERNEL);
+    mmap_map_page(mem.first, mem.second->header.next, MMAP_ATTRIB_KERNEL_RW);
 
     // and the old "second" becomes the new "first".
     free_directory_t* tmp = mem.first;
@@ -172,8 +172,8 @@ uintptr_t mem_alloc_page() {
   }
 
   // we have run out of memory..
-  kprintf("Out of memory!\n");
-  kabort();
+  printf("Out of memory!\n");
+  abort();
 }
 
 void mem_free_page(uintptr_t page) {
@@ -193,7 +193,7 @@ void mem_free_page(uintptr_t page) {
 
   // we have to push the linked list.
   // the new page becomes our new directory, replacing the second directory.
-  mmap_map_page(mem.second, page, MMAP_ATTRIB_KERNEL);
+  mmap_map_page(mem.second, page, MMAP_ATTRIB_KERNEL_RW);
   mem.second->header.this = page;
   mem.second->header.next = mem.first->header.this;
   mem.second->header.free = 0;
@@ -204,11 +204,11 @@ void mem_free_page(uintptr_t page) {
   mem.second = tmp;
 }
 
-void* mem_alloc_mapped(void *virtual, size_t size) {
+void* mem_alloc_mapped(void *virtual, size_t size, unsigned mmap_attr) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   for (; size; size -= PAGE_SIZE, virtual += PAGE_SIZE) {
     uintptr_t physical = mem_alloc_page();
-    mmap_map_page(virtual, physical, MMAP_ATTRIB_USER);
+    mmap_map_page(virtual, physical, mmap_attr);
   }
   return virtual;
 }

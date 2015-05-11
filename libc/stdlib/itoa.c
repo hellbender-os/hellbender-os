@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-char* itoa(int value, char* str, int base) {
+char* _itoa(int value, char* str, int base) {
   char *retval = str;
   if (value < 0) {
     (*str++) = '-';

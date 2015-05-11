@@ -3,42 +3,63 @@
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdlib.h>
-#include <kernel/kstdio.h>
 #include <kernel/isr.h>
 #include <kernel/idt.h>
-#include <kernel/io.h>
 
 #define isr_set_idt(INTERRUPT) \
   extern void isr_wrapper_ ## INTERRUPT (); \
-  entry.offset = (uint32_t)&isr_wrapper_ ## INTERRUPT;  \
-  idt_set_entry(INTERRUPT, entry);
+  if (entry.offset) idt_set_entry(INTERRUPT, entry); \
+  else { \
+    entry.offset = (uint32_t)&isr_wrapper_ ## INTERRUPT; \
+    idt_set_entry(INTERRUPT, entry); \
+    entry.offset = 0; \
+  }
 
-void isr_remap_pic() {
-  outb(0x20, 0x11);
-  outb(0xA0, 0x11);
-  outb(0x21, 0x20);
-  outb(0xA1, 0x28);
-  outb(0x21, 0x04);
-  outb(0xA1, 0x02);
-  outb(0x21, 0x01);
-  outb(0xA1, 0x01);
-  outb(0x21, 0x0);
-  outb(0xA1, 0x0);
+static void isr_set_traps(idt_entry_t entry);
+static void isr_set_pics(idt_entry_t entry);
+static void isr_set_syscalls(idt_entry_t entry);
 
-  outb(0x21, 0xff);
-  outb(0xa1, 0xff);
+extern void isr_debugger();
+
+void isr_stage_1_debugger() {
+  idt_entry_t entry = (idt_entry_t) {
+    .offset = (uint32_t)&isr_debugger,
+    .type = IDT_TYPE_INTERRUPT_32,
+    .dpl = 0
+  };
+  isr_set_traps(entry);
+  isr_set_pics(entry);
+  isr_set_syscalls(entry);
 }
 
-void isr_initialize() {
-  isr_remap_pic();
-  
+void isr_stage_3_trap() {
   idt_entry_t entry = (idt_entry_t) {
     .offset = 0,
     .type = IDT_TYPE_INTERRUPT_32,
     .dpl = 0
   };
+  isr_set_traps(entry);
+}
 
+void isr_stage_3_syscall() {
+  idt_entry_t entry = (idt_entry_t) {
+    .offset = 0,
+    .type = IDT_TYPE_INTERRUPT_32,
+    .dpl = 0
+  };
+  isr_set_syscalls(entry);
+}
+
+void isr_stage_4_pic() {
+  idt_entry_t entry = (idt_entry_t) {
+    .offset = 0,
+    .type = IDT_TYPE_INTERRUPT_32,
+    .dpl = 0
+  };
+  isr_set_pics(entry);
+}
+
+static void isr_set_traps(idt_entry_t entry) {
   // set protected mode traps
   isr_set_idt(0);
   isr_set_idt(1);
@@ -72,7 +93,9 @@ void isr_initialize() {
   isr_set_idt(29);
   isr_set_idt(30);
   isr_set_idt(31);
+}
 
+static void isr_set_pics(idt_entry_t entry) {
   // set PIC interrupts
   isr_set_idt(32);
   isr_set_idt(33);
@@ -90,65 +113,11 @@ void isr_initialize() {
   isr_set_idt(117);
   isr_set_idt(118);
   isr_set_idt(119);
+}
 
+static void isr_set_syscalls(idt_entry_t entry) {
   // set kernel interrupts
   entry.dpl = 3;
   isr_set_idt(80);
   isr_set_idt(81);
-}
-
-#define PIC1		0x20		/* IO base address for master PIC */
-#define PIC2		0xA0		/* IO base address for slave PIC */
-#define PIC1_COMMAND	PIC1
-#define PIC1_DATA	(PIC1+1)
-#define PIC2_COMMAND	PIC2
-#define PIC2_DATA	(PIC2+1)
-#define PIC_EOI		0x20		/* End-of-interrupt command code */
- 
-void isr_pic_eoi(unsigned line) {
-  if (line > 8) {
-    outb(PIC2_COMMAND, PIC_EOI);
-  }
-  outb(PIC1_COMMAND, PIC_EOI);
-}
-
-int isr_pic_check_39() {
-  outb(PIC1_COMMAND, 0x0B);
-  unsigned char irr = inb(PIC1_COMMAND);
-  return irr & 0x80;
-}
-
-void isr_pic_disable(unsigned interrupt) {
-  int irq_line = interrupt - 32;
-  if (irq_line > 8) irq_line -= 72;
-
-  uint16_t port;
-  uint8_t value;
-  
-  if(irq_line < 8) {
-    port = PIC1_DATA;
-  } else {
-    port = PIC2_DATA;
-    irq_line -= 8;
-  }
-  value = inb(port) | (1 << irq_line);
-  outb(port, value);        
-
-}
-
-void isr_pic_enable(unsigned interrupt) {
-  int irq_line = interrupt - 32;
-  if (irq_line > 8) irq_line -= 72;
-
-  uint16_t port;
-  uint8_t value;
-  
-  if(irq_line < 8) {
-    port = PIC1_DATA;
-  } else {
-    port = PIC2_DATA;
-    irq_line -= 8;
-  }
-  value = inb(port) & ~(1 << irq_line);
-  outb(port, value);        
 }

@@ -6,8 +6,12 @@
 #include <kernel/kernel.h>
 
 typedef struct domain {
-  void* table_base; // address of the page table.
-  size_t table_size; // virtual address space size; multiples of TABLE_SIZE.
+  void* domain_base; // beginning of the virtual address space.
+  size_t domain_size; // virtual address space size; multiples of TABLE_SIZE.
+  // TODO: support domains larger than TABLE_SIZE.
+  // TODO: support domains with holes in their virtual memory.
+  uintptr_t page_table_ds; // physical address of the page table.
+  uintptr_t page_table_cs; // physical address of the page table.
 
   void* module_bottom; // address range where domain image was mapped.
   void* module_top;
@@ -15,15 +19,21 @@ typedef struct domain {
   void* text_top;
   void* heap_bottom; // range that contains heap; above module_top.
   void* heap_top;
+  void* heap_limit;
 
   void* start; // address of the entry function.
 } domain_t;
 
-// _bottom for applications, _top for services, _existing for core.
-domain_t* domain_allocate_bottom();
-domain_t* domain_allocate_top();
-domain_t* domain_allocate_module(void* module_table);
+// application domain from fixed addess,
+//domain_t* domain_create_application(); // fixed at APPLICATION_OFFSET
+//domain_t* domain_create_service(); // allocated from the top of address space.
+domain_t* domain_create_kernel(kernel_module_t* module);
+domain_t* domain_create_module(kernel_module_t* module,
+                               module_binary_t* binary); // from loaded binary.
 
 void* domain_grow_heap(domain_t *domain, size_t size); // returns new top.
+
+void domain_enable(domain_t* domain);
+void domain_disable(domain_t* domain);
 
 #endif

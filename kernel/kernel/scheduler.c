@@ -1,9 +1,11 @@
-#include <kernel/kernel.h>
-#include <kernel/scheduler.h>
-#include <kernel/kstdio.h>
-#include <kernel/kstdlib.h>
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <kernel/thread.h>
+#include <kernel/scheduler.h>
 
 typedef struct scheduler {
   thread_t* realtime;
@@ -24,8 +26,8 @@ void scheduler_set_realtime_thread(thread_t *thread) {
 
 void scheduler_add_thread(thread_t *thread) {
   if (scheduler.num_threads >= 16) {
-    kprintf("Max number of threads reached.\n");
-    kabort();
+    printf("Max number of threads reached.\n");
+    abort();
   }
   scheduler.threads[scheduler.num_threads++] = thread;
 }
@@ -33,7 +35,7 @@ void scheduler_add_thread(thread_t *thread) {
 __attribute__((__noreturn__))
 void scheduler_goto_next() {
   thread_t *thread = NULL;
-  if (scheduler.realtime->state != THREAD_STATE_DEAD) {
+  if (scheduler.realtime && scheduler.realtime->state != THREAD_STATE_DEAD) {
     thread = scheduler.realtime;
   }
   for (unsigned i = 0; thread == NULL && i < scheduler.num_threads; ++i) {
@@ -47,9 +49,9 @@ void scheduler_goto_next() {
     }
   }
   if (thread) {
-    thread_set_current(thread);
+    if (thread != kernel.current_thread) thread_set_current(thread);
     kernel_to_usermode();
   } else {
-    khalt();
+    kernel_halt();
   }
 }

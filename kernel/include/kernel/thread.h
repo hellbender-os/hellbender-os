@@ -1,13 +1,10 @@
 #ifndef _KERNEL_THREAD_H
 #define _KERNEL_THREAD_H
 
+#include <stdint.h>
+
 #include <kernel/kernel.h>
-
-// current thread page table is mapped into this address.
-#define THREAD_OFFSET 0x800000
-
-#define THREAD_HEAP_BOTTOM (THREAD_OFFSET+2*PAGE_SIZE)
-#define THREAD_HEAP_TOP (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
+#include <kernel/domain.h>
 
 // NEW for just created thread, OLD for threads that have been running.
 #define THREAD_STATE_NEW  0xA11B00b5
@@ -29,6 +26,7 @@ typedef struct thread {
   void* kernel_stack_ptr; // current pointer of the kernel stack. MUST BE FIRST!
 
   uint32_t thread_id; // unique identifier.
+  unsigned is_kernel; // true, if the thread runs using kernel selectors.
   uint32_t state; // new or old, depending if thread has been running.
   void* start_address; // start address for new threads.
   unsigned pic_line; // one based PIC line number; for PIC interrupt handlers.
@@ -38,12 +36,42 @@ typedef struct thread {
   
   void* stack_bottom; // range that contains stack; top of the address space.
   void* stack_top;
+
+  domain_t *home_domain;
+  void* heap_bottom;
+  void* heap_limit;
   
 } thread_t;
 
-#define CURRENT_THREAD ((thread_t*)THREAD_OFFSET)
+typedef struct thread_state {
+  uint32_t gs;
+  uint32_t fs;
+  uint32_t es;
+  uint32_t ds;
+  
+  uint32_t edi;
+  uint32_t esi;
+  uint32_t ebp;
+  uint32_t esp;
+  uint32_t ebx;
+  uint32_t edx;
+  uint32_t ecx;
+  uint32_t eax;
+} __attribute__((packed)) thread_state_t;
 
-thread_t* thread_allocate(void *start_address);
+#if defined(__is_hellbender_kernel)
+// kernel has full access to thread.
+#define CURRENT_THREAD ((thread_t*)THREAD_OFFSET)
+#define CURRENT_STATE ((thread_state_t*)(CURRENT_THREAD->kernel_stack_ptr))
+
+#else
+// ring3 has only read only access to thread info.
+#define CURRENT_THREAD ((thread_t*)(THREAD_OFFSET + 2*PAGE_SIZE))
+
+#endif
+
+void thread_initialize();
+thread_t* thread_create(domain_t *home_domain, void *start_address);
 void thread_set_current(thread_t* thread);
 
 void* thread_grow_stack(thread_t *thread, size_t size); // returns new bottom.

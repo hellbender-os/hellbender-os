@@ -4,7 +4,14 @@
 #define SYSCALL "int $80"
 #define SYSCALL_PRINT 0x01
 #define SYSCALL_ALLOC 0x02
+#define SYSCALL_CURRENT_DOMAIN 0x03
+#define SYSCALL_YIELD 0x04
 #define SYSCALL_EXIT  0xfe
+#define SYSCALL_SEM_OPEN 0x10
+#define SYSCALL_SEM_POST 0x11
+#define SYSCALL_SEM_WAIT 0x12
+
+
 
 #define SYSIRET "int $81"
 

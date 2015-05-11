@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-void vmem_initialize();
+void vmem_stage_3_init();
 
 // allocates TABLE_SIZE of unmapped virtual memory.
 void* vmem_alloc_bottom_table();

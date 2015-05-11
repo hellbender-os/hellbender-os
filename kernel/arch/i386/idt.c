@@ -1,10 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdlib.h>
-#include <kernel/kstdio.h>
 #include <kernel/idt.h>
 
 uint8_t idt_table[IDT_VECTORS*8];
@@ -14,7 +13,7 @@ typedef struct __attribute__((packed)) idt_address {
   uint32_t address;
 } idt_address_t;
 
-void idt_initialize() {
+void idt_stage_1_init() {
   memset(idt_table, 0, sizeof(idt_table));
 }
 
@@ -37,16 +36,15 @@ void idt_set_entry(unsigned interrupt, idt_entry_t source) {
   target[5] |= (source.type & 15);
 }
 
-void idt_enable_interrupts() {
+void idt_load() {
 #ifdef DEBUG
-  kprintf("idt_enable_interrupts\n");
+  printf("idt_enable_interrupts\n");
 #endif
 
   volatile idt_address_t idt // needs volatile because some wierd optimization.
     = (idt_address_t) { .address = (uint32_t)idt_table,
                         .size = sizeof(idt_table)-1 };
   asm ("lidt (%%eax);"
-       "sti"
        : /* no output registers */
        : "a"(&idt)
        : 

@@ -17,8 +17,9 @@ typedef struct idt_entry {
 #define IDT_TYPE_INTERRUPT_32 14
 #define IDT_TYPE_TRAP_32 15
 
-void idt_initialize();
+void idt_stage_1_init();
+void idt_stage_5_init();
 void idt_set_entry(unsigned interrupt, idt_entry_t source);
-void idt_enable_interrupts();
+void idt_load();
 
 #endif

@@ -10,7 +10,7 @@
 
 #include "heap_impl.h"
 
-void* tinyheap_realloc_tiny(tinyheap_t* heap, void* ptr, size_t size) {
+void* heap_realloc_tiny(tinyheap_t* heap, void* ptr, size_t size) {
   (void)(heap); (void)(ptr); (void)(size);
   return NULL;
 }

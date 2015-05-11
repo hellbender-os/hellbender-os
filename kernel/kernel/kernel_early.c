@@ -1,10 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdlib.h>
-#include <kernel/kstdio.h>
 #include <kernel/tty.h>
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
@@ -12,6 +12,8 @@
 #include <kernel/tss.h>
 #include <kernel/module.h>
 #include <kernel/thread.h>
+#include <kernel/idt.h>
+#include <kernel/isr.h>
 
 #include <kernel/multiboot.h>
 #include <kernel/elf32.h>
@@ -42,11 +44,6 @@
 #define MAX_MEMORY_MAP_ELEMENTS 32
 
 typedef struct kernel_early {
-  // physical address ranges where kernel modules are loaded.
-  // the first one is the actual kernel.
-  unsigned nof_binaries;
-  module_binary_t binaries[MAX_MODULES];
-  
   // memory map information copied from multiboot header.
   unsigned memory_map_elements;
   memory_map_t memory_map[MAX_MEMORY_MAP_ELEMENTS];
@@ -63,24 +60,22 @@ static uintptr_t max(uintptr_t a, uintptr_t b) {
 
 void kernel_early_process_info(kernel_early_t *early,
                                multiboot_info_t *info) {
-#ifdef DEBUG
-  kprintf("kernel_early_process_info\n");
-#endif
+  //printf("kernel_early_process_info\n");
 
   // copy all available memory map elements into kernel structure.
   uintptr_t mm_end = info->mmap_addr + info->mmap_length;
   for (uintptr_t mm = info->mmap_addr; mm < mm_end; mm += sizeof(uint32_t)) {
     memory_map_t *map = (memory_map_t*)mm;
     /*
-      kprintf("Memory .type=%u; .base=%u; .size=%u\n",
+      printf("Memory .type=%u; .base=%u; .size=%u\n",
       (unsigned)map->type,
       (unsigned)map->base_addr_low,
       (unsigned)map->length_low);
     */
     if (map->type == 1) {
       if (early->memory_map_elements > MAX_MEMORY_MAP_ELEMENTS) {
-        kprintf("Maximum number of memory map elements exceeded!");
-        kabort();
+        printf("Maximum number of memory map elements exceeded!");
+        abort();
       }
       memcpy(&early->memory_map[early->memory_map_elements++],
              map, sizeof(memory_map_t));
@@ -104,7 +99,7 @@ void kernel_early_process_info(kernel_early_t *early,
         max_text = max(max_text, shdr[i].sh_addr + shdr[i].sh_size);
       }
       //const char *name = &((const char *)shdr[i].sh_name)[shstrtab];
-      //kprintf("Section %s at %u; %u bytes; type = %u\n",
+      //printf("Section %s at %u; %u bytes; type = %u\n",
       //     name,
       //     (unsigned)shdr[i].sh_addr,
       //     (unsigned)shdr[i].sh_size,
@@ -112,13 +107,13 @@ void kernel_early_process_info(kernel_early_t *early,
     }
   }
   if (min_text < KERNEL_OFFSET) {
-    kprintf("Kernel loaded too low!");
-    kabort();
+    printf("Kernel loaded too low!");
+    abort();
   }
 
   // these are the limits for the whole kernel, and kernel code.
   {
-    kprintf("Kernel found at %x - %x; code at %x - %x\n",
+    printf("Kernel found at %x - %x; code at %x - %x\n",
             (unsigned)min_data, (unsigned)max_data,
             (unsigned)min_text, (unsigned)max_text);
     module_binary_t binary;
@@ -130,8 +125,7 @@ void kernel_early_process_info(kernel_early_t *early,
     module.text_bottom = min_text;
     module.text_top = max_text;
     // we put kernel and module data into these arrays.
-    early->binaries[0] = binary;
-    early->nof_binaries = 1;
+    kernel.binaries[0] = binary;
     kernel.modules[0] = module;
     kernel.nof_modules = 1;
   }
@@ -144,31 +138,30 @@ void kernel_early_process_info(kernel_early_t *early,
     binary.bottom = (uintptr_t)modules[i].mod_start;
     binary.top = (uintptr_t)modules[i].mod_end;
     kernel_module_t *mod_ptr = (kernel_module_t*)binary.bottom;
-    int idx = early->nof_binaries++;
-    early->binaries[idx] = binary;
+    int idx = kernel.nof_modules++;
+    kernel.binaries[idx] = binary;
     kernel.modules[idx] = *mod_ptr;
-    kernel.nof_modules = early->nof_binaries;
 
     if (mod_ptr->bottom == CORE_OFFSET) {
+      kernel.core_module = idx;
       core_found = 1;
-      kprintf("Found core service at %x - %x\n",
-              binary.bottom, binary.top);
+      printf("Core service found at %x - %x; ",
+             (unsigned)binary.bottom, (unsigned)binary.top);
     } else {
-      kprintf("Found a module at %x - %x\n",
-              binary.bottom, binary.top);
+      printf("GRUB module found at %x - %x; ",
+              (unsigned)binary.bottom, (unsigned)binary.top);
     }
-    kprintf("Mapped into %x - %x\n", mod_ptr->bottom, mod_ptr->top);
+    printf("mapped into %x - %x\n",
+           (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
   }
   if (!core_found) {
-    kprintf("Core service not found!\n");
-    kabort();
+    printf("Core service not found!\n");
+    abort();
   }
 }
 
 void kernel_early_init_paging() {
-#ifdef DEBUG
-  kprintf("kernel_early_init_paging\n");
-#endif
+  //printf("kernel_early_init_paging\n");
   
   // map kernel code into CS section.
   mmap_early_map((void*)(CS_BASE + kernel.modules[0].text_bottom),
@@ -186,9 +179,7 @@ void kernel_early_init_paging() {
 }
 
 void kernel_early_init_segments() {
-#ifdef DEBUG
-  kprintf("kernel_early_init_segments\n");
-#endif
+  //printf("kernel_early_init_segments\n");
 
   gdt_entry_t gdt[SEL_COUNT] = {{0}};
   gdt[0] = (gdt_entry_t) { // 0x00 == NULL
@@ -244,15 +235,17 @@ void kernel_early_init_segments() {
 }
 
 void kernel_early_finalize(kernel_early_t *early) {
-#ifdef DEBUG
-  kprintf("kernel_early_finalize\n");
-#endif
+  //printf("kernel_early_finalize\n");
 
   // prepare the pages tables for actual use.
   mmap_early_finalize();
 
+  idt_initialize();
+  isr_initialize(); // populates IDT.
+  idt_load();
+
   mem_early_initialize(early->memory_map, early->memory_map_elements,
-                       early->binaries, early->nof_binaries);
+                       kernel.binaries, kernel.nof_modules);
   
   // NOW WE CAN USE NON-EARLY FUNCTIONS!
   
@@ -263,30 +256,6 @@ void kernel_early_finalize(kernel_early_t *early) {
   // and make those guard pages available for use.
   mem_free_page(mmap_unmap_page(kernel_stack));
   mem_free_page(mmap_unmap_page(KERNEL_STACK_TOP));
-
-  // map modules so that kernel can access them later.
-  for (unsigned i = 1; i < early->nof_binaries; ++i) {
-    mmap_map((void*)(kernel.modules[i].bottom), early->binaries[i].bottom,
-             kernel.modules[i].top - kernel.modules[i].bottom,
-             MMAP_ATTRIB_USER);
-    unsigned text_offset =
-      kernel.modules[i].text_bottom - kernel.modules[i].bottom;
-    unsigned text_size =
-      kernel.modules[i].text_top - kernel.modules[i].text_bottom;
-    mmap_map((void*)(CS_BASE + kernel.modules[i].text_bottom),
-             early->binaries[i].bottom + text_offset,
-             text_size, MMAP_ATTRIB_PRESENT|MMAP_ATTRIB_USERMODE);
-  }
-
-  // remove write permissions from executable pages in the DS segment.
-  mmap_remap((void*)kernel.modules[0].text_bottom,
-             kernel.modules[0].text_top - kernel.modules[0].text_bottom,
-             MMAP_ATTRIB_PRESENT);
-  for (unsigned i = 0; i < early->nof_binaries; ++i) {
-    mmap_remap((void*)kernel.modules[i].text_bottom,
-               kernel.modules[i].text_top - kernel.modules[i].text_bottom,
-               MMAP_ATTRIB_PRESENT | MMAP_ATTRIB_USERMODE);
-  }
 }
 
 void kernel_early(uint32_t magic, multiboot_info_t *info) {
@@ -295,7 +264,7 @@ void kernel_early(uint32_t magic, multiboot_info_t *info) {
   gdt_early_initialize();
   
 #ifdef DEBUG
-    kprintf("kernel_early\n");
+    printf("kernel_early\n");
 #endif
     
   if (magic == MULTIBOOT_BOOTLOADER_MAGIC) {
@@ -305,10 +274,10 @@ void kernel_early(uint32_t magic, multiboot_info_t *info) {
     kernel_early_init_segments(&early);
     kernel_early_finalize(&early);
   } else {
-    kprintf("No multiboot!");
-    kabort();
+    printf("No multiboot!");
+    abort();
   }
 #ifdef DEBUG
-  kprintf("kernel_early DONE!\n");
+  printf("kernel_early DONE!\n");
 #endif
 }

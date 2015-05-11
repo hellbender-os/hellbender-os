@@ -19,22 +19,16 @@
 .global _start
 .type _start, @function
 _start:
-	movl $(kernel_stack+16384+4096), %esp
+	movl $(kernel_stack+16384+4096-8), %esp
     
-	# Initialize the core kernel before running the global constructors.
+	# Kernel initialization stages are chained together, never to return.
 	push %ebx
 	push %eax
-	call kernel_early
+	call early_stage_1
 
-	# Call the global constructors.
-	call _init
-
-	# Transfer control to the main kernel.
-	call kernel_main
-
-	# Hang if kernel_main unexpectedly returns.
-	cli
+	# Hang if we still (unexpectedly) return.
 .Lhang:
+	cli
 	hlt
 	jmp .Lhang
 .size _start, . - _start

@@ -1,21 +1,21 @@
 #include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <kernel/kernel.h>
-#include <kernel/kstdlib.h>
-#include <kernel/kstdio.h>
 #include <kernel/vmem.h>
 
 uint8_t vmem_free_tables[64]; // bit map of 512 tables, free if bit = 1.
 
-void vmem_initialize() {
+void vmem_stage_3_init() {
   memset(vmem_free_tables, 0xff, sizeof(vmem_free_tables));
 
   // first table for kernel.
   // second table for current thread.
   // last for recursive page directory.
+  // TODO: it would be better to do accocation explicitely from kernel_init.
   vmem_free_tables[0] &= ~1;
-  vmem_free_tables[0] &= ~2;
   vmem_free_tables[511/8] &= ~128; 
 }
 
@@ -24,8 +24,8 @@ void* vmem_alloc_table(unsigned table) {
     vmem_free_tables[table/8] &= ~(1<<(table%8));
     return (void*)((uintptr_t)table * (uintptr_t)0x400000);
   } else {
-    kprintf("Out of virtual memory tables!\n");
-    kabort();
+    printf("Out of virtual memory tables!\n");
+    abort();
   }
 }
 
@@ -68,8 +68,8 @@ void* vmem_alloc_top_table() {
 void* vmem_alloc_existing_table(void* existing) {
   unsigned table = (uintptr_t)existing / (uintptr_t)TABLE_SIZE;
   if (!(vmem_free_tables[table/8] & (1<<(table%8)))) {
-    kprintf("Conflicting page table allocations!\n");
-    kabort();
+    printf("Conflicting page table allocations!\n");
+    abort();
   }
   return vmem_alloc_table(table);
 }
