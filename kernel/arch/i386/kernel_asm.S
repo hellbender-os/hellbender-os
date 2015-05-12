@@ -1,7 +1,28 @@
         .section .text
+        .global kernel_enter_ring0
         .global kernel_enter_ring3
-        .global kernel_return_ring3
-kernel_enter_ring3: // use when current thread state == NEW.
+        .global kernel_restore_context
+        
+kernel_enter_ring0: // use when current thread state == NEW; for kernel threads.
+        pop %eax // return address not needed
+        pop %eax // data selector
+        pop %edx // stack address
+        pop %ebx // code selector
+        pop %ecx // code address
+        cli
+        mov %ax, %ds
+        mov %ax, %es
+        mov %ax, %fs
+        mov %ax, %gs
+        mov %ax, %ss // ring0->ring0 iret won't load new stack.
+        mov %edx, %esp
+        pushf
+        push %ebx  // CS
+        push %ecx // EIP
+        orl $0x200, 8(%esp)    // enable interrupts after iret
+        iret
+        
+kernel_enter_ring3: // use when current thread state == NEW: for user threads.
         pop %eax // return address not needed
         pop %eax // data selector
         pop %edx // stack address
@@ -20,7 +41,7 @@ kernel_enter_ring3: // use when current thread state == NEW.
         orl $0x200, 8(%esp)    // enable interrupts after iret
         iret
 
-kernel_return_ring3: // use when current thread state == OLD.
+kernel_restore_context: // use when current thread state == OLD.
         //xchg %bx,%bx
         mov (0x400000), %eax  // current thread structure is there.
         mov %eax, %esp        // restore the thread kernel stack pointer.

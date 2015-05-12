@@ -5,7 +5,6 @@
 
         .global coresrv_get_ticks
 coresrv_get_ticks:
-        xchg %bx, %bx
         mov $idc_coresrv_get_ticks, %eax
         int $82
         

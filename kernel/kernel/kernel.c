@@ -8,12 +8,17 @@
 #include <kernel/kernel.h>
 #include <kernel/scheduler.h>
 
+extern void kernel_enter_ring0(uint32_t data_selector,
+                               uint32_t stack_address,
+                               uint32_t code_selector,
+                               uint32_t code_address);
+
 extern void kernel_enter_ring3(uint32_t data_selector,
                                uint32_t stack_address,
                                uint32_t code_selector,
                                uint32_t code_address);
 
-extern void kernel_return_ring3();
+extern void kernel_restore_context();
 
 kernel_t kernel;
 
@@ -32,7 +37,7 @@ void kernel_to_usermode() {
   if (CURRENT_THREAD->state == THREAD_STATE_NEW) {
     CURRENT_THREAD->state = THREAD_STATE_OLD;
     if (CURRENT_THREAD->is_kernel) {
-      kernel_enter_ring3(SEL_KERNEL_DATA,
+      kernel_enter_ring0(SEL_KERNEL_DATA,
                          (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
                          SEL_KERNEL_CODE,
                          (uint32_t)CURRENT_THREAD->start_address);
@@ -43,7 +48,7 @@ void kernel_to_usermode() {
                          (uint32_t)CURRENT_THREAD->start_address);
     }
   } else {
-    kernel_return_ring3();
+    kernel_restore_context();
   }
   __builtin_unreachable();
 }
