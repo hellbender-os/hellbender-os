@@ -7,6 +7,7 @@ Hellbender Operating System - research project
   * multithreading.
   * memory protection.
   * interrupt processing in userspace.
+  * 3 memory protection "domains": kernel, trusted userspace, untrusted userspace.
 
 ### kernel:
   * virtual memory allocation (fixed size blocks).
@@ -15,14 +16,19 @@ Hellbender Operating System - research project
   * context switching.
   * scheduling (extremely simplistic).
   * interrupt-to-userspace routing.
-  
-### kernelspace (ring 0), userspace (ring 3):
-  * kernelspace in the first 4MB region.
-  * userspace OS services at the top of the address space.
-  * application userspace above 4MB, below services.
+
+### IPC:
+  * POSIX semaphores (partial support).
+  * special "non-context-switching-callee-memory-protecting" inter-domain call from untrusted userspace into trusted userspace.
+  * trusted userspace callee has access to caller memory, avoiding message passing overhead with OS services.
 
 ### extremely limit standard library support:
   * malloc & friends.
   * printf.
   * abort.
   * exit.
+  
+### virtual address space split into three domains:
+  * kernelspace in the first 4MB region.
+  * OS services (trusted userspace code) at the top of the address space.
+  * normal application userspace above 4MB, below services.
