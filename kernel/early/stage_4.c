@@ -3,12 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <shred.h>
+#include <semaphore.h>
 
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/scheduler.h>
-#include <kernel/semaphore.h>
 #include <kernel/pic.h>
 #include <kernel/isr.h>
 #include <kernel/pic_isr.h>
@@ -38,19 +37,21 @@ void early_stage_4() {
   scheduler_add_thread(kernel.processes[core_idx]->thread);
 
   // wait until core service notifies that the pre-init is done.
-  semaphore_t* to_core = semaphore_create("kernel_to_core");
-  semaphore_t* to_kernel = semaphore_create("core_to_kernel");
-  semaphore_wait(to_kernel);
+  sem_t* to_core = sem_open("kernel_to_core", O_CREAT, (mode_t)0, (unsigned)0);
+  sem_t* to_kernel = sem_open("core_to_kernel", O_CREAT, (mode_t)0, (unsigned)0);
+  sem_wait(to_kernel);
 
   printf("Kernel setting hardware interrupts.\n");
   // setup hardware interrupts.
-  //pic_isr_stage_4_init();
-  //isr_stage_4_pic();
+  core_service_t *service =
+    (core_service_t*)data->modules[core_idx].module_info;
+  isr_stage_4_pic();
+  pic_isr_stage_4_init(service);
   printf("Hardware interrupts activated.\n");
 
   // notify core service to continue; wait it till completes.
-  semaphore_post(to_core);
-  semaphore_wait(to_kernel);
+  sem_post(to_core);
+  sem_wait(to_kernel);
 
   printf("Kernel initialization done.\n");
 

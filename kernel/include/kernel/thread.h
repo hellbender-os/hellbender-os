@@ -9,7 +9,22 @@
 // NEW for just created thread, OLD for threads that have been running.
 #define THREAD_STATE_NEW  0xA11B00b5
 #define THREAD_STATE_OLD  0xC001D00d
+#define THREAD_STATE_WAIT 0xF00dBabe
 #define THREAD_STATE_DEAD 0xDeadBeef
+
+typedef unsigned wait_result_t;
+#define WAIT_NO_MORE 0
+#define WAIT_STILL 1
+
+typedef struct wait_state wait_state_t;
+typedef wait_result_t (*wait_func_ptr)(wait_state_t* state);
+
+typedef struct wait_state {
+  wait_func_ptr wait_func;
+  void* wait_obj;
+  unsigned seq_nr;
+} wait_state_t;
+
 
 // each thread has a page table.
 // the page table is mapped to THREAD_OFFSET when the thread is running.
@@ -27,7 +42,10 @@ typedef struct thread {
 
   uint32_t thread_id; // unique identifier.
   unsigned is_kernel; // true, if the thread runs using kernel selectors.
+
   uint32_t state; // new or old, depending if thread has been running.
+  wait_state_t wait_state;
+
   void* start_address; // start address for new threads.
   unsigned pic_line; // one based PIC line number; for PIC interrupt handlers.
 

@@ -21,7 +21,7 @@ void early_stage_5() {
   kernel.processes[app_idx] =
     process_create_module(&data->modules[app_idx],
                           &data->binaries[app_idx]);
-  //scheduler_add_thread(kernel.processes[app_idx]->thread);
+  scheduler_add_thread(kernel.processes[app_idx]->thread);
 
   // enter main kernel loop.
   free(kernel.early_data);

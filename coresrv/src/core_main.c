@@ -19,7 +19,7 @@ int main(void) {
 
   // do initialization with interrupts.
   
-  printf("Core pose-init done.\n");
+  printf("Core post-init done.\n");
   sem_post(to_kernel);
 
   while (1) sched_yield();

@@ -1,4 +1,4 @@
-.section .text
+.section .text.startup
 
         .extern main
         .extern exit

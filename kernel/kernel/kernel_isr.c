@@ -62,6 +62,21 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
       }
     }
     break;
+  case SYSCALL_SEM_CREATE: // edx: sem_t*; ebx: const char*; ecx: int oflags;
+                           // edi: mode_t mode; esi: unsigned value
+    // TODO: check permissions & validity.
+    {
+      semaphore_t* ksem = semaphore_create((const char*)params->ebx,
+                                           (unsigned)params->esi);
+      if (ksem) {
+        sem_t* usem = (sem_t*)params->edx;
+        usem->id = ksem;
+        params->eax = 0;
+      } else {
+        params->eax = 1;
+      }
+    }
+    break;
   case SYSCALL_SEM_POST: // edx: sem_t* s
     {
       // TODO: check permissions & validity.
@@ -74,8 +89,12 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
     {
       // TODO: check permissions & validity.
       sem_t* usem = (sem_t*)params->edx;
-      semaphore_wait((semaphore_t*)usem->id);
+      semaphore_t* ksem = (semaphore_t*)usem->id;
       params->eax = 0;
+      if (semaphore_wait(ksem,
+                         &CURRENT_THREAD->wait_state) == WAIT_STILL) {
+        scheduler_make_wait(CURRENT_THREAD);
+      }
     }
     break;
   default:

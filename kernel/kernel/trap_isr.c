@@ -93,6 +93,7 @@ void isr_routine_14(uint32_t *stack) {
   asm volatile("mov %%cr2,%0" : "=r"(data_address), "=m"(__force_order));
   printf("at %x:%x\n", (unsigned)code_selector, (unsigned)code_address);
   printf("reading %x\n", (unsigned)data_address);
+  BREAK;
   abort();
 }
 

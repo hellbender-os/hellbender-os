@@ -42,6 +42,15 @@ int syscall_sem_open(sem_t *s, const char* name, int oflag) {
   return retval;
 }
 
+int syscall_sem_create(sem_t *s, const char* name, int oflag,
+                       mode_t mode, unsigned value) {
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_SEM_CREATE), "d"(s), "b"(name), "c"(oflag),
+        "D"(mode), "S"(value));
+  return retval;
+}
+
 int syscall_sem_post(sem_t *s) {
   register unsigned retval __asm__("eax");
   asm(SYSCALL : "=r"(retval), "=m"(__force_order)

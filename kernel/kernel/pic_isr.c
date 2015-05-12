@@ -23,7 +23,7 @@ typedef struct pic_isr {
 
 pic_isr_t pic_isr;
 
-void pic_isr_stage_4_init() {
+void pic_isr_stage_4_init(core_service_t *core) {
   memset(&pic_isr, 0, sizeof(pic_isr));
   process_t *core_process = kernel.processes[kernel.core_module];
   
@@ -37,11 +37,9 @@ void pic_isr_stage_4_init() {
   memset(&pic_isr, 0, sizeof(pic_isr));
   pic_isr.timer_thread = timer_thread;
   pic_isr.thread = other_thread;
-  //TODO: core needs to be active for this!
-  //core_service_t *core =
-  //  (core_service_t*)kernel.modules[kernel.core_module].module_info;
-  //pic_isr.routines[0] = (void*)core->timer_isr;
-  //pic_isr.routines[1] = (void*)core->keyboard_isr;
+
+  pic_isr.routines[0] = (void*)core->timer_isr;
+  pic_isr.routines[1] = (void*)core->keyboard_isr;
 
   pic_enable(32); // timer0
   pic_enable(33); // keyboard

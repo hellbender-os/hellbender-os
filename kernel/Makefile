@@ -39,7 +39,6 @@ kernel/isr_debugger.o \
 kernel/trap_isr.o \
 kernel/pic_isr.o \
 kernel/kernel_isr.o \
-kernel/khalt.o \
 kernel/domain.o \
 kernel/module.o \
 kernel/thread.o \

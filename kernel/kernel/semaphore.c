@@ -15,7 +15,7 @@ typedef struct semaphore {
   volatile unsigned exit_nr;
 } semaphore_t;
 
-semaphore_t* semaphore_create(const char* name) {
+semaphore_t* semaphore_create(const char* name, unsigned value) {
   size_t len = strlen(name) + 1;
   if (len > SEMAPHORE_MAX_NAME) {
     printf("Maximum semaphore length exceeded.\n");
@@ -24,6 +24,7 @@ semaphore_t* semaphore_create(const char* name) {
 
   semaphore_t* s = (semaphore_t*)malloc(sizeof(semaphore_t) + len);
   memset(s, 0, sizeof(semaphore_t));
+  s->count = value;
   s->name = ((char*)s) + sizeof(semaphore_t);
   memcpy((char*)s->name, name, len);
   s->next = kernel.semaphores;
@@ -44,18 +45,23 @@ void semaphore_post(semaphore_t* s) {
   __sync_fetch_and_add(&s->count, 1);
 }
 
-void semaphore_wait(semaphore_t* s) {
+wait_result_t semaphore_wait_still(wait_state_t* state) {
+  semaphore_t* s = (semaphore_t*)state->wait_obj;
+  if (s->exit_nr == state->seq_nr) {
+    if (s->count) {
+      __sync_fetch_and_sub(&s->count, 1);
+      __sync_fetch_and_add(&s->exit_nr, 1);
+      return WAIT_NO_MORE;
+    }
+  }
+  return WAIT_STILL;
+}
+
+wait_result_t semaphore_wait(semaphore_t* s, wait_state_t* state) {
   // FIFO: each thread gets a sequence number, only the thread with
   // the smallest sequence number may exit.
-  unsigned nr = __sync_fetch_and_add(&s->entry_nr, 1);
-  while (1) {
-    if (s->exit_nr == nr) {
-      if (s->count) {
-        __sync_fetch_and_sub(&s->count, 1);
-        __sync_fetch_and_add(&s->exit_nr, 1);
-        return;
-      }
-    }
-    sched_yield();
-  }
+  state->wait_func = &semaphore_wait_still;
+  state->wait_obj = s;
+  state->seq_nr = __sync_fetch_and_add(&s->entry_nr, 1);
+  return semaphore_wait_still(state);
 }

@@ -1,7 +1,9 @@
 #ifndef _KERNEL_PIC_ISR
 #define _KERNEL_PIC_ISR
 
-void pic_isr_stage_4_init();
+#include <kernel/module.h>
+
+void pic_isr_stage_4_init(core_service_t *core);
 
 __attribute__((__noreturn__))
 void pic_isr_process_next();

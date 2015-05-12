@@ -51,6 +51,8 @@ core.srv: $(CORE_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 
 test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
+# To see the linker script: -Wl,-verbose
+# To see the link process:  -Xlinker --print-map
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

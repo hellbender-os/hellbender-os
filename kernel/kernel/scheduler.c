@@ -35,7 +35,8 @@ void scheduler_add_thread(thread_t *thread) {
 __attribute__((__noreturn__))
 void scheduler_goto_next() {
   thread_t *thread = NULL;
-  if (scheduler.realtime && scheduler.realtime->state != THREAD_STATE_DEAD) {
+  if (scheduler.realtime && scheduler.realtime->state != THREAD_STATE_DEAD
+      && scheduler.realtime->state != THREAD_STATE_WAIT) {
     thread = scheduler.realtime;
   }
   for (unsigned i = 0; thread == NULL && i < scheduler.num_threads; ++i) {
@@ -43,7 +44,12 @@ void scheduler_goto_next() {
       scheduler.next_thread = 0;
     }
     thread_t *this = scheduler.threads[scheduler.next_thread];
-    if (this->state != THREAD_STATE_DEAD) {
+    if (this->state == THREAD_STATE_WAIT) {
+      if ((*this->wait_state.wait_func)(&this->wait_state) == WAIT_NO_MORE) {
+        this->state = THREAD_STATE_OLD;
+      }
+    }
+    if (this->state != THREAD_STATE_DEAD && this->state != THREAD_STATE_WAIT) {
       thread = this;
       break;
     }
@@ -54,4 +60,8 @@ void scheduler_goto_next() {
   } else {
     kernel_halt();
   }
+}
+
+void scheduler_make_wait(thread_t *thread) {
+  thread->state = THREAD_STATE_WAIT;
 }
