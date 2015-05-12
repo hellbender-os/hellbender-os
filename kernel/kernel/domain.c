@@ -4,6 +4,7 @@
 
 #include <kernel/domain.h>
 #include <kernel/module.h>
+#include <kernel/process.h>
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 #include <kernel/vmem.h>
@@ -136,6 +137,25 @@ void domain_disable(domain_t* domain) {
     mmap_map_table(CS_BASE + domain->domain_base, 0, 0);
   }
 }
+
+void domain_push(uint32_t address) {
+  if (address >= APPLICATION_LIMIT
+      && address < SERVICE_LIMIT
+      && (address & 0x3FF007) == 0) {
+    // TODO: support a domain stack.
+    // TODO: map (address>>22) to domain_t.
+    domain_enable(kernel.processes[kernel.core_module]->domain);
+  } else {
+    printf("Illegal IDC address %x.\n", (unsigned)address);
+    abort();
+  }
+}
+
+void domain_pop() {
+  // TODO: support a domain stack.
+  // TODO: disable domain if not in stack anymore.
+}
+
 
 /*
 void* domain_alloc_data(domain_t *domain, size_t size) {

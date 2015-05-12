@@ -8,20 +8,22 @@ OUTPUT_FORMAT("binary")
 ENTRY(_start)
 
 _hellbender_module_info = DEFINED(_hellbender_module_info) ? _hellbender_module_info : 0;
+_hellbender_module_org = DEFINED(_hellbender_module_org) ? _hellbender_module_org : 0x800000;
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
 SECTIONS
 {
 	/* Core services are based at the end of our address space. */
-	. = DEFINED(_hellbender_module_org) ? _hellbender_module_org : 0x800000;
+	. = _hellbender_module_org;
         _hellbender_module_bottom = .;
         _hellbender_text_bottom = .;
 
-	/* The module header must be first,
+	/* The IDC table and module header must be first,
            followed by the standard .text section. */
         .init :
         {
+                *(.idc_table)
                 *(.module_header)
                 KEEP (*(SORT_NONE(.init)))
         }

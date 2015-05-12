@@ -126,7 +126,11 @@ void early_stage_1(uint32_t magic, multiboot_info_t *info) {
     module_binary_t binary;
     binary.bottom = (uintptr_t)modules[i].mod_start;
     binary.top = (uintptr_t)modules[i].mod_end;
-    kernel_module_t *mod_ptr = (kernel_module_t*)binary.bottom;
+    // module header at zero, or 4K offset, depending on IDC table.
+    kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom+4096);
+    if (mod_ptr->magic != 0x1337c0de) {
+      mod_ptr = (kernel_module_t*)(binary.bottom);
+    }
     int idx = data.nof_modules++;
     data.binaries[idx] = binary;
     data.modules[idx] = *mod_ptr;

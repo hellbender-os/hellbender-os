@@ -16,4 +16,8 @@
 
 #define SYSIRET "int $81"
 
+
+#define IDCALL "int $82"
+#define IDRET "int $83"
+
 #endif

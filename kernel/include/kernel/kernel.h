@@ -31,6 +31,12 @@ extern unsigned long __force_order;
 // all applications are mapped into this address, in their own address spaces.
 #define APPLICATION_OFFSET 0x800000
 
+// Anything above this limit is reserved to OS services.
+#define APPLICATION_LIMIT 0x70000000
+
+// Anything above this limit is reserved to recursive page directory.
+#define SERVICE_LIMIT 0x7fc00000
+
 // core module is mapped at a fixed address at the top of the address space.
 #define CORE_OFFSET 0x7F800000
 

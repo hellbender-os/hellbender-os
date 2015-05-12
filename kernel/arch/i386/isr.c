@@ -120,4 +120,6 @@ static void isr_set_syscalls(idt_entry_t entry) {
   entry.dpl = 3;
   isr_set_idt(80);
   isr_set_idt(81);
+  isr_set_idt(82);
+  isr_set_idt(83);
 }

@@ -36,11 +36,13 @@ $(ARCH_COREOBJS) \
 src/core_main.o \
 src/keyboard.o \
 src/timer.o \
+src/core_idc.S \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
 $(ARCH_OBJS) \
 src/test_main.o \
+src/libcore.o \
 
 all: core.srv test.app
 

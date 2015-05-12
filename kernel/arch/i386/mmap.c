@@ -39,10 +39,10 @@ static inline void invalidate_all() {
                : "%eax"
                );
 }
-
+/*
 static inline unsigned set_segments() {
   unsigned old_ds;
-  asm volatile("mov %%ds, %0;"
+  asm volatile("mov %%ss, %0;"
                "mov %2, %%ds;"
                "mov %2, %%es;"
                "mov %2, %%ss;"
@@ -62,7 +62,7 @@ static inline void reset_segments(unsigned old_ds) {
                : "memory"
                );
 }
-
+*/
 void mmap_stage_2_init() {
   memset(&mmap, 0, sizeof(mmap));
   memset(mmap_page_directory, 0, PAGE_SIZE);
@@ -166,22 +166,29 @@ void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   uint32_t* page_tables = mmap.page_tables;
   uint32_t *page_table = page_tables + page_dir_index * 0x400;
   
-  // ensure that the is a page table.
-  unsigned old_ds = set_segments();
-  if ((page_dir[page_dir_index] & 1) == 0) {
+  // ensure that the page table exists; set the page entry.
+  unsigned value;
+  asm volatile("push %%ds;"
+               "mov %1, %%ds;"
+               "mov (%2), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "mov %3, (%4);"
+               "1:"
+               "pop %%ds;"
+               : "=&r"(value)
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_dir + page_dir_index),
+                 "r"((physical & 0xfffff000) | attributes),
+                 "r"(page_table + page_table_index)
+               : "cc");
+  if ((value & 1) == 0) {
     // TODO: we can skip this test; then it'd create a page fault instead.
-    //uintptr_t new_table = mem_alloc_page();
-    //page_dir[page_dir_index] = new_table | attributes;
-    //invalidate(page_table);
-    //memset(page_table, 0, PAGE_SIZE);
     printf("Trying to map %x to unmapped page table!\n", (unsigned)virtual);
     abort();
   }
 
-  // set the page table entry.
-  page_table[page_table_index] = (physical & 0xfffff000) | attributes;
   invalidate(virtual);
-  reset_segments(old_ds);
   return virtual;
 }
 
@@ -196,20 +203,23 @@ uintptr_t mmap_unmap_page(void* virtual) {
   uint32_t* page_tables = mmap.page_tables;
   uint32_t *page_table = page_tables + page_dir_index * 0x400;
 
-  unsigned old_ds = set_segments();
-  if (page_dir[page_dir_index] & 1) {
-    // get and clear the page table entry.
-    uint32_t value = page_table[page_table_index];
-    if (value & 1) {
-      physical = value & 0xfffff000;
-      page_table[page_table_index] = 0;
-      //kprintf("unmapping PDI=%x; PTI=%x, was %x\n",
-      //       (unsigned)page_dir_index, (unsigned)page_table_index,
-      //       (unsigned)physical);
-      asm volatile("invlpg (%0)" ::"r"(address) : "memory");
-    }
-  }
-  reset_segments(old_ds);
+  // ensure that the page table exists; clean the page entry.
+  unsigned value;
+  asm volatile("push %%ds;"
+               "mov %1, %%ds;"
+               "mov (%2), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "movl $0, (%3);"
+               "1:"
+               "pop %%ds;"
+               : "=&r"(value)
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_dir + page_dir_index),
+                 "r"(page_table + page_table_index)
+               : "cc");
+
+  invalidate(virtual);
   return physical;
 }
 
@@ -224,17 +234,29 @@ uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
   uint32_t* page_tables = mmap.page_tables;
   uint32_t *page_table = page_tables + page_dir_index * 0x400;
 
-  unsigned old_ds = set_segments();
-  if (page_dir[page_dir_index] & 1) {
-    // get and clear the page table entry.
-    uint32_t value = page_table[page_table_index];
-    if (value & 1) {
-      physical = value & 0xfffff000;
-      page_table[page_table_index] = physical | attributes;
-      asm volatile("invlpg (%0)" ::"r"(address) : "memory");
-    }
-  }
-  reset_segments(old_ds);
+  // ensure that the page table and page exists; reset the page entry.
+  unsigned dir_value, table_value;
+  asm volatile("push %%ds;"
+               "mov %2, %%ds;"
+               "mov (%3), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "mov (%5), %1;"
+               "test $1, %1;"
+               "jz 1f;"
+               "andl $0xfffff000, %1;"
+               "or %4, %1;"
+               "mov %1, (%5);"
+               "1:"
+               "pop %%ds;"
+               : "=&r"(dir_value), "=&r"(table_value)
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_dir + page_dir_index),
+                 "r"(attributes),
+                 "r"(page_table + page_table_index)
+               : "cc");
+
+  invalidate(virtual);
   return physical;
 }
 
@@ -285,9 +307,17 @@ void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
   unsigned page_dir_index = address >> 22;
   uint32_t* page_dir = mmap.page_directory;
 
-  unsigned old_ds = set_segments();
-  page_dir[page_dir_index] = page_table | attributes;
-  reset_segments(old_ds);
+  // just set the page directory entry.
+  asm volatile("push %%ds;"
+               "mov %0, %%ds;"
+               "mov %1, (%2);"
+               "pop %%ds;"
+               :
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_table | attributes),
+                 "r"(page_dir + page_dir_index)
+               );
+
   invalidate_all(); // TODO: or just all pages in the page table.
   return virtual;
 }
