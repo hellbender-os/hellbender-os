@@ -1,3 +1,5 @@
 *.o
-*.srv
-*.app
+core.srv
+coresrv.map
+test.app
+

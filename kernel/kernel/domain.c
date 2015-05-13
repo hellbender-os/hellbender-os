@@ -133,8 +133,10 @@ void domain_enable(domain_t* domain) {
 
 void domain_disable(domain_t* domain) {
   if (domain->page_table_ds) {
-    mmap_map_table(domain->domain_base, 0, 0);
-    mmap_map_table(CS_BASE + domain->domain_base, 0, 0);
+    mmap_map_table(domain->domain_base, domain->page_table_ds,
+                   MMAP_ATTRIB_KERNEL_RW);
+    mmap_map_table(CS_BASE + domain->domain_base, domain->page_table_cs,
+                   MMAP_ATTRIB_KERNEL_RO);
   }
 }
 

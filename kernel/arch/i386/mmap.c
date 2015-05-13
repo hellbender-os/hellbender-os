@@ -108,9 +108,9 @@ void* mmap_stage_2_map_page(void* virtual, uintptr_t page, unsigned attributes) 
 
 void* mmap_stage_2_map(void* virtual, uintptr_t physical,
                        size_t size, unsigned attributes) {
-  printf("mapping %x-%x into %x-%x\n",
-         (unsigned)physical, (unsigned)(physical+size),
-         (unsigned)virtual, (unsigned)(virtual+size));
+  //printf("mapping %x-%x into %x-%x\n",
+  //       (unsigned)physical, (unsigned)(physical+size),
+  //       (unsigned)virtual, (unsigned)(virtual+size));
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
   if (size > TABLE_SIZE) {
     printf("too big.\n");
@@ -157,7 +157,7 @@ void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
 
-  //kprintf("Mapping virtual address = %x\n", (unsigned)virtual);
+  //printf("Mapping virtual address = %x\n", (unsigned)virtual);
   //kprintf("PDI = %u; PTI = %u; attr = %u\n",
   //        (unsigned)page_dir_index, (unsigned)page_table_index,
   //        (unsigned)attributes);
@@ -198,7 +198,6 @@ uintptr_t mmap_unmap_page(void* virtual) {
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
 
-  uintptr_t physical = 0;
   uint32_t* page_dir = mmap.page_directory;
   uint32_t* page_tables = mmap.page_tables;
   uint32_t *page_table = page_tables + page_dir_index * 0x400;
@@ -210,6 +209,7 @@ uintptr_t mmap_unmap_page(void* virtual) {
                "mov (%2), %0;"
                "test $1, %0;"
                "jz 1f;"
+               "mov (%3), %0;"
                "movl $0, (%3);"
                "1:"
                "pop %%ds;"
@@ -218,13 +218,12 @@ uintptr_t mmap_unmap_page(void* virtual) {
                  "r"(page_dir + page_dir_index),
                  "r"(page_table + page_table_index)
                : "cc");
-
   invalidate(virtual);
-  return physical;
+  return value & ~0x3ff;
 }
 
 uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
-  //kprintf("Remapping virtual address = %x\n", (unsigned)virtual);
+  //printf("Remapping virtual address = %x\n", (unsigned)virtual);
   uintptr_t address = (uintptr_t)virtual;
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;

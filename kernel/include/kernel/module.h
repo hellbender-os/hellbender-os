@@ -25,6 +25,7 @@ typedef struct core_service {
   uint32_t this_size;
   uint32_t keyboard_isr;
   uint32_t timer_isr;
+  uint32_t vga_buffer;
 } __attribute__((packed)) core_service_t;
 
 #define CORE_MODULE ((kernel_module_t*)CORE_OFFSET)

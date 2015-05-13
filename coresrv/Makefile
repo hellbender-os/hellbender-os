@@ -29,27 +29,40 @@ LIBS:=$(LIBS) $(ARCH_LIBS)
 
 HEADER_OBJ:=$(ARCHDIR)/module_header.o
 
+CORE_IDC:=coresrv/core_idc.o
+
 CORE_OBJS:=\
 $(HEADER_OBJ) \
 $(ARCH_OBJS) \
 $(ARCH_COREOBJS) \
-src/core_main.o \
-src/keyboard.o \
-src/timer.o \
-src/core_idc.S \
+coresrv/core_main.o \
+kbd/kbd_init.o \
+kbd/kbd_isr.o \
+kbd/kbd_getc.o \
+rtc/rtc_init.o \
+rtc/rtc_isr.o \
+rtc/rtc_ticks.o \
+vga/vga_init.o \
+vga/vga_putc.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
 $(ARCH_OBJS) \
-src/test_main.o \
-src/libcore.o \
+test/test_main.o \
+coresrv/libcore.o \
 
 all: core.srv test.app
 
 .PHONY: all clean install install-headers install-server
 
-core.srv: $(CORE_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(LDFLAGS) $(LIBS)
+core.srv: $(CORE_OBJS) $(CORE_IDC) $(ARCHDIR)/linker.ld $(LIB_DEPS)
+	$(CC) -Xlinker -Map -Xlinker coresrv.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(CORE_IDC) $(LDFLAGS) $(LIBS)
+
+coresrv/core_idc.S: $(CORE_OBJS) make_core_idc.sh
+	./make_core_idc.sh > coresrv/core_idc.S
+
+coresrv/libcore.S: coresrv.map make_libcore.pl
+	./make_libcore.pl > coresrv/libcore.S
 
 test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)

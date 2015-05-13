@@ -35,11 +35,11 @@ extern void _init();
  */
 void early_stage_3(early_data_t *data) {
   printf("early_stage_3\n");
-
   // setup physical page allocator, and virtual memory allocator.
   mem_stage_3_init(data->memory_map, data->memory_map_elements,
                    data->binaries, data->nof_modules);
   vmem_stage_3_init();
+
   // this will release the memory that is covered by the VGA buffer.
   terminal_stage_3_cleanup();
   
@@ -51,7 +51,8 @@ void early_stage_3(early_data_t *data) {
   _init();
 
   // kernel thread execution context.
-  kernel.processes[0] = process_create_kernel(&data->modules[0], &early_stage_4);
+  kernel.processes[0] = process_create_kernel(&data->modules[0],
+                                              &early_stage_4);
   kernel.nof_processes = 1;
   thread_set_current(kernel.processes[0]->thread);
 

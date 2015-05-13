@@ -11,6 +11,8 @@
 #include <kernel/pic.h>
 #include <kernel/isr.h>
 #include <kernel/pic_isr.h>
+#include <kernel/vga.h>
+#include <kernel/mmap.h>
 
 /**
  * The whole kernel is now on-line, and we are in multiprocessing
@@ -28,13 +30,19 @@
 void early_stage_4() {
   printf("early_stage_4\n");
   early_data_t *data = (early_data_t*)kernel.early_data;
-    
+
   // create core service process.
   unsigned core_idx = kernel.core_module;
   kernel.processes[core_idx] =
     process_create_module(&data->modules[core_idx],
                           &data->binaries[core_idx]);
   scheduler_add_thread(kernel.processes[core_idx]->thread);
+  core_service_t *service =
+    (core_service_t*)data->modules[core_idx].module_info;
+
+  // map VGA memory to core service:
+  mmap_map_page((void*)service->vga_buffer, (uintptr_t)VGA_MEMORY,
+                MMAP_ATTRIB_USER_RW);
 
   // wait until core service notifies that the pre-init is done.
   sem_t* to_core = sem_open("kernel_to_core", O_CREAT, (mode_t)0, (unsigned)0);
@@ -43,8 +51,6 @@ void early_stage_4() {
 
   printf("Kernel setting hardware interrupts.\n");
   // setup hardware interrupts.
-  core_service_t *service =
-    (core_service_t*)data->modules[core_idx].module_info;
   isr_stage_4_pic();
   pic_isr_stage_4_init(service);
   printf("Hardware interrupts activated.\n");

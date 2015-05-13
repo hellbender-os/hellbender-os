@@ -109,7 +109,7 @@ void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
           //        (unsigned)binaries[k].bottom, (unsigned)binaries[k].top);
         }
       }
-      if (!in_module) {
+      if (!in_module && base) {
         mem_free_page(base);
       }
       base += PAGE_SIZE;
@@ -178,6 +178,10 @@ uintptr_t mem_alloc_page() {
 
 void mem_free_page(uintptr_t page) {
   // TODO: use a magic token to check that the page is not mapped!
+  if (page == 0) {
+    printf("FREED ZERO PAGE!\n");
+    abort();
+  }
   
   // try to put the page into the second directory.
   if (mem.second->header.free < DIRECTORY_SIZE) {

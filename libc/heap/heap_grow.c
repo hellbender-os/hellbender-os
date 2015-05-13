@@ -13,7 +13,7 @@ static inline void* do_allocate(void* address, size_t size) {
   // kernel can directly map stuff.
   // TODO: check virtual address space limits!
   uintptr_t end_ptr = (uintptr_t)address + size;
-  mem_alloc_mapped(address, size, MMAP_ATTRIB_USER_RW);
+  mem_alloc_mapped(address, size, MMAP_ATTRIB_KERNEL_RW);
   return (void*)end_ptr;
 }
 
