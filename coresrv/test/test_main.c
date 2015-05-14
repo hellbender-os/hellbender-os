@@ -45,6 +45,7 @@ void read_command(char *buf, size_t size) {
       continue;
     }
     int c = keymap_code2char(keymap, KBD_GETC_KEYCODE(kc), KBD_GETC_FLAGS(kc));
+    if (c <= 0) continue;
     //if (c <= 0) {
     //  printf("code %x = %c\n", (unsigned)KBD_GETC_KEYCODE(kc), (unsigned)c);
     //  continue;

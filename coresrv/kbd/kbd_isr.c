@@ -2,6 +2,7 @@
 #include <hellbender.h>
 #include <kernel/io.h>
 #include <coresrv/kbd.h>
+#include <coresrv/rtc.h>
 
 #include "kbd_impl.h"
 
@@ -61,7 +62,7 @@ void kbd_isr() {
       BARRIER;
       kbd.last_event = event_idx;
     } else {
-      // TODO: beep
+      coresrv_rtc_beep(800, 4);
     }
   }
   syscall_iret();

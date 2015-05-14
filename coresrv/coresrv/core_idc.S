@@ -7,6 +7,12 @@ idc_coresrv_kbd_getc:
         pop %edx
         int $83
 
+        .global idc_coresrv_rtc_beep
+idc_coresrv_rtc_beep:
+        calll _idc_coresrv_rtc_beep
+        pop %edx
+        int $83
+
         .global idc_coresrv_rtc_ticks
 idc_coresrv_rtc_ticks:
         calll _idc_coresrv_rtc_ticks

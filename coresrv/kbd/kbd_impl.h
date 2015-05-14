@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <coresrv/kbd.h>
 
-#define KBD_MAX_EVENTS 16
+#define KBD_MAX_EVENTS 32
 
 typedef struct kbd {
   int escape_next;
