@@ -33,24 +33,24 @@ static int get_result() {
     return inb(DATA_PORT);
   } else return -1;
 }
-/*
+
 static int get_result2() {
   int result = get_result();
   while (result == 0xaa) result = get_result();
   return result;
 }
-*/
+
 static void send_data(unsigned data) {
   wait_till_input_clear();
   outb(DATA_PORT, data);
 }
-/*
+
 static void send_data2(unsigned data) {
   send_command(0xD4);
   wait_till_input_clear();
   outb(DATA_PORT, data);
 }
-*/
+
 static void flush_data() {
   iowait();
   while (inb(STATUS_REGISTER) & 1) {
@@ -76,9 +76,9 @@ void ps2_init() {
   send_command(0x20);
   int config = get_result();
   send_command(0x60);
-  config &= ~(/*1+2+*/64);
+  config &= ~(1+2+64); // QEmu cannot re-enable interrupts.
   send_data(config);
-  /*int dual_channel = config & 32;
+  int dual_channel = config & 32;
 
   // Perform Controller Self Test:
   send_command(0xAA);
@@ -107,16 +107,16 @@ void ps2_init() {
   }
 
   // Enable Devices
-  if (chan1_ok) {*/
+  if (chan1_ok) config |= 1;
+  if (chan2_ok) config |= 2;
+  send_command(0x60);
+  send_data(config); // interrupts first, then devices (otherwise QEmu bugs).
+  if (chan1_ok) {
     send_command(0xAE);
-    /*    config |= 1;
   }
   if (chan2_ok) {
     send_command(0xA8);
-    config |= 2;
   }
-  send_command(0x60);
-  send_data(config);
 
   // Reset Devices; may cause self-tests to run, thus we'll skip any 0xAA.
   if (chan1_ok) {
@@ -155,10 +155,10 @@ void ps2_init() {
         int id0 = get_result();
         int id1 = get_result();
         //printf("chan1 identity: %x %x\n", id0, id1);
-        if (id0 == 0xAB && id1 == 0x83) {*/
+        if (id0 == 0xAB && id1 == 0x83) {
           printf("Keyboard detected on PS/2 channel 1.\n");
           ps2.chan1_mode = 1;
-          /*        } else if (id0 == 0x00) {
+        } else if (id0 == 0x00) {
           printf("Mouse detected on PS/2 channel 1.\n");
           ps2.chan1_mode = 2;
         } else if (id0 == 0x03) {
@@ -220,7 +220,6 @@ void ps2_init() {
       printf("chan2 failed to start scanning.\n");
     }
   }
-  */
 
   flush_data();
 }

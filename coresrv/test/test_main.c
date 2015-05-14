@@ -71,7 +71,6 @@ void test_shell() {
 }
 
 int main(void) {
-  BREAK;
   printf("Hello, user World!\n");
   test_shell();
   return 0xabba;
