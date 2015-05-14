@@ -56,7 +56,7 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
   thread->start_address = start_address;
   thread->this = thread;
   thread->page_table = page_table;
-  thread->stack_bottom = thread->stack_top = (void*)(THREAD_OFFSET+TABLE_SIZE);
+  thread->stack_bottom = thread->stack_top = (void*)THREAD_STACK_TOP;
   // stack will be allocated when the thread becomes active the first time.
 
   thread->home_domain = home_domain;

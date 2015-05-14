@@ -95,13 +95,37 @@ domain_t* domain_create_module(kernel_module_t* module,
   domain_enable(domain);
 
   // all data is read/write in DS, all core is read-only in CS & DS.
-  mmap_map((void*)(module->bottom), binary->bottom,
-           module->top - module->bottom,
-           MMAP_ATTRIB_USER_RW);
+  unsigned module_size = module->top - module->bottom;
+  unsigned binary_size = binary->top - binary->bottom;
+  if (module_size % PAGE_SIZE)
+    module_size += PAGE_SIZE - module_size % PAGE_SIZE;
+  if (binary_size % PAGE_SIZE)
+    binary_size += PAGE_SIZE - binary_size % PAGE_SIZE;
+  //printf("BINARY R/W: %x-%x into %x-%x\n",
+  //       (unsigned)binary->bottom,
+  //       (unsigned)binary->bottom + binary_size,
+  //       (unsigned)module->bottom,
+  //       (unsigned)module->bottom + binary_size);
+  mmap_map((void*)module->bottom, binary->bottom,
+           module_size, MMAP_ATTRIB_USER_RW);
+  unsigned alloc_size = module_size - binary_size;
+  if (alloc_size) {
+    //printf("MEMORY R/W: into %x-%x\n",
+    //       (unsigned)module->bottom + binary_size,
+    //       (unsigned)module->bottom + binary_size + alloc_size);
+    mem_alloc_mapped((void*)(module->bottom + binary_size), alloc_size,
+                     MMAP_ATTRIB_USER_RW);
+  }
   unsigned text_offset =
     module->text_bottom - module->bottom;
   unsigned text_size =
     module->text_top - module->text_bottom;
+  if (text_size % PAGE_SIZE) text_size += PAGE_SIZE - text_size % PAGE_SIZE;
+  //printf("MODULE R/-: %x-%x into %x-%x\n",
+  //       (unsigned)binary->bottom + text_offset,
+  //       (unsigned)binary->bottom + text_offset + text_size,
+  //       (unsigned)module->text_bottom,
+  //       (unsigned)module->bottom + text_size);
   mmap_map((void*)(CS_BASE + module->text_bottom),
            binary->bottom + text_offset,
            text_size, MMAP_ATTRIB_USER_RO);

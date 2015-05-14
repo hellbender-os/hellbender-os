@@ -36,6 +36,8 @@ $(HEADER_OBJ) \
 $(ARCH_OBJS) \
 $(ARCH_COREOBJS) \
 coresrv/core_main.o \
+ps2/ps2_init.o \
+ps2/ps2_isr.o \
 kbd/kbd_init.o \
 kbd/kbd_isr.o \
 kbd/kbd_getc.o \
@@ -65,7 +67,7 @@ coresrv/libcore.S: coresrv.map make_libcore.pl
 	./make_libcore.pl > coresrv/libcore.S
 
 test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
 # To see the linker script: -Wl,-verbose
 # To see the link process:  -Xlinker --print-map
 

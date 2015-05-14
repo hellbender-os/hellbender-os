@@ -27,7 +27,7 @@ extern unsigned long __force_order;
 #define THREAD_TSS_STACK_TOP (THREAD_OFFSET + 2*PAGE_SIZE)
 #define THREAD_HEAP_BOTTOM (THREAD_OFFSET+16*PAGE_SIZE)
 #define THREAD_HEAP_TOP    (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
-
+#define THREAD_STACK_TOP (THREAD_OFFSET+TABLE_SIZE-PAGE_SIZE)
 // all applications are mapped into this address, in their own address spaces.
 #define APPLICATION_OFFSET 0x800000
 

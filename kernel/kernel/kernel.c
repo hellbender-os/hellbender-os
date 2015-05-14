@@ -38,12 +38,12 @@ void kernel_to_usermode() {
     CURRENT_THREAD->state = THREAD_STATE_OLD;
     if (CURRENT_THREAD->is_kernel) {
       kernel_enter_ring0(SEL_KERNEL_DATA,
-                         (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
+                         (uint32_t)CURRENT_THREAD->stack_top,
                          SEL_KERNEL_CODE,
                          (uint32_t)CURRENT_THREAD->start_address);
     } else {
       kernel_enter_ring3(SEL_USER_DATA|3,
-                         (uint32_t)(THREAD_OFFSET + TABLE_SIZE),
+                         (uint32_t)CURRENT_THREAD->stack_top,
                          SEL_USER_CODE|3,
                          (uint32_t)CURRENT_THREAD->start_address);
     }

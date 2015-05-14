@@ -2,6 +2,7 @@
 #include <sched.h>
 #include <semaphore.h>
 
+extern void ps2_init();
 extern void kbd_init();
 extern void rtc_init();
 extern void vga_init();
@@ -13,6 +14,7 @@ int main(void) {
 
   // do initialization without interrupts.
 
+  ps2_init();
   kbd_init();
   rtc_init();
   vga_init();
@@ -26,7 +28,7 @@ int main(void) {
   printf("Core post-init begins.\n");
 
   // do initialization with interrupts.
-  
+
   printf("Core post-init done.\n");
   sem_post(to_kernel);
 

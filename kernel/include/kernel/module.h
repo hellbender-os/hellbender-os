@@ -23,14 +23,14 @@ typedef struct kernel_module {
 // core provides some basic services to get things running.
 typedef struct core_service {
   uint32_t this_size;
-  uint32_t keyboard_isr;
   uint32_t timer_isr;
+  uint32_t ps2_chan1_isr;
+  uint32_t ps2_chan2_isr;
   uint32_t vga_buffer;
 } __attribute__((packed)) core_service_t;
 
 #define CORE_MODULE ((kernel_module_t*)CORE_OFFSET)
 #define CORE_SERVICE ((core_service_t*)(CORE_OFFSET + sizeof(kernel_module_t)))
-
 
 int module_check_header(kernel_module_t *module);
 

@@ -5,7 +5,6 @@
 void kbd_isr() {
   char buffer[81];
   unsigned key = inb(0x60);
-  sprintf(buffer, "Keyboard ISR: %x\n", key);
-  syscall_print(buffer);
+  printf("Keyboard ISR: %x\n", key);
   syscall_iret();
 }

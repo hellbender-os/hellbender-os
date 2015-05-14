@@ -39,10 +39,12 @@ void pic_isr_stage_4_init(core_service_t *core) {
   pic_isr.thread = other_thread;
 
   pic_isr.routines[0] = (void*)core->timer_isr;
-  pic_isr.routines[1] = (void*)core->keyboard_isr;
+  pic_isr.routines[1] = (void*)core->ps2_chan1_isr;
+  //pic_isr.routines[12] = (void*)core->ps2_chan2_isr;
 
   pic_enable(32); // timer0
-  pic_enable(33); // keyboard
+  pic_enable(33); // ps2 channel 1
+  //pic_enable(116); // ps2 channel 2
 }
 
 __attribute__((__noreturn__))
@@ -71,7 +73,7 @@ void pic_isr_process_next() {
 
 void pic_isr_process(unsigned int_num) {
   // interrupt numbers are 32..39 and 112..119
-  printf("interrupt %u\n", int_num);
+  //printf("interrupt %u\n", int_num);
   int_num -= 32;
   if (int_num > 8) int_num -= 96;
 
