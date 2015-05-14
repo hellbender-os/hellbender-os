@@ -44,6 +44,12 @@ void early_stage_4() {
   mmap_map_page((void*)service->vga_buffer, (uintptr_t)VGA_MEMORY,
                 MMAP_ATTRIB_USER_RW);
 
+  // TODO: give only required permissions!
+  asm volatile ("pushf;"
+                "orl $0x3000, (%esp);"
+                "popf;"
+                );
+  
   // wait until core service notifies that the pre-init is done.
   sem_t* to_core = sem_open("kernel_to_core", O_CREAT, (mode_t)0, (unsigned)0);
   sem_t* to_kernel = sem_open("core_to_kernel", O_CREAT, (mode_t)0, (unsigned)0);

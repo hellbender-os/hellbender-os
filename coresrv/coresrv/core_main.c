@@ -14,8 +14,8 @@ int main(void) {
 
   // do initialization without interrupts.
 
-  ps2_init();
   kbd_init();
+  ps2_init();
   rtc_init();
   vga_init();
   

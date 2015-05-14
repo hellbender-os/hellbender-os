@@ -64,6 +64,9 @@ heap/heap_malloc.o \
 heap/heap_realloc.o \
 hellbender/libc_init.o \
 hellbender/syscall.o \
+keymap/create.o \
+keymap/code2char.o \
+keymap/keymap_fi.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \

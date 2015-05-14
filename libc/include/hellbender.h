@@ -3,8 +3,14 @@
 
 #include <sys/types.h>
 
+#ifndef BREAK
 extern unsigned long __force_order;
 #define BREAK { asm volatile("xchg %%bx, %%bx" : "=m"(__force_order)); }
+#endif
+
+#ifndef BARRIER
+#define BARRIER asm volatile("": : :"memory");
+#endif
 
 void syscall_print(const char* str);
 void syscall_allocate(void* address, unsigned size);

@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <kernel/vga.h>
 
-extern void coresrv_vga_putc(unsigned x, unsigned y,
+extern void coresrv_vga_putc(unsigned x, unsigned y, unsigned cursorx,
                              unsigned c, unsigned color);
 
 #endif

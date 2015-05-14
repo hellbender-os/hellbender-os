@@ -12,7 +12,9 @@ typedef struct domain domain_t;
 typedef struct semaphore semaphore_t;
 
 extern unsigned long __force_order;
-#define BREAK { asm volatile("xchg %%bx, %%bx" : "=m"(__force_order)); }
+#define BREAK asm volatile("xchg %%bx, %%bx" : "=m"(__force_order));
+
+#define BARRIER asm volatile("": : :"memory");
 
 #define PAGE_SIZE 4096
 #define TABLE_SIZE (1024*PAGE_SIZE)
