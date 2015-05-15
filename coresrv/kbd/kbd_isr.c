@@ -62,7 +62,7 @@ void kbd_isr() {
       BARRIER;
       kbd.last_event = event_idx;
     } else {
-      coresrv_rtc_beep(800, 4);
+      coresrv_rtc_beep(NO_IDC, 800, 4);
     }
   }
   syscall_iret();

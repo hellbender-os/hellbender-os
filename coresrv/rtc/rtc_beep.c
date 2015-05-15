@@ -3,8 +3,7 @@
 
 volatile uint32_t beep_counter = 0;
 
-void _idc_coresrv_rtc_beep(__attribute__((unused))uintptr_t retval,
-                           unsigned freq, unsigned ticks) {
+__IDCIMPL__ void coresrv_rtc_beep(IDC_PTR, unsigned freq, unsigned ticks) {
   if (freq == 0 || ticks == 0) {
     beep_counter = 0;
     uint8_t tmp = inb(0x61) & 0xFC;
@@ -27,8 +26,4 @@ void _idc_coresrv_rtc_beep(__attribute__((unused))uintptr_t retval,
       outb(0x61, tmp | 3);
     }
   }
-}
-
-void coresrv_rtc_beep(unsigned freq, unsigned ticks) {
-  _idc_coresrv_rtc_beep(0, freq, ticks);
 }

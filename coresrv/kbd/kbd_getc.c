@@ -4,7 +4,7 @@
 
 #include "kbd_impl.h"
 
-int _idc_coresrv_kbd_getc(__attribute__((unused))uintptr_t retval) {
+__IDCIMPL__ int coresrv_kbd_getc(IDC_PTR) {
   while (kbd.first_event != kbd.last_event) {
     unsigned event_idx = kbd.first_event;
     kbd_event_t event = kbd.events[event_idx];

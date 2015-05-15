@@ -3,8 +3,8 @@
 
 #include <stddef.h>
 #include <kernel/vga.h>
+#include <coresrv/coresrv.h>
 
-extern void coresrv_vga_putc(unsigned x, unsigned y, unsigned cursorx,
-                             unsigned c, unsigned color);
+__IDC__ void coresrv_vga_putc(IDC_PTR, unsigned x, unsigned y, unsigned cursorx, unsigned c, unsigned color);
 
 #endif

@@ -3,6 +3,6 @@
 
 extern volatile uint32_t counter;
 
-unsigned _idc_coresrv_rtc_ticks(__attribute__((unused))uintptr_t retval) {
+__IDCIMPL__ unsigned coresrv_rtc_ticks(IDC_PTR) {
   return counter;
 }

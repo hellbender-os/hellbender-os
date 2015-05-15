@@ -1,6 +1,8 @@
 #ifndef _CORESRV_KBD_H
 #define _CORESRV_KBD_H
 
+#include <coresrv/coresrv.h>
+
 #define KBD_MAX_KEYCODE 256
 
 #define KBD_EVENT_KEYDOWN 1
@@ -37,6 +39,6 @@ typedef struct kbd_event {
 #define KBD_GETC_KEYCODE(i) (i & 0xffff)
 #define KBD_GETC_FLAGS(i) ((i>>16) & 0xff)
 
-extern int coresrv_kbd_getc();
+__IDC__ int coresrv_kbd_getc(IDC_PTR);
 
 #endif

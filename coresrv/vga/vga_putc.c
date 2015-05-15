@@ -16,9 +16,7 @@ static void update_cursor(int row, int col)
    outb(0x3D5, (unsigned char )((position>>8)&0xFF));
  }
 
-void _idc_coresrv_vga_putc(__attribute__((unused))uintptr_t retval,
-                           unsigned x, unsigned y, unsigned cursorx,
-                           unsigned c, unsigned color) {
+__IDCIMPL__ void coresrv_vga_putc(IDC_PTR, unsigned x, unsigned y, unsigned cursorx, unsigned c, unsigned color) {
   if (x < VGA_WIDTH && y < VGA_HEIGHT) {
     vga_buffer[y * VGA_WIDTH + x] = make_vgaentry(c, color);
     update_cursor(y, cursorx);

@@ -1,7 +1,7 @@
 HOST?=i686-binary
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g0 -dDEBUG
+CFLAGS?=-O2 -g0
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -29,7 +29,10 @@ LIBS:=$(LIBS) $(ARCH_LIBS)
 
 HEADER_OBJ:=$(ARCHDIR)/module_header.o
 
-CORE_IDC:=coresrv/core_idc.o
+CORE_IDC:=coresrv/coresrv_idc.o
+CORE_IDCH:=include/coresrv/coresrv_idc.h
+CORE_STUB:=coresrv/coresrv_stub.o
+CORE_SYMS:=coresrv/coresrv_syms.o
 
 CORE_OBJS:=\
 $(HEADER_OBJ) \
@@ -47,6 +50,8 @@ rtc/rtc_ticks.o \
 rtc/rtc_beep.o \
 vga/vga_init.o \
 vga/vga_putc.o \
+vfs/vfs_open.o \
+vfs/rootfs.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
@@ -54,25 +59,30 @@ $(ARCH_OBJS) \
 test/test_main.o \
 coresrv/libcore.o \
 
+HEADERS=$(shell find . -name "*\.h")
+
 all: core.srv test.app
 
 .PHONY: all clean install install-headers install-server
 
-core.srv: $(CORE_OBJS) $(CORE_IDC) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -Xlinker -Map -Xlinker coresrv.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(CORE_IDC) $(LDFLAGS) $(LIBS)
+core.srv: $(CORE_OBJS) $(CORE_IDC) $(CORE_STUB) $(ARCHDIR)/linker.ld $(LIB_DEPS)
+	$(CC) -Xlinker -Map -Xlinker coresrv.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(CORE_IDC) $(CORE_STUB) $(LDFLAGS) $(LIBS)
 
-coresrv/core_idc.S: $(CORE_OBJS) make_core_idc.sh
-	./make_core_idc.sh > coresrv/core_idc.S
+coresrv/coresrv_idc.S include/coresrv/coresrv_idc.h: $(HEADERS) make_coresrv_idc.sh
+	./make_coresrv_idc.sh > coresrv/coresrv_idc.S 2> $(CORE_IDCH)
 
-coresrv/libcore.S: coresrv.map make_libcore.pl
-	./make_libcore.pl > coresrv/libcore.S
+coresrv/coresrv_stub.S: $(CORE_OBJS) make_coresrv_stub.sh
+	./make_coresrv_stub.sh > coresrv/coresrv_stub.S
 
-test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
+coresrv/coresrv_syms.S: coresrv.map make_coresrv_syms.pl
+	./make_coresrv_syms.pl > coresrv/coresrv_syms.S
+
+test.app: $(APP_OBJS) $(CORE_STUB) $(CORE_SYMS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
+	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(CORE_STUB) $(CORE_SYMS) $(LDFLAGS) $(LIBS)
 # To see the linker script: -Wl,-verbose
 # To see the link process:  -Xlinker --print-map
 
-%.o: %.c
+%.o: %.c $(CORE_IDCH)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.S

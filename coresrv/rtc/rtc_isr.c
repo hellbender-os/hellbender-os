@@ -10,7 +10,7 @@ void rtc_isr() {
   ++counter;
   if (beep_counter) {
     if (!(--beep_counter)) {
-      coresrv_rtc_beep(0, 0);
+      coresrv_rtc_beep(NO_IDC, 0, 0);
     }
   }
   syscall_iret();

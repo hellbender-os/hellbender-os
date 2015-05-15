@@ -28,6 +28,14 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
+fcntl/fcntl_init.o \
+fcntl/open.o \
+unistd/close.o \
+unistd/fsync.o \
+unistd/ftruncate.o \
+unistd/lseek.o \
+unistd/read.o \
+unistd/write.o \
 stdio/sprintf.o \
 stdio/printf.o \
 stdio/puts.o \
@@ -53,6 +61,7 @@ string/memmove.o \
 string/memset.o \
 string/strlen.o \
 string/strcmp.o \
+string/strcpy.o \
 sched/sched_yield.o \
 semaphore/sem_open.o \
 semaphore/sem_post.o \
