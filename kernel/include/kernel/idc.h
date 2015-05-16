@@ -18,7 +18,7 @@
  * __IDCIMPL__ r_type somesrv_somefunc(IDC_PTR, p_type p1, etc);
  */
 #define __IDC__ extern
-#define IDC_PTR __attribute__((unused))uintptr_t __idc_ptr
+#define IDC_PTR __attribute__((unused))void* __idc_ptr
 #define __IDCIMPL__
 
 /**

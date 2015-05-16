@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <fcntl.h>
+#include <kernel/kernel.h>
 
 #include "fcntl_impl.h"
 
@@ -12,6 +13,8 @@ int open(const char *name, int flags, ...) {
   }
   // ask virtual file system to populate it for the file.
   vfo_t *vfo = &fcntl_data.handles[handle];
+  //printf("making call to vfs_open\n");
+  BREAK;
   if (CORE_IDC(coresrv_vfs_open, vfo, name, flags) == 0) {
     return handle;
   } else {

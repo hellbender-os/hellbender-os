@@ -120,14 +120,9 @@ isr_wrapper_82:
         // eax: target_address
         // kernel stack: ss, esp, flags, cs, eip
         mov %eax, (%esp)
-        //push %ebx // we might want to switch from TSS stack to kernel stack.
-        //mov %esp, %ebx
-	//movl $(kernel_stack+16384+4096), %esp
         push %eax
         call domain_push // checks that target_address is valid, enables domain.
         pop %eax
-        //mov %ebx, %esp
-        //pop %ebx
         // kernel stack: ss, esp, flags, cs, target_address
         iret // returns to ring3 at the target_address.
 
@@ -141,9 +136,10 @@ isr_wrapper_83:
         // edx: return_address
         // stack: ss, esp, flags, cs, eip
         mov %edx, (%esp)
-         // we might want to switch from TSS stack to kernel stack.
-        push %eax
+        push %edx
         call domain_pop // disables domain.
-        pop %eax
+        pop %edx
+        // caller stack has been depleted by IDC wrapper; we have to fix that.
+        sub $4, 12(%esp)
         // stack: ss, esp, flags, cs, return_address
         iret // returns to ring3 at the target_address.

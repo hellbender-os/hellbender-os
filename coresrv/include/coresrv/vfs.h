@@ -23,6 +23,7 @@ typedef struct vfo {
   coresrv_vfs_ftruncate_ptr ftruncate;
 
   uintptr_t id;
+  off_t offset;
 } vfo_t;
 
 __IDC__ int coresrv_vfs_open(IDC_PTR, vfo_t*, const char *name, int flags);

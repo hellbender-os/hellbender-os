@@ -57,7 +57,8 @@ APP_OBJS:=\
 $(HEADER_OBJ) \
 $(ARCH_OBJS) \
 test/test_main.o \
-coresrv/libcore.o \
+$(CORE_STUB) \
+$(CORE_SYMS) \
 
 HEADERS=$(shell find . -name "*\.h")
 
@@ -77,8 +78,8 @@ coresrv/coresrv_stub.S: $(CORE_OBJS) make_coresrv_stub.sh
 coresrv/coresrv_syms.S: coresrv.map make_coresrv_syms.pl
 	./make_coresrv_syms.pl > coresrv/coresrv_syms.S
 
-test.app: $(APP_OBJS) $(CORE_STUB) $(CORE_SYMS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(CORE_STUB) $(CORE_SYMS) $(LDFLAGS) $(LIBS)
+test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
+	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
 # To see the linker script: -Wl,-verbose
 # To see the link process:  -Xlinker --print-map
 
