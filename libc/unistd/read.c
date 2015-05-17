@@ -12,15 +12,14 @@ ssize_t read(int handle, void *buffer, size_t size) {
     printf("Illegal file handle.\n");
     abort();
   }
-  vfo_t *vfo = &fcntl_data.handles[handle];
-  if (!vfo->id) {
+  struct vfs_file *file = &fcntl_data.handles[handle];
+  if (!file->filesys) {
     printf("File handle not open.\n");
     abort();
   }
-  if (!vfo->read) {
+  if (!file->filesys->read) {
     printf("Read not supported.\n");
     abort();
   }
-  printf("making call to vfo->read\n");
-  return IDC(coresrv_vfs_read, vfo->read, vfo, buffer, size);
+  return IDC(vfs_read, file->filesys->read, file, buffer, size);
 }

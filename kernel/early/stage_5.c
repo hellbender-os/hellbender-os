@@ -16,13 +16,14 @@ void early_stage_5() {
   early_data_t *data = (early_data_t*)kernel.early_data;
     
   // create application process.
-  unsigned app_idx = 1;
-  if (app_idx == kernel.core_module) ++app_idx;
-  kernel.processes[app_idx] =
-    process_create_module(&data->modules[app_idx],
-                          &data->binaries[app_idx]);
-  scheduler_add_thread(kernel.processes[app_idx]->thread);
-
+  if (data->binaries[MODULE_TEST].bottom) {
+    unsigned app_idx = kernel.nof_processes++;
+    kernel.processes[app_idx] =
+    process_create_module(&data->modules[MODULE_TEST],
+                          &data->binaries[MODULE_TEST]);
+    scheduler_add_thread(kernel.processes[app_idx]->thread);
+  }
+  
   // enter main kernel loop.
   free(kernel.early_data);
   kernel.early_data = NULL;

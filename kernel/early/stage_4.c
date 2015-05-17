@@ -32,17 +32,25 @@ void early_stage_4() {
   early_data_t *data = (early_data_t*)kernel.early_data;
 
   // create core service process.
-  unsigned core_idx = kernel.core_module;
+  unsigned core_idx = kernel.core_module = kernel.nof_processes++;
   kernel.processes[core_idx] =
-    process_create_module(&data->modules[core_idx],
-                          &data->binaries[core_idx]);
+    process_create_module(&data->modules[MODULE_CORE],
+                          &data->binaries[MODULE_CORE]);
   scheduler_add_thread(kernel.processes[core_idx]->thread);
   core_service_t *service =
-    (core_service_t*)data->modules[core_idx].module_info;
+    (core_service_t*)data->modules[MODULE_CORE].module_info;
 
   // map VGA memory to core service:
   mmap_map_page((void*)service->vga_buffer, (uintptr_t)VGA_MEMORY,
                 MMAP_ATTRIB_USER_RW);
+
+  // map initrd to core service:
+  size_t initrd_size = (size_t)(data->binaries[MODULE_INITRD].top -
+                                data->binaries[MODULE_INITRD].bottom);
+  service->initrd_buffer = INITRD_OFFSET;
+  service->initrd_size = initrd_size;
+  mmap_map((void*)INITRD_OFFSET, data->binaries[MODULE_INITRD].bottom,
+           initrd_size, MMAP_ATTRIB_USER_RO);
 
   // TODO: give only required permissions!
   asm volatile ("pushf;"
@@ -55,10 +63,9 @@ void early_stage_4() {
   sem_t* to_kernel = sem_open("core_to_kernel", O_CREAT, (mode_t)0, (unsigned)0);
   sem_wait(to_kernel);
 
-  printf("Kernel setting hardware interrupts.\n");
   // setup hardware interrupts.
   isr_stage_4_pic();
-  pic_isr_stage_4_init(service);
+  pic_isr_stage_4_init(service, kernel.processes[core_idx]);
   printf("Hardware interrupts activated.\n");
 
   // notify core service to continue; wait it till completes.

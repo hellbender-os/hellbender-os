@@ -14,7 +14,7 @@ typedef unsigned ino_t;
 typedef unsigned key_t;
 typedef unsigned mode_t;
 typedef unsigned nlink_t;
-typedef unsigned off_t;
+typedef int off_t;
 typedef unsigned pid_t;
 typedef unsigned pthread_attr_t;
 typedef unsigned pthread_cond_t;

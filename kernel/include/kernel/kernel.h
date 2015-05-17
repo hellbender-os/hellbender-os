@@ -30,6 +30,7 @@ extern unsigned long __force_order;
 #define THREAD_HEAP_BOTTOM (THREAD_OFFSET+16*PAGE_SIZE)
 #define THREAD_HEAP_TOP    (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
 #define THREAD_STACK_TOP (THREAD_OFFSET+TABLE_SIZE-PAGE_SIZE)
+
 // all applications are mapped into this address, in their own address spaces.
 #define APPLICATION_OFFSET 0x800000
 
@@ -41,6 +42,8 @@ extern unsigned long __force_order;
 
 // core module is mapped at a fixed address at the top of the address space.
 #define CORE_OFFSET 0x7F800000
+#define IDC_TABLE_SIZE 4096
+#define INITRD_OFFSET (CORE_OFFSET + TABLE_SIZE/2)
 
 // virtual address space is split into two segments to simulate 'no-execute'
 // flag in protected mode.
@@ -59,15 +62,16 @@ extern unsigned long __force_order;
 
 // maximum number of modules that can be loaded by GRUB (kernel included).
 #define MAX_MODULES 4
+#define MODULE_KERNEL 0
+#define MODULE_CORE 1
+#define MODULE_TEST 2
+#define MODULE_INITRD 3
 
 typedef struct kernel {
   // modules loaded by GRUB:
-  //unsigned nof_modules;
-  //module_binary_t binaries[MAX_MODULES]; // physical address range.
-  //kernel_module_t modules[MAX_MODULES]; // virtual address ranges.
   unsigned nof_processes;
+  unsigned core_module;//TODO: remove once domain_push works.
   process_t* processes[MAX_MODULES]; // domain and thread.
-  unsigned core_module; // index of the core module.
 
   void* early_data; // holds multiboot information during initialization.
   void* heap_bottom; // heap limits for libK (before processes are set up).

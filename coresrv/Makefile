@@ -50,8 +50,11 @@ rtc/rtc_ticks.o \
 rtc/rtc_beep.o \
 vga/vga_init.o \
 vga/vga_putc.o \
+vfs/vfs_init.o \
+vfs/vfs_mount.o \
 vfs/vfs_open.o \
 vfs/rootfs.o \
+vfs/initfs.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
@@ -83,7 +86,7 @@ test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 # To see the linker script: -Wl,-verbose
 # To see the link process:  -Xlinker --print-map
 
-%.o: %.c $(CORE_IDCH)
+%.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.S
@@ -96,7 +99,7 @@ clean:
 
 install: install-headers install-server
 
-install-headers:
+install-headers: $(CORE_IDCH)
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -RT include $(DESTDIR)$(INCLUDEDIR)
 

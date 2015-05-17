@@ -17,10 +17,8 @@ typedef struct early_data {
   memory_map_t memory_map[MAX_MEMORY_MAP_ELEMENTS];
 
   // modules loaded by GRUB:
-  unsigned nof_modules;
   module_binary_t binaries[MAX_MODULES]; // physical address range.
   kernel_module_t modules[MAX_MODULES]; // virtual address ranges.
-
 } early_data_t;
 
 /**

@@ -4,7 +4,8 @@
 
 int module_check_header(kernel_module_t *module) {
   if (module->magic != 0x1337c0de) {
-    printf("No magic in module: %x\n", (unsigned)module->magic);
+    printf("No magic in module: %x-%x\n",
+           (unsigned)module->bottom, (unsigned)module->top);
     return 0;
   }
   uint16_t *fields = (uint16_t*)module;

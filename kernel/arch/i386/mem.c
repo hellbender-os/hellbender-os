@@ -74,6 +74,7 @@ void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
 
   // round the input values to page boundaries.
   for (unsigned j = 0; j < nof_binaries; ++j) {
+    if (!binaries[j].bottom) continue;
     binaries[j].bottom -= binaries[j].bottom % PAGE_SIZE;
     if (binaries[j].top % PAGE_SIZE) {
       binaries[j].top += PAGE_SIZE - binaries[j].top % PAGE_SIZE;

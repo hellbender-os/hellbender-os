@@ -81,4 +81,6 @@
 #define EWOULDBLOCK 78
 #define EXDEV 79
 
+typedef int errno_t;
+
 #endif

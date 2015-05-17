@@ -28,14 +28,6 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
-fcntl/fcntl_init.o \
-fcntl/open.o \
-unistd/close.o \
-unistd/fsync.o \
-unistd/ftruncate.o \
-unistd/lseek.o \
-unistd/read.o \
-unistd/write.o \
 stdio/sprintf.o \
 stdio/printf.o \
 stdio/puts.o \
@@ -52,17 +44,20 @@ stdlib/ldiv.o \
 stdlib/div.o \
 stdlib/qsort.o \
 stdlib/bsearch.o \
-stdlib/system.o \
-stdlib/getenv.o \
 stdlib/abort.o \
+stdlib/exit.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
 string/memset.o \
 string/strlen.o \
 string/strcmp.o \
+string/strncmp.o \
+string/strcat.o \
+string/strcat_s.o \
 string/strcpy.o \
-sched/sched_yield.o \
+string/strcpy_s.o \
+string/strrchr.o \
 semaphore/sem_open.o \
 semaphore/sem_post.o \
 semaphore/sem_wait.o \
@@ -73,13 +68,23 @@ heap/heap_malloc.o \
 heap/heap_realloc.o \
 hellbender/libc_init.o \
 hellbender/syscall.o \
-keymap/create.o \
-keymap/code2char.o \
-keymap/keymap_fi.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
-stdlib/exit.o \
+fcntl/fcntl_init.o \
+fcntl/open.o \
+unistd/close.o \
+unistd/fsync.o \
+unistd/ftruncate.o \
+unistd/lseek.o \
+unistd/read.o \
+unistd/write.o \
+stdlib/system.o \
+stdlib/getenv.o \
+sched/sched_yield.o \
+keymap/create.o \
+keymap/code2char.o \
+keymap/keymap_fi.o \
 
 OBJS:=\
 $(FREEOBJS) \

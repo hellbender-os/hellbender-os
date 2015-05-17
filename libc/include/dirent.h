@@ -6,12 +6,7 @@
 
 struct dirent {
   ino_t  d_ino;
-  char   d_name[NAME_MAX];
-};
-
-struct dirent_stat {
-  struct dirent d_dirent;
-  struct stat d_stat;
+  char   d_name[NAME_MAX+1];
 };
 
 #endif

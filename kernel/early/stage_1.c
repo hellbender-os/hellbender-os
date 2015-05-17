@@ -102,7 +102,7 @@ void early_stage_1(uint32_t magic, multiboot_info_t *info) {
 
   // these are the limits for the whole kernel, and kernel code.
   {
-    printf("Kernel found at %x - %x; code at %x - %x\n",
+    printf("Kernel  found at %x - %x; code at %x - %x\n",
             (unsigned)min_data, (unsigned)max_data,
             (unsigned)min_text, (unsigned)max_text);
     module_binary_t binary;
@@ -114,41 +114,69 @@ void early_stage_1(uint32_t magic, multiboot_info_t *info) {
     module.text_bottom = min_text;
     module.text_top = max_text;
     // we put kernel and module data into these arrays.
-    data.binaries[0] = binary;
-    data.modules[0] = module;
-    data.nof_modules = 1;
+    data.binaries[MODULE_KERNEL] = binary;
+    data.modules[MODULE_KERNEL] = module;
   }
   
   // find all modules, make sure core is one of them.
   int core_found = 0;
+  int initrd_found = 0;
   module_t *modules = (module_t*)info->mods_addr;
   for (unsigned i = 0; i < info->mods_count; ++i) {
     module_binary_t binary;
     binary.bottom = (uintptr_t)modules[i].mod_start;
     binary.top = (uintptr_t)modules[i].mod_end;
-    // module header at zero, or 4K offset, depending on IDC table.
-    kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom+4096);
-    if (mod_ptr->magic != 0x1337c0de) {
-      mod_ptr = (kernel_module_t*)(binary.bottom);
-    }
-    int idx = data.nof_modules++;
-    data.binaries[idx] = binary;
-    data.modules[idx] = *mod_ptr;
 
-    if (mod_ptr->bottom == CORE_OFFSET) {
-      kernel.core_module = idx;
+    if (strcmp((char*)modules[i].string, "--core") == 0) {
+      // core has IDC table in the beginning.
+      kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom+4096);
+      if (mod_ptr->magic != 0x1337c0de) {
+        printf("No magic in core!\n");
+        abort();
+      }
       core_found = 1;
-      printf("Core service found at %x - %x; ",
+      data.binaries[MODULE_CORE] = binary;
+      data.modules[MODULE_CORE] = *mod_ptr;
+      printf("Coresrv found at %x - %x; ",
              (unsigned)binary.bottom, (unsigned)binary.top);
-    } else {
-      printf("GRUB module found at %x - %x; ",
+      printf("mapped into %x - %x\n",
+             (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
+    }
+    else if (strcmp((char*)modules[i].string, "--test") == 0) {
+      // module header at zero.
+      kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom);
+      if (mod_ptr->magic != 0x1337c0de) {
+        printf("No magic in core!\n");
+        abort();
+      }
+      data.binaries[MODULE_TEST] = binary;
+      data.modules[MODULE_TEST] = *mod_ptr;
+      printf("Testapp found at %x - %x; ",
+              (unsigned)binary.bottom, (unsigned)binary.top);
+      printf("mapped into %x - %x\n",
+             (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
+    }
+    else if (strcmp((char*)modules[i].string, "--initrd") == 0) {
+      initrd_found = 1;
+      data.binaries[MODULE_INITRD] = binary;
+      unsigned initrd_size = (unsigned)(binary.top - binary.bottom);
+      printf("Initrd  found at %x - %x; ",
+              (unsigned)binary.bottom, (unsigned)binary.top);
+      printf("mapped into %x - %x\n",
+             (unsigned)INITRD_OFFSET, (unsigned)INITRD_OFFSET + initrd_size);
+    }
+    else {
+      printf("Unknown found at %x - %x; \n",
               (unsigned)binary.bottom, (unsigned)binary.top);
     }
-    printf("mapped into %x - %x\n",
-           (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
   }
+
   if (!core_found) {
     printf("Core service not found!\n");
+    abort();
+  }
+  if (!initrd_found) {
+    printf("Initrd not found!\n");
     abort();
   }
 

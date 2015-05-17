@@ -10,4 +10,6 @@ _hellbender_module_info:
         .long ps2_chan1_isr
         .long ps2_chan2_isr
         .long vga_buffer
+        .long 0 # initrd buffer, filled by early kernel init.
+        .long 0 # initrd size.
 _hellbender_module_info2:       

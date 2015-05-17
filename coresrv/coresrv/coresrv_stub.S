@@ -12,44 +12,38 @@ coresrv_stub:
 .global __IDC__coresrv_kbd_getc
 .set __IDC__coresrv_kbd_getc, coresrv_stub
 
-.global __IDC__coresrv_rootfs_close
-.set __IDC__coresrv_rootfs_close, coresrv_stub
-
-.global __IDC__coresrv_rootfs_lseek
-.set __IDC__coresrv_rootfs_lseek, coresrv_stub
-
-.global __IDC__coresrv_rootfs_open
-.set __IDC__coresrv_rootfs_open, coresrv_stub
-
-.global __IDC__coresrv_rootfs_read
-.set __IDC__coresrv_rootfs_read, coresrv_stub
-
 .global __IDC__coresrv_rtc_beep
 .set __IDC__coresrv_rtc_beep, coresrv_stub
 
 .global __IDC__coresrv_rtc_ticks
 .set __IDC__coresrv_rtc_ticks, coresrv_stub
 
-.global __IDC__coresrv_vfs_close
-.set __IDC__coresrv_vfs_close, coresrv_stub
-
-.global __IDC__coresrv_vfs_fsync
-.set __IDC__coresrv_vfs_fsync, coresrv_stub
-
-.global __IDC__coresrv_vfs_ftruncate
-.set __IDC__coresrv_vfs_ftruncate, coresrv_stub
-
-.global __IDC__coresrv_vfs_lseek
-.set __IDC__coresrv_vfs_lseek, coresrv_stub
-
-.global __IDC__coresrv_vfs_open
-.set __IDC__coresrv_vfs_open, coresrv_stub
-
-.global __IDC__coresrv_vfs_read
-.set __IDC__coresrv_vfs_read, coresrv_stub
-
-.global __IDC__coresrv_vfs_write
-.set __IDC__coresrv_vfs_write, coresrv_stub
-
 .global __IDC__coresrv_vga_putc
 .set __IDC__coresrv_vga_putc, coresrv_stub
+
+.global __IDC__vfs_close
+.set __IDC__vfs_close, coresrv_stub
+
+.global __IDC__vfs_fsync
+.set __IDC__vfs_fsync, coresrv_stub
+
+.global __IDC__vfs_ftruncate
+.set __IDC__vfs_ftruncate, coresrv_stub
+
+.global __IDC__vfs_lseek
+.set __IDC__vfs_lseek, coresrv_stub
+
+.global __IDC__vfs_mount
+.set __IDC__vfs_mount, coresrv_stub
+
+.global __IDC__vfs_open
+.set __IDC__vfs_open, coresrv_stub
+
+.global __IDC__vfs_read
+.set __IDC__vfs_read, coresrv_stub
+
+.global __IDC__vfs_unmount
+.set __IDC__vfs_unmount, coresrv_stub
+
+.global __IDC__vfs_write
+.set __IDC__vfs_write, coresrv_stub

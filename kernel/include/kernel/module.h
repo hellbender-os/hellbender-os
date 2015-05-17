@@ -27,10 +27,12 @@ typedef struct core_service {
   uint32_t ps2_chan1_isr;
   uint32_t ps2_chan2_isr;
   uint32_t vga_buffer;
+  uint32_t initrd_buffer;
+  uint32_t initrd_size;
 } __attribute__((packed)) core_service_t;
 
-#define CORE_MODULE ((kernel_module_t*)CORE_OFFSET)
-#define CORE_SERVICE ((core_service_t*)(CORE_OFFSET + sizeof(kernel_module_t)))
+#define CORE_MODULE ((kernel_module_t*)(CORE_OFFSET + IDC_TABLE_SIZE))
+#define CORE_SERVICE ((core_service_t*)CORE_MODULE->module_info)
 
 int module_check_header(kernel_module_t *module);
 

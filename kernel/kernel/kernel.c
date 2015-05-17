@@ -28,8 +28,7 @@ void kernel_main(void) {
   printf("kernel_main\n");
   
   printf("Hello, kernel World!\n");
-
-  while (1) sched_yield();
+  exit(0);
 }
 
 __attribute__((__noreturn__))

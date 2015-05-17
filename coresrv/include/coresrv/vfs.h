@@ -5,27 +5,39 @@
 
 #include <sys/types.h>
 
-typedef struct vfo vfo_t;
+#define VFS_SEPARATOR_CHAR '/'
+#define VFS_SEPARATOR_STRING "/"
 
-__IDC__ int coresrv_vfs_close(IDC_PTR, vfo_t*);
-__IDC__ ssize_t coresrv_vfs_read(IDC_PTR, vfo_t*, void *, size_t);
-__IDC__ ssize_t coresrv_vfs_write(IDC_PTR, vfo_t*, const void *, size_t);
-__IDC__ off_t coresrv_vfs_lseek(IDC_PTR, vfo_t*, off_t, int);
-__IDC__ int coresrv_vfs_fsync(IDC_PTR, vfo_t*);
-__IDC__ int coresrv_vfs_ftruncate(IDC_PTR, vfo_t*, off_t);
+struct vfs_filesys {
+  vfs_open_ptr open;
+  vfs_close_ptr close;
+  vfs_read_ptr read;
+  vfs_write_ptr write;
+  vfs_lseek_ptr lseek;
+  vfs_fsync_ptr fsync;
+  vfs_ftruncate_ptr ftruncate;
 
-typedef struct vfo {
-  coresrv_vfs_close_ptr close;
-  coresrv_vfs_read_ptr read;
-  coresrv_vfs_write_ptr write;
-  coresrv_vfs_lseek_ptr lseek;
-  coresrv_vfs_fsync_ptr fsync;
-  coresrv_vfs_ftruncate_ptr ftruncate;
+  void* internal;
+};
 
-  uintptr_t id;
-  off_t offset;
-} vfo_t;
+struct vfs_file {
+  struct vfs_filesys* filesys;
+  void *internal;
+};
 
-__IDC__ int coresrv_vfs_open(IDC_PTR, vfo_t*, const char *name, int flags);
+extern struct vfs_rootfs vfs_rootfs;
+
+void vfs_init();
+  
+__IDC__ int vfs_mount(IDC_PTR, const char*, struct vfs_filesys *);
+__IDC__ int vfs_unmount(IDC_PTR, const char*);
+
+__IDC__ int vfs_open(IDC_PTR, struct vfs_file*, const char *, int);
+__IDC__ int vfs_close(IDC_PTR, struct vfs_file*);
+__IDC__ ssize_t vfs_read(IDC_PTR, struct vfs_file*, void *, size_t);
+__IDC__ ssize_t vfs_write(IDC_PTR, struct vfs_file*, const void *, size_t);
+__IDC__ off_t vfs_lseek(IDC_PTR, struct vfs_file*, off_t, int);
+__IDC__ int vfs_fsync(IDC_PTR, struct vfs_file*);
+__IDC__ int vfs_ftruncate(IDC_PTR, struct vfs_file*, off_t);
 
 #endif

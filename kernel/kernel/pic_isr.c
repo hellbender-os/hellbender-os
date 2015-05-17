@@ -23,9 +23,8 @@ typedef struct pic_isr {
 
 pic_isr_t pic_isr;
 
-void pic_isr_stage_4_init(core_service_t *core) {
+void pic_isr_stage_4_init(core_service_t *core, process_t *core_process) {
   memset(&pic_isr, 0, sizeof(pic_isr));
-  process_t *core_process = kernel.processes[kernel.core_module];
   
   // we need 2 threads: one to process timer events (ensuring proper scheduing),
   // and the other one for processing all other interrupts.

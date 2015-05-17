@@ -4,26 +4,41 @@
 .global __IDE__coresrv_kbd_getc
 .set __IDE__coresrv_kbd_getc, 0x7f800000
 
-.global __IDE__coresrv_rootfs_close
-.set __IDE__coresrv_rootfs_close, 0x7f800008
-
-.global __IDE__coresrv_rootfs_lseek
-.set __IDE__coresrv_rootfs_lseek, 0x7f800010
-
-.global __IDE__coresrv_rootfs_open
-.set __IDE__coresrv_rootfs_open, 0x7f800018
-
-.global __IDE__coresrv_rootfs_read
-.set __IDE__coresrv_rootfs_read, 0x7f800020
-
 .global __IDE__coresrv_rtc_beep
-.set __IDE__coresrv_rtc_beep, 0x7f800028
+.set __IDE__coresrv_rtc_beep, 0x7f800008
 
 .global __IDE__coresrv_rtc_ticks
-.set __IDE__coresrv_rtc_ticks, 0x7f800030
-
-.global __IDE__coresrv_vfs_open
-.set __IDE__coresrv_vfs_open, 0x7f800038
+.set __IDE__coresrv_rtc_ticks, 0x7f800010
 
 .global __IDE__coresrv_vga_putc
-.set __IDE__coresrv_vga_putc, 0x7f800040
+.set __IDE__coresrv_vga_putc, 0x7f800018
+
+.global __IDE__vfs_initfs_close
+.set __IDE__vfs_initfs_close, 0x7f800020
+
+.global __IDE__vfs_initfs_lseek
+.set __IDE__vfs_initfs_lseek, 0x7f800028
+
+.global __IDE__vfs_initfs_open
+.set __IDE__vfs_initfs_open, 0x7f800030
+
+.global __IDE__vfs_initfs_read
+.set __IDE__vfs_initfs_read, 0x7f800038
+
+.global __IDE__vfs_mount
+.set __IDE__vfs_mount, 0x7f800040
+
+.global __IDE__vfs_open
+.set __IDE__vfs_open, 0x7f800048
+
+.global __IDE__vfs_rootfs_close
+.set __IDE__vfs_rootfs_close, 0x7f800050
+
+.global __IDE__vfs_rootfs_lseek
+.set __IDE__vfs_rootfs_lseek, 0x7f800058
+
+.global __IDE__vfs_rootfs_open
+.set __IDE__vfs_rootfs_open, 0x7f800060
+
+.global __IDE__vfs_rootfs_read
+.set __IDE__vfs_rootfs_read, 0x7f800068

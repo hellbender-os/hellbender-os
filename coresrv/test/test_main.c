@@ -66,22 +66,6 @@ void normalize_cwd() {
   *dst = 0;
 }
 
-void test_timer() {
-  unsigned counter = 0;
-  unsigned last = 0;
-  while (counter < 200) {
-    counter = CORE_IDC(coresrv_rtc_ticks);
-    if (counter == last) {
-      sched_yield();
-      continue;
-    }
-    last = counter;
-    if (counter % 20 == 0) {
-      printf("tick\n");
-    }
-  }
-}
-
 void read_command(char *buf, size_t size) {
   uint8_t color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
   unsigned x = strlen(cwd) + 2;
@@ -143,28 +127,28 @@ void do_pwd() {
 }
 
 void do_cd(char *dir) {
+  char old_cwd[PATH_MAX];
+  strcpy_s(old_cwd, PATH_MAX, cwd);
   dir = trim(dir);
-  unsigned cwd_len = strlen(cwd);
-  unsigned dir_len = strlen(dir);
-  if (dir_len == 0) { // empty cd resets to root.
+  if (strlen(dir) == 0) { // empty cd resets to root.
     cwd[0] = 0;
-    
-  } else if (dir_len > 0) {
-    strcpy(dir + dir_len, "/"); // make sure paths end with a separator.
-    ++dir_len;
+  } else {
     if (dir[0] == PATH_SEPARATOR) { // leading separator is absolute path.
-      strcpy(cwd, dir);
-      
+      strcpy_s(cwd, PATH_MAX, dir);
+      strcat_s(cwd, PATH_MAX, "/");
     } else { // all else are relative paths.
-      if (cwd_len + dir_len + 2 < PATH_MAX) {
-        cwd[cwd_len] = PATH_SEPARATOR;
-        strcpy(cwd + cwd_len + 1, dir);
-      } else {
-        printf("Error: max path length exceeded.\n");
-      }
+      strcat_s(cwd, PATH_MAX, dir);
+      strcat_s(cwd, PATH_MAX, "/");
     }
   }
   normalize_cwd();
+  int handle = open(cwd, O_RDONLY);
+  if (handle >= 0) {
+    close(handle);
+  } else {
+    printf("Error: '%s' not found.\n", cwd);
+    //strcpy_s(cwd, PATH_MAX, old_cwd);
+  }
 }
 
 void do_ls() {
@@ -172,7 +156,7 @@ void do_ls() {
   if (dir >= 0) {
     struct dirent dirent;
     while (read(dir, &dirent, sizeof(dirent)) == sizeof(dirent)) {
-      printf("%s\n", dirent.d_name);
+      printf("found: %s\n", dirent.d_name);
     }
     close(dir);
   } else {

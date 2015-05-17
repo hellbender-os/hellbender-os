@@ -37,7 +37,7 @@ void early_stage_3(early_data_t *data) {
   printf("early_stage_3\n");
   // setup physical page allocator, and virtual memory allocator.
   mem_stage_3_init(data->memory_map, data->memory_map_elements,
-                   data->binaries, data->nof_modules);
+                   data->binaries, MAX_MODULES);
   vmem_stage_3_init();
 
   // this will release the memory that is covered by the VGA buffer.

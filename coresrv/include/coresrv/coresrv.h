@@ -6,7 +6,11 @@
 
 #include <kernel/idc.h>
 
-typedef struct vfo vfo_t;
+struct vfs_file;
+struct vfs_filesys;
+struct vfs_rootfs;
+struct vfs_initfs;
+
 #include <coresrv/coresrv_idc.h>
 
 // calls the default coresrv implementation of an IDC interface.

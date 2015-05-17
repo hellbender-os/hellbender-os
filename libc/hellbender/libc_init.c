@@ -4,6 +4,8 @@
 #if defined(__is_hellbender_kernel)
 #include <kernel/kernel.h>
 #include <kernel/process.h>
+#else
+void fcntl_init();
 #endif
 
 #include <kernel/domain.h>
@@ -11,6 +13,7 @@
 #include <hellbender.h>
 
 void _hellbender_libc_init() {
+  // get the heap address space.
 #if defined(__is_hellbender_kernel)
   void* bottom = kernel.heap_bottom;
   void* top = kernel.heap_limit;
@@ -32,4 +35,10 @@ void _hellbender_libc_init() {
                        HEAP_DEFAULT_ALLOCATION_SIZE);
   heap_init_tiny(&default_tinyheap, &default_wilderness);
   heap_init_small(&default_smallheap, &default_wilderness);
+
+  // init the remaining libc.
+#if defined(__is_hellbender_kernel)
+#else
+  fcntl_init();
+#endif
 }

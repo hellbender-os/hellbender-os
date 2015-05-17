@@ -12,16 +12,15 @@ int close(int handle) {
     printf("Illegal file handle.\n");
     abort();
   }
-  vfo_t *vfo = &fcntl_data.handles[handle];
-  if (!vfo->id) {
+  struct vfs_file *file = &fcntl_data.handles[handle];
+  if (!file->filesys) {
     printf("File handle not open.\n");
     abort();
   }
-  if (!vfo->close) {
+  if (!file->filesys->close) {
     printf("Close not supported.\n");
     abort();
   }
-  printf("making call to vfo->close\n");
-  return IDC(coresrv_vfs_close, vfo->close, vfo);
+  return IDC(vfs_close, file->filesys->close, file);
 }
 
