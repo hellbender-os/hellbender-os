@@ -117,12 +117,13 @@ isr_wrapper_81:
         .balign 4
 isr_wrapper_82:
         // Target_address points to IDC wrapper at the first page of the domain.
-        // eax: target_address
+        // eax: target_address; edx: return address
         // kernel stack: ss, esp, flags, cs, eip
         mov %eax, (%esp)
+        push %edx
         push %eax
         call domain_push // checks that target_address is valid, enables domain.
-        pop %eax
+        add $8, %esp // might be needed if we were called from ring0.
         // kernel stack: ss, esp, flags, cs, target_address
         iret // returns to ring3 at the target_address.
 
@@ -131,15 +132,12 @@ isr_wrapper_82:
         .global isr_wrapper_83
         .balign 4
 isr_wrapper_83:
-        // IDC wrapper has popped the return_address from stack into edx.
+        // IDC wrapper has called target, time to return.
         // eax: return_value
-        // edx: return_address
         // stack: ss, esp, flags, cs, eip
-        mov %edx, (%esp)
-        push %edx
-        call domain_pop // disables domain.
-        pop %edx
-        // caller stack has been depleted by IDC wrapper; we have to fix that.
-        sub $4, 12(%esp)
+        push %eax
+        call domain_pop // disables domain, returns the original return address.
+        mov %eax, 4(%esp)
+        pop %eax
         // stack: ss, esp, flags, cs, return_address
         iret // returns to ring3 at the target_address.

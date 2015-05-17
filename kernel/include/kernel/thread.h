@@ -58,6 +58,12 @@ typedef struct thread {
   domain_t *home_domain;
   void* heap_bottom;
   void* heap_limit;
+
+  struct domain_stack {
+    uintptr_t entry_address;
+    uintptr_t return_address;
+  } domain_stack[IDC_CALL_MAX];
+  size_t domain_idx;
   
 } thread_t;
 

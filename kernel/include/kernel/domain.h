@@ -36,7 +36,7 @@ void* domain_grow_heap(domain_t *domain, size_t size); // returns new top.
 void domain_enable(domain_t* domain);
 void domain_disable(domain_t* domain);
 
-void domain_push(uint32_t address);
-void domain_pop();
+void domain_push(uintptr_t entry_address, uintptr_t return_address);
+uintptr_t domain_pop();
 
 #endif

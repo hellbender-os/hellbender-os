@@ -9,9 +9,16 @@
 #include <coresrv/initfs.h>
 #include <kernel/kernel.h>
 
+// like strrchr but skips the last character (dir names end with separator).
+static char *strrchr2(const char *str, int ch) {
+  char *ptr = NULL;
+  for (; *str && *(str+1); ++str) if (*str == ch) ptr = (char*)str;
+  return ptr;
+}
+
 static struct vfs_initfs_entry* find_parent(const char *path,
                                            struct vfs_initfs_entry *ptr) {
-  char *path_end = strrchr(path, VFS_SEPARATOR_CHAR);
+  char *path_end = strrchr2(path, VFS_SEPARATOR_CHAR);
   if (!path_end) return NULL;
   size_t path_len = path_end - path;
   for (; ptr; ptr = ptr->flat_next) {
@@ -19,7 +26,7 @@ static struct vfs_initfs_entry* find_parent(const char *path,
       return ptr;
     }
   }
-  printf("Parent not found for. %s\n", path);
+  printf("Parent not found for %s\n", path);
   return NULL;
 }
 
@@ -55,6 +62,7 @@ void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
     size -= sizeof(struct vfs_initfs_header);
     buffer += sizeof(struct vfs_initfs_header);
     char *fullpath = (char*)buffer;
+    //printf("Adding fullpath '%s'\n", fullpath);
     if (filesize == 0
         && header->mode == 0
         && strncmp(fullpath, "TRAILER!!", 9) == 0) break;
@@ -63,7 +71,7 @@ void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
     buffer += filesize + (filesize&1);
     struct vfs_initfs_entry *entry = NULL;
     struct vfs_initfs_entry *parent = NULL;
-    if (strcmp(fullpath, ".") == 0) {
+    if (strcmp(fullpath, "./") == 0) {
       entry = &initfs->root;
     } else {
       parent = find_parent(fullpath, initfs->flat_first);
@@ -73,7 +81,7 @@ void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
       initfs->flat_first = entry;
     }
     entry->header = *header;
-    char *path_end = strrchr(fullpath, VFS_SEPARATOR_CHAR);
+    char *path_end = strrchr2(fullpath, VFS_SEPARATOR_CHAR);
     entry->name = path_end ? path_end + 1 : fullpath;
     entry->path = fullpath;
     entry->data = filesize ? data : NULL;
@@ -106,6 +114,7 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
 
   } else {
     // find children by name (cpio directories don't have the tailing slash).
+    /*
     char purename[NAME_MAX+1];
     strcpy_s(purename, NAME_MAX+1, name);
     int name_is_dir = 0;
@@ -113,16 +122,17 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
       name_is_dir = 1;
       purename[name_len-1] = 0;
     }
+    */
     for (struct vfs_initfs_entry *ptr = internal->this->children; 
          ptr; ptr = ptr->next) {
-      if (strcmp(ptr->name, purename) == 0) {
-        int ptr_is_dir = S_ISDIR(ptr->header.mode) ? 1 : 0;
-        if (name_is_dir == ptr_is_dir) {
+      if (strcmp(ptr->name, name) == 0) {
+        /*int ptr_is_dir = S_ISDIR(ptr->header.mode) ? 1 : 0;
+          if (name_is_dir == ptr_is_dir) {*/
           internal->this = ptr;
           internal->child = internal->this->children;
           internal->offset = 0;
           return 0;
-        }
+          //}
       }
     }
   }
@@ -139,7 +149,6 @@ __IDCIMPL__ int vfs_initfs_close(IDC_PTR, struct vfs_file* file) {
 
 __IDCIMPL__ ssize_t vfs_initfs_read(IDC_PTR, struct vfs_file* file, void *buf, size_t size) {
   struct vfs_initfs_file *internal = (struct vfs_initfs_file*)(file->internal);
-  struct vfs_initfs *initfs = (struct vfs_initfs *)file->filesys;
 
   if (S_ISDIR(internal->this->header.mode)) {
     // directories return dirent and advance to next children.
@@ -164,7 +173,8 @@ __IDCIMPL__ ssize_t vfs_initfs_read(IDC_PTR, struct vfs_file* file, void *buf, s
     if (internal->offset + bytes > internal->this->filesize) {
       bytes = internal->this->filesize - internal->offset;
     }
-    memcpy(initfs->buffer, internal->this->data, bytes);
+    memcpy(buf, internal->this->data + internal->offset, bytes);
+    internal->offset += bytes;
     return bytes;
   }
   return 0;

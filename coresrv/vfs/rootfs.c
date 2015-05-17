@@ -46,21 +46,16 @@ int vfs_rootfs_open_mount(struct vfs_rootfs *rootfs,
 
   } else {
     // find mount by name.
-    printf("looking for mount '%s'\n", name);
     for (struct vfs_rootfs_mount *ptr = rootfs->first; 
          ptr; ptr = ptr->next) {
-      printf("matching '%s'\n", ptr->name);
       if (strcmp(ptr->name, name) == 0) {
         // switch over to the mounted filesystem.
-        printf("found match!\n");
         IDC(vfs_close, file->filesys->close, file);
-        printf("closed.\n");
         file->filesys = ptr->filesys;
         IDC(vfs_open, file->filesys->open, file, "", 0);
-        printf("opened.\n");
         return 0;
       }
-    }    
+    }
   }
   return -1;
 }

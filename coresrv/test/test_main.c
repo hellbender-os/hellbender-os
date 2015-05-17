@@ -57,8 +57,8 @@ void normalize_cwd() {
     if (strncmp(src, "//", 2) == 0) ++src;
     else if (strncmp(src, "/./", 3) == 0) src += 2;
     else if (strncmp(src, "/../", 4) == 0) {
-      while (dst > cwd && *(--dst) != PATH_SEPARATOR);
-      src += 3;
+      while (dst > cwd && *(dst-1) != PATH_SEPARATOR) --dst;
+      src += 4;
     } else {
       *dst++ = *src++;
     }
@@ -147,7 +147,7 @@ void do_cd(char *dir) {
     close(handle);
   } else {
     printf("Error: '%s' not found.\n", cwd);
-    //strcpy_s(cwd, PATH_MAX, old_cwd);
+    strcpy_s(cwd, PATH_MAX, old_cwd);
   }
 }
 
@@ -156,7 +156,7 @@ void do_ls() {
   if (dir >= 0) {
     struct dirent dirent;
     while (read(dir, &dirent, sizeof(dirent)) == sizeof(dirent)) {
-      printf("found: %s\n", dirent.d_name);
+      printf("%s\n", dirent.d_name);
     }
     close(dir);
   } else {
@@ -165,25 +165,27 @@ void do_ls() {
 }
 
 void do_cat(char* file) {
-  size_t cwd_len = strlen(cwd);
-  size_t file_len = strlen(file);
-  if (cwd_len + file_len < PATH_MAX) {
-    char file_path[PATH_MAX];
-    strcpy(file_path, cwd);
-    strcpy(file_path + cwd_len, file);
+  file = trim(file);
+  char file_path[PATH_MAX];
+  if (strcpy_s(file_path, PATH_MAX, cwd)) {
+    printf("Too long path.\n");
+    return;
+  }
+  if (strcat_s(file_path, PATH_MAX, file)) {
+    printf("Too long path.\n");
+    return;
+  }
 
-    int file = open(file_path, O_RDONLY);
-    if (file >= 0) {
-      char c;
-      while (read(file, &c, sizeof(c)) == sizeof(c)) {
-        printf("%c", c);
-      }
-    } else {
-      printf("Error: failed to open file '%s'\n", file_path);
+  int fd = open(file_path, O_RDONLY);
+  if (fd >= 0) {
+    char c;
+    while (read(fd, &c, sizeof(c)) == sizeof(c)) {
+      printf("%c", c);
     }
-    
+    close(fd);
+    if (c != '\n') printf("\n"); // current terminal overwrites last line..
   } else {
-    printf("Error: max path length exceeded.\n");
+    printf("Error: failed to open file '%s'\n", file_path);
   }
 }
 

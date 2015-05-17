@@ -4,85 +4,85 @@
 .global __IDE__coresrv_kbd_getc
 __IDE__coresrv_kbd_getc:
     calll coresrv_kbd_getc
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__coresrv_rtc_beep
 __IDE__coresrv_rtc_beep:
     calll coresrv_rtc_beep
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__coresrv_rtc_ticks
 __IDE__coresrv_rtc_ticks:
     calll coresrv_rtc_ticks
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__coresrv_vga_putc
 __IDE__coresrv_vga_putc:
     calll coresrv_vga_putc
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_initfs_close
 __IDE__vfs_initfs_close:
     calll vfs_initfs_close
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_initfs_lseek
 __IDE__vfs_initfs_lseek:
     calll vfs_initfs_lseek
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_initfs_open
 __IDE__vfs_initfs_open:
     calll vfs_initfs_open
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_initfs_read
 __IDE__vfs_initfs_read:
     calll vfs_initfs_read
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_mount
 __IDE__vfs_mount:
     calll vfs_mount
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_open
 __IDE__vfs_open:
     calll vfs_open
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_rootfs_close
 __IDE__vfs_rootfs_close:
     calll vfs_rootfs_close
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_rootfs_lseek
 __IDE__vfs_rootfs_lseek:
     calll vfs_rootfs_lseek
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_rootfs_open
 __IDE__vfs_rootfs_open:
     calll vfs_rootfs_open
-    pop %edx
     int $83
+.balign 8
 
 .global __IDE__vfs_rootfs_read
 __IDE__vfs_rootfs_read:
     calll vfs_rootfs_read
-    pop %edx
     int $83
+.balign 8
 
 .balignl 4096, 0x53cd5a90

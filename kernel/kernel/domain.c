@@ -164,22 +164,38 @@ void domain_disable(domain_t* domain) {
   }
 }
 
-void domain_push(uint32_t address) {
-  if (address >= APPLICATION_LIMIT
-      && address < SERVICE_LIMIT
-      && (address & 0x3FF007) == 0) {
-    // TODO: support a domain stack.
+void domain_push(uintptr_t entry_address, uintptr_t return_address) {
+  if (CURRENT_THREAD->domain_idx >= IDC_CALL_MAX) {
+    printf("Too many recursive IDC calls!\n");
+    abort();
+  }
+  struct domain_stack *stack =
+    &CURRENT_THREAD->domain_stack[CURRENT_THREAD->domain_idx++];
+  stack->entry_address = entry_address;
+  stack->return_address = return_address;
+  
+  if (entry_address >= APPLICATION_LIMIT
+      && entry_address < SERVICE_LIMIT
+      && (entry_address & 0x3FF007) == 0) {
+
     // TODO: map (address>>22) to domain_t.
     domain_enable(kernel.processes[kernel.core_module]->domain);
   } else {
-    printf("Illegal IDC address %x.\n", (unsigned)address);
+    printf("Illegal IDC address %x.\n", (unsigned)entry_address);
     abort();
   }
 }
 
-void domain_pop() {
-  // TODO: support a domain stack.
+uintptr_t domain_pop() {
+  if (CURRENT_THREAD->domain_idx == 0) {
+    printf("Too many IDC pops!\n");
+    abort();
+  }
+  struct domain_stack *stack =
+    &CURRENT_THREAD->domain_stack[--CURRENT_THREAD->domain_idx];
+
   // TODO: disable domain if not in stack anymore.
+  return stack->return_address;  
 }
 
 

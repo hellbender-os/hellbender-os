@@ -32,18 +32,14 @@ __IDCIMPL__ int vfs_open(IDC_PTR, struct vfs_file *file, const char *name, int f
   while (*remname) {
     remname = get_next_name(remname, thisname); // copies name until separator.
     if (strcat_s(fullpath, PATH_MAX, thisname)) return -1;
-    printf("looking for '%s', full '%s'\n", thisname, fullpath);
     struct vfs_filesys *last_fs = file->filesys;
     if (IDC(vfs_open, file->filesys->open, file, thisname, flags)) return -1;
     // path was found in the current file system, check mount points.
     if (last_fs != &vfs_rootfs.filesys) {
-      printf("checking for mounts '%s'\n", fullpath);
       if (vfs_rootfs_open_mount(&vfs_rootfs, file, fullpath) == 0) {
-        printf("found mounted filesystem %s\n", fullpath);
+        // ok, we just switched over to a new filesystem.
       }
-      else printf("found path element %s\n", thisname);
     }
-    else printf("found root filesystem %s\n", fullpath);
   }
   
   return 0;

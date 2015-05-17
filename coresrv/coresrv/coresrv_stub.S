@@ -4,8 +4,7 @@
 .global coresrv_stub
 coresrv_stub:
     pop %edx
-    pop %eax
-    push %edx
+    mov (%esp), %eax
     int $82;
 
 

@@ -50,6 +50,10 @@ extern unsigned long __force_order;
 // we don't need this when we switch to 64-bit long mode.
 #define CS_BASE 0x80000000 
 
+// recursive IDC calls are limited by the "domain stack".
+#define IDC_CALL_MAX 16
+
+// selectors
 #define SEL_NULL        0x00
 #define SEL_KERNEL_CODE 0x08
 #define SEL_KERNEL_DATA 0x10
