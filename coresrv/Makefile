@@ -55,6 +55,10 @@ vfs/vfs_mount.o \
 vfs/vfs_open.o \
 vfs/rootfs.o \
 vfs/initfs.o \
+vfs/devfs.o \
+dev/dev_init.o \
+dev/dev_register.o \
+dev/dev_unregister.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \

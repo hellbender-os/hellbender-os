@@ -9,7 +9,7 @@ extern struct fcntl_data fcntl_data;
 
 static inline int fcntl_find_handle() {
   for (int i = 0; i < OPEN_MAX; ++i) {
-    if (!fcntl_data.handles[i].filesys) return i;
+    if (!fcntl_data.handles[i].filesys.open) return i;
   }
   return -1;
 }

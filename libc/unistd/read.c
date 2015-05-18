@@ -13,13 +13,13 @@ ssize_t read(int handle, void *buffer, size_t size) {
     abort();
   }
   struct vfs_file *file = &fcntl_data.handles[handle];
-  if (!file->filesys) {
+  if (!file->filesys.open) {
     printf("File handle not open.\n");
     abort();
   }
-  if (!file->filesys->read) {
+  if (!file->filesys.read) {
     printf("Read not supported.\n");
     abort();
   }
-  return IDC(vfs_read, file->filesys->read, file, buffer, size);
+  return IDC(vfs_read, file->filesys.read, file, buffer, size);
 }

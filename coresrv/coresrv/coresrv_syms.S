@@ -13,32 +13,47 @@
 .global __IDE__coresrv_vga_putc
 .set __IDE__coresrv_vga_putc, 0x7f800018
 
+.global __IDE__dev_register
+.set __IDE__dev_register, 0x7f800020
+
+.global __IDE__vfs_devfs_close
+.set __IDE__vfs_devfs_close, 0x7f800028
+
+.global __IDE__vfs_devfs_lseek
+.set __IDE__vfs_devfs_lseek, 0x7f800030
+
+.global __IDE__vfs_devfs_open
+.set __IDE__vfs_devfs_open, 0x7f800038
+
+.global __IDE__vfs_devfs_read
+.set __IDE__vfs_devfs_read, 0x7f800040
+
 .global __IDE__vfs_initfs_close
-.set __IDE__vfs_initfs_close, 0x7f800020
+.set __IDE__vfs_initfs_close, 0x7f800048
 
 .global __IDE__vfs_initfs_lseek
-.set __IDE__vfs_initfs_lseek, 0x7f800028
+.set __IDE__vfs_initfs_lseek, 0x7f800050
 
 .global __IDE__vfs_initfs_open
-.set __IDE__vfs_initfs_open, 0x7f800030
+.set __IDE__vfs_initfs_open, 0x7f800058
 
 .global __IDE__vfs_initfs_read
-.set __IDE__vfs_initfs_read, 0x7f800038
+.set __IDE__vfs_initfs_read, 0x7f800060
 
 .global __IDE__vfs_mount
-.set __IDE__vfs_mount, 0x7f800040
+.set __IDE__vfs_mount, 0x7f800068
 
 .global __IDE__vfs_open
-.set __IDE__vfs_open, 0x7f800048
+.set __IDE__vfs_open, 0x7f800070
 
 .global __IDE__vfs_rootfs_close
-.set __IDE__vfs_rootfs_close, 0x7f800050
+.set __IDE__vfs_rootfs_close, 0x7f800078
 
 .global __IDE__vfs_rootfs_lseek
-.set __IDE__vfs_rootfs_lseek, 0x7f800058
+.set __IDE__vfs_rootfs_lseek, 0x7f800080
 
 .global __IDE__vfs_rootfs_open
-.set __IDE__vfs_rootfs_open, 0x7f800060
+.set __IDE__vfs_rootfs_open, 0x7f800088
 
 .global __IDE__vfs_rootfs_read
-.set __IDE__vfs_rootfs_read, 0x7f800068
+.set __IDE__vfs_rootfs_read, 0x7f800090

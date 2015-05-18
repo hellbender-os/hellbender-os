@@ -23,7 +23,8 @@ __IDCIMPL__ int vfs_open(IDC_PTR, struct vfs_file *file, const char *name, int f
   memset(file, 0, sizeof(struct vfs_file));
 
   // start from the root.
-  file->filesys = &vfs_rootfs.filesys;
+  int in_root = 1;
+  file->filesys = vfs_rootfs.filesys;
   vfs_rootfs_open_mount(&vfs_rootfs, file, "");
   const char* remname = name;
   char thisname[NAME_MAX+2]; // room for directory separator.
@@ -32,14 +33,15 @@ __IDCIMPL__ int vfs_open(IDC_PTR, struct vfs_file *file, const char *name, int f
   while (*remname) {
     remname = get_next_name(remname, thisname); // copies name until separator.
     if (strcat_s(fullpath, PATH_MAX, thisname)) return -1;
-    struct vfs_filesys *last_fs = file->filesys;
-    if (IDC(vfs_open, file->filesys->open, file, thisname, flags)) return -1;
+
+    if (IDC(vfs_open, file->filesys.open, file, thisname, flags)) return -1;
     // path was found in the current file system, check mount points.
-    if (last_fs != &vfs_rootfs.filesys) {
+    if (!in_root) {
       if (vfs_rootfs_open_mount(&vfs_rootfs, file, fullpath) == 0) {
         // ok, we just switched over to a new filesystem.
       }
     }
+    in_root = 0;
   }
   
   return 0;

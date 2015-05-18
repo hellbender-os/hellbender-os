@@ -20,6 +20,12 @@ coresrv_stub:
 .global __IDC__coresrv_vga_putc
 .set __IDC__coresrv_vga_putc, coresrv_stub
 
+.global __IDC__dev_register
+.set __IDC__dev_register, coresrv_stub
+
+.global __IDC__dev_unregister
+.set __IDC__dev_unregister, coresrv_stub
+
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 

@@ -13,14 +13,14 @@ int close(int handle) {
     abort();
   }
   struct vfs_file *file = &fcntl_data.handles[handle];
-  if (!file->filesys) {
+  if (!file->filesys.open) {
     printf("File handle not open.\n");
     abort();
   }
-  if (!file->filesys->close) {
+  if (!file->filesys.close) {
     printf("Close not supported.\n");
     abort();
   }
-  return IDC(vfs_close, file->filesys->close, file);
+  return IDC(vfs_close, file->filesys.close, file);
 }
 

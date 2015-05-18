@@ -5,6 +5,7 @@
 #include <kernel/kernel.h>
 #include <kernel/module.h>
 #include <coresrv/vfs.h>
+#include <coresrv/devfs.h>
 #include <coresrv/initfs.h>
 
 extern void ps2_init();
@@ -12,6 +13,7 @@ extern void kbd_init();
 extern void rtc_init();
 extern void vga_init();
 extern void vfs_init();
+extern void dev_init();
 
 struct vfs_initfs vfs_initfs;
 
@@ -27,6 +29,7 @@ int main(void) {
   rtc_init();
   vga_init();
   vfs_init();
+  dev_init();
 
   printf("Mounting initrd.\n");
   vfs_initfs_init(&vfs_initfs,

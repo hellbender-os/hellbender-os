@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <coresrv/vfs.h>
 #include <coresrv/rootfs.h>
-#include <coresrv/initfs.h>
 
 struct vfs_rootfs vfs_rootfs;
 

@@ -21,7 +21,7 @@ struct vfs_filesys {
 };
 
 struct vfs_file {
-  struct vfs_filesys* filesys;
+  struct vfs_filesys filesys;
   void *internal;
 };
 

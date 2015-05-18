@@ -3,6 +3,12 @@
 int __IDC__coresrv_kbd_getc(IDC_PTR);
 typedef void* coresrv_kbd_getc_ptr;
 
+int __IDC__dev_register(IDC_PTR, const char*, struct vfs_filesys *);
+typedef void* dev_register_ptr;
+
+int __IDC__dev_unregister(IDC_PTR, const char*);
+typedef void* dev_unregister_ptr;
+
 int __IDC__vfs_close(IDC_PTR, struct vfs_file*);
 typedef void* vfs_close_ptr;
 
@@ -43,6 +49,11 @@ extern uintptr_t __IDE__coresrv_kbd_getc;
 extern uintptr_t __IDE__coresrv_rtc_beep;
 extern uintptr_t __IDE__coresrv_rtc_ticks;
 extern uintptr_t __IDE__coresrv_vga_putc;
+extern uintptr_t __IDE__dev_register;
+extern uintptr_t __IDE__vfs_devfs_close;
+extern uintptr_t __IDE__vfs_devfs_lseek;
+extern uintptr_t __IDE__vfs_devfs_open;
+extern uintptr_t __IDE__vfs_devfs_read;
 extern uintptr_t __IDE__vfs_initfs_close;
 extern uintptr_t __IDE__vfs_initfs_lseek;
 extern uintptr_t __IDE__vfs_initfs_open;

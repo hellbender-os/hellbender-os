@@ -39,6 +39,7 @@ void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
   initfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_initfs_lseek);
   //initfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_initfs_fsync);
   //initfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_initfs_ftruncate);
+  initfs->filesys.internal = initfs;
   
   initfs->buffer = buffer;
   initfs->size = size;
@@ -101,8 +102,8 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
   if (!file->internal) {
     file->internal = malloc(sizeof(struct vfs_initfs_file));
   }
-  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)(file->internal);
-  struct vfs_initfs *initfs = (struct vfs_initfs *)file->filesys;
+  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)file->internal;
+  struct vfs_initfs *initfs = (struct vfs_initfs *)file->filesys.internal;
 
   int name_len = strlen(name);
   if (name_len == 0) {
@@ -141,14 +142,14 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
 }
 
 __IDCIMPL__ int vfs_initfs_close(IDC_PTR, struct vfs_file* file) {
-  file->filesys = NULL;
+  memset(&file->filesys, 0, sizeof(file->filesys));
   free(file->internal);
   file->internal = NULL;
   return 0;
 }
 
 __IDCIMPL__ ssize_t vfs_initfs_read(IDC_PTR, struct vfs_file* file, void *buf, size_t size) {
-  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)(file->internal);
+  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)file->internal;
 
   if (S_ISDIR(internal->this->header.mode)) {
     // directories return dirent and advance to next children.
@@ -181,7 +182,7 @@ __IDCIMPL__ ssize_t vfs_initfs_read(IDC_PTR, struct vfs_file* file, void *buf, s
 }
 
 __IDCIMPL__ off_t vfs_initfs_lseek(IDC_PTR, struct vfs_file* file, off_t off, int where) {
-  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)(file->internal);
+  struct vfs_initfs_file *internal = (struct vfs_initfs_file*)file->internal;
 
   switch (where) {
   case SEEK_SET:

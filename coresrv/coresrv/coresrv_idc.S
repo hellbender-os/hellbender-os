@@ -25,6 +25,36 @@ __IDE__coresrv_vga_putc:
     int $83
 .balign 8
 
+.global __IDE__dev_register
+__IDE__dev_register:
+    calll dev_register
+    int $83
+.balign 8
+
+.global __IDE__vfs_devfs_close
+__IDE__vfs_devfs_close:
+    calll vfs_devfs_close
+    int $83
+.balign 8
+
+.global __IDE__vfs_devfs_lseek
+__IDE__vfs_devfs_lseek:
+    calll vfs_devfs_lseek
+    int $83
+.balign 8
+
+.global __IDE__vfs_devfs_open
+__IDE__vfs_devfs_open:
+    calll vfs_devfs_open
+    int $83
+.balign 8
+
+.global __IDE__vfs_devfs_read
+__IDE__vfs_devfs_read:
+    calll vfs_devfs_read
+    int $83
+.balign 8
+
 .global __IDE__vfs_initfs_close
 __IDE__vfs_initfs_close:
     calll vfs_initfs_close
