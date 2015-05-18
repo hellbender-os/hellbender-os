@@ -74,7 +74,7 @@ all: core.srv test.app
 .PHONY: all clean install install-headers install-server
 
 core.srv: $(CORE_OBJS) $(CORE_IDC) $(CORE_STUB) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -Xlinker -Map -Xlinker coresrv.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(CORE_IDC) $(CORE_STUB) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,coresrv.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CORE_OBJS) $(CORE_IDC) $(CORE_STUB) $(LDFLAGS) $(LIBS)
 
 coresrv/coresrv_idc.S include/coresrv/coresrv_idc.h: $(HEADERS) make_coresrv_idc.sh
 	./make_coresrv_idc.sh > coresrv/coresrv_idc.S 2> $(CORE_IDCH)
@@ -86,7 +86,7 @@ coresrv/coresrv_syms.S: coresrv.map make_coresrv_syms.pl
 	./make_coresrv_syms.pl > coresrv/coresrv_syms.S
 
 test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -Xlinker -Map -Xlinker testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
 # To see the linker script: -Wl,-verbose
 # To see the link process:  -Xlinker --print-map
 
