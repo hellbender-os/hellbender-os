@@ -9,6 +9,8 @@ typedef struct keymap {
   char char_altgr[KBD_MAX_KEYCODE];
 } keymap_t;
 
+extern keymap_t* keymap;
+
 keymap_t* keymap_create(const char* locale);
 int keymap_code2char(keymap_t* keymap, unsigned key_code, unsigned flags);
 

@@ -1,11 +1,31 @@
 #include <stdio.h>
+#include <sys/keymap.h>
 #include <hellbender.h>
 #include <kernel/io.h>
 #include <coresrv/kbd.h>
 #include <coresrv/rtc.h>
+#include <coresrv/tty.h>
 
 #include "kbd_impl.h"
 
+static int magic_key(unsigned event_type, unsigned key, unsigned flags) {
+  if (flags == (KBD_FLAG_LSHIFT+KBD_FLAG_LCTRL+KBD_FLAG_LALT)) {
+    if (event_type == KBD_EVENT_KEYDOWN) {
+      int c = keymap_code2char(keymap, key, 0);
+      switch (c) {
+      case '1': // switch between virtual terminals.
+      case '2':
+      case '3':
+        {
+          unsigned tty_id = c - '1';
+          dev_tty_switch_to(tty_id);
+        }
+        break;
+      }
+    }
+    return 1;
+  } else return 0;
+}
 
 void kbd_isr() {
   unsigned key = inb(0x60);
@@ -52,6 +72,8 @@ void kbd_isr() {
       else event_type = KBD_EVENT_KEYDOWN;
       kbd.keydown[key] = 1;
     }
+
+    if (magic_key(event_type, key, flags)) break;
 
     unsigned event_idx = (kbd.last_event + 1) % KBD_MAX_EVENTS;
     if (event_idx != kbd.first_event) {

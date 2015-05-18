@@ -7,6 +7,7 @@
 #include <coresrv/vfs.h>
 #include <coresrv/devfs.h>
 #include <coresrv/initfs.h>
+#include <coresrv/tty.h>
 
 extern void ps2_init();
 extern void kbd_init();
@@ -31,6 +32,9 @@ int main(void) {
   vfs_init();
   dev_init();
 
+  printf("Setting up virtual consoles.\n");
+  dev_tty_init();
+  
   printf("Mounting initrd.\n");
   vfs_initfs_init(&vfs_initfs,
                   (uint8_t*)CORE_SERVICE->initrd_buffer,

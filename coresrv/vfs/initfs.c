@@ -193,6 +193,7 @@ __IDCIMPL__ off_t vfs_initfs_lseek(IDC_PTR, struct vfs_file* file, off_t off, in
     break;
   case SEEK_END:
     internal->offset = internal->this->filesize - off;
+    break;
   }
   if (internal->offset < 0) internal->offset = 0;
   if (internal->offset > (int)internal->this->filesize) {

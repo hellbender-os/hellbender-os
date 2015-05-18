@@ -5,7 +5,9 @@
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #else
+#include <sys/keymap.h>
 void fcntl_init();
+keymap_t* keymap;
 #endif
 
 #include <kernel/domain.h>
@@ -36,9 +38,15 @@ void _hellbender_libc_init() {
   heap_init_tiny(&default_tinyheap, &default_wilderness);
   heap_init_small(&default_smallheap, &default_wilderness);
 
-  // init the remaining libc.
 #if defined(__is_hellbender_kernel)
+  // kernel doesn't use all features.
+  
 #else
+  // file handles.
   fcntl_init();
+
+  // TODO: support actual locales.
+  keymap = keymap_create("fi");
 #endif
+
 }

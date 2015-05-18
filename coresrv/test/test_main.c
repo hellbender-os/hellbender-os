@@ -12,8 +12,6 @@
 #include <coresrv/vga.h>
 #include <sys/keymap.h>
 
-keymap_t* keymap;
-
 const char builtin_help[] = "help";
 const char builtin_pwd[]  = "pwd";
 const char builtin_cd[]   = "cd";
@@ -214,7 +212,6 @@ void test_shell() {
 
 int main(void) {
   printf("Hello, user World!\n");
-  keymap = keymap_create("fi");
   test_shell();
   return 0xabba;
 }

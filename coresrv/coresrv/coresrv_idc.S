@@ -31,6 +31,42 @@ __IDE__dev_register:
     int $83
 .balign 8
 
+.global __IDE__dev_tty_close
+__IDE__dev_tty_close:
+    calll dev_tty_close
+    int $83
+.balign 8
+
+.global __IDE__dev_tty_lseek
+__IDE__dev_tty_lseek:
+    calll dev_tty_lseek
+    int $83
+.balign 8
+
+.global __IDE__dev_tty_open
+__IDE__dev_tty_open:
+    calll dev_tty_open
+    int $83
+.balign 8
+
+.global __IDE__dev_tty_read
+__IDE__dev_tty_read:
+    calll dev_tty_read
+    int $83
+.balign 8
+
+.global __IDE__dev_tty_write
+__IDE__dev_tty_write:
+    calll dev_tty_write
+    int $83
+.balign 8
+
+.global __IDE__dev_unregister
+__IDE__dev_unregister:
+    calll dev_unregister
+    int $83
+.balign 8
+
 .global __IDE__vfs_devfs_close
 __IDE__vfs_devfs_close:
     calll vfs_devfs_close

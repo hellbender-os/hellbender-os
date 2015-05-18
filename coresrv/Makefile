@@ -59,6 +59,7 @@ vfs/devfs.o \
 dev/dev_init.o \
 dev/dev_register.o \
 dev/dev_unregister.o \
+dev/tty.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
