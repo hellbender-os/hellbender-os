@@ -8,6 +8,7 @@
 #include <kernel/tty.h>
 #include <kernel/mmap.h>
 #include <kernel/mem.h>
+#include <kernel/io.h>
 
 size_t terminal_row;
 size_t terminal_column;
@@ -87,6 +88,14 @@ void terminal_putchar(char c)
       }
     }
   }
+
+  unsigned position = terminal_row * VGA_WIDTH + terminal_column;
+  // cursor LOW port to vga INDEX register
+  outb(0x3D4, 0x0F);
+  outb(0x3D5, (unsigned char)(position&0xFF));
+  // cursor HIGH port to vga INDEX register
+  outb(0x3D4, 0x0E);
+  outb(0x3D5, (unsigned char )((position>>8)&0xFF));
 }
 
 void terminal_write(const char* data, size_t size)

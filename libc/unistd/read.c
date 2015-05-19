@@ -12,7 +12,7 @@ ssize_t read(int handle, void *buffer, size_t size) {
     printf("Illegal file handle.\n");
     abort();
   }
-  struct vfs_file *file = &fcntl_data.handles[handle];
+  struct vfs_file *file = &_fcntl_data.handles[handle];
   if (!file->filesys.open) {
     printf("File handle not open.\n");
     abort();

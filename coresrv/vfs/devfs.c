@@ -37,7 +37,7 @@ int vfs_devfs_add(struct vfs_devfs *devfs,
 
 __IDCIMPL__ int vfs_devfs_open(IDC_PTR, struct vfs_file* file, const char *name, int flags) {
   (void)(flags); // TODO: check flags.
-  struct vfs_devfs *devfs = (struct vfs_devfs *)&file->filesys.internal;
+  struct vfs_devfs *devfs = (struct vfs_devfs *)file->filesys.internal;
   
   if (strlen(name) == 0) {
     // root of the devfs lists the registered devices.

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sched.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <semaphore.h>
 #include <kernel/kernel.h>
 #include <kernel/module.h>
@@ -34,7 +36,7 @@ int main(void) {
 
   printf("Setting up virtual consoles.\n");
   dev_tty_init();
-  
+
   printf("Mounting initrd.\n");
   vfs_initfs_init(&vfs_initfs,
                   (uint8_t*)CORE_SERVICE->initrd_buffer,

@@ -15,23 +15,28 @@
 #define N_TTYS 3
 #define TTY_HEIGHT 100
 
+#define MEMORY_SIZE (VGA_WIDTH*TTY_HEIGHT)
+#define WINDOW_SIZE (VGA_WIDTH*VGA_HEIGHT)
+
 struct dev_tty_buffer {
   unsigned id;
   uint16_t buffer[VGA_WIDTH*TTY_HEIGHT];
-  unsigned top_index; // beginning of the topmost line in the buffer.
-  unsigned bottom_index; // end of the bottomost line.
-  unsigned cursor_index; // the line the cursor is at.
-  unsigned cursor_offset; // the cursor position on the line.
-  unsigned window_index; // the first visible line.
+  unsigned cursor_index;
+  unsigned window_end;
+  unsigned screen_end;
   uint16_t color;
 };
 
 struct dev_tty {
   struct dev_tty_buffer ttys[N_TTYS];
   unsigned current_tty;
-  uint16_t vga_shadow[VGA_WIDTH*VGA_HEIGHT];
+  uint16_t vga_shadow[WINDOW_SIZE];
   unsigned vga_cursor_x;
   unsigned vga_cursor_y;
+  unsigned cursor_visible;
+  unsigned vga_copied;
+  unsigned menu_visible;
+  uint16_t menusave[VGA_WIDTH];
 } dev_tty;
 
 extern uint16_t vga_buffer[];
@@ -39,7 +44,13 @@ extern uint16_t vga_buffer[];
 static void update_vga_cursor(struct dev_tty_buffer *tty) {
   if (tty->id != dev_tty.current_tty) return;
 
-  unsigned position = tty->cursor_index + tty->cursor_offset;
+  unsigned screen_begin = tty->screen_end - WINDOW_SIZE;
+  unsigned position = tty->cursor_index - screen_begin;
+  if (tty->cursor_index < screen_begin || position >= WINDOW_SIZE) {
+    // Hide cursor
+    position = 0xffff;
+  }
+
   // cursor LOW port to vga INDEX register
   outb(0x3D4, 0x0F);
   outb(0x3D5, (unsigned char)(position&0xFF));
@@ -51,17 +62,17 @@ static void update_vga_cursor(struct dev_tty_buffer *tty) {
 static void update_vga_part(struct dev_tty_buffer *tty,
                             unsigned index, size_t size) {
   if (tty->id != dev_tty.current_tty) return;
-  
-  for (; size; --size) {
-    if (index > tty->window_index) {
-      unsigned vga_index = index - tty->window_index;
-      uint16_t d = tty->buffer[index];
+
+  unsigned screen_begin = tty->screen_end - WINDOW_SIZE;
+  for (; size; --size, ++index) {
+    if (index >= screen_begin && index < tty->screen_end) {
+      unsigned vga_index = index - screen_begin;
+      uint16_t d = tty->buffer[index % MEMORY_SIZE];
       if (d != dev_tty.vga_shadow[vga_index]) {
         dev_tty.vga_shadow[vga_index] = d;
         vga_buffer[vga_index] = d;
       }
     }
-    if (++index == VGA_WIDTH*TTY_HEIGHT) index = 0;
   }
   update_vga_cursor(tty);
 }
@@ -69,19 +80,31 @@ static void update_vga_part(struct dev_tty_buffer *tty,
 static void update_vga_full(struct dev_tty_buffer *tty) {
   if (tty->id != dev_tty.current_tty) return;
 
-  unsigned index = tty->window_index;
-  unsigned vga_index = 0;
-  for (unsigned y = 0; y < VGA_HEIGHT; ++y) {
-    for (unsigned x = 0; x < VGA_WIDTH; ++x, ++index, ++vga_index) {
-      uint16_t d = tty->buffer[index];
-      if (d != dev_tty.vga_shadow[vga_index]) {
-        dev_tty.vga_shadow[vga_index] = d;
-        vga_buffer[vga_index] = d;
-      }
+  unsigned index = tty->screen_end - WINDOW_SIZE;
+  for (unsigned i = 0; i < WINDOW_SIZE; ++i, ++index) {
+    uint16_t d = tty->buffer[index % MEMORY_SIZE];
+    if (dev_tty.menu_visible && i < 80) {
+      dev_tty.menusave[i] = d;
+    } else if (d != dev_tty.vga_shadow[i]) {
+      dev_tty.vga_shadow[i] = d;
+      vga_buffer[i] = d;
     }
-    if (index == VGA_WIDTH*TTY_HEIGHT) index = 0;
   }
   update_vga_cursor(tty);
+
+  if (dev_tty.menu_visible) {
+    uint16_t color = make_vgaentry(0, make_color(COLOR_WHITE,
+                                                 COLOR_BLUE));
+    char menu[81] = "  1  2  3                                        16M/133M  L:1.3/0.7/0.5  21:42 ";
+    unsigned idx = dev_tty.current_tty;
+    menu[3*idx+1] = '[';
+    menu[3*idx+3] = ']';
+    for (int i = 0; i < 80; ++i) {
+      uint16_t d = color | menu[i];
+      dev_tty.vga_shadow[i] = d;
+      vga_buffer[i] = d;
+    }
+  }
 }
 
 void dev_tty_init() {
@@ -89,15 +112,15 @@ void dev_tty_init() {
   for (int i = 0; i < N_TTYS; ++i) {
     dev_tty.ttys[i].id = i;
     //dev_tty.ttys[i].buffer = (uint16_t)malloc(VGA_WIDTH*TTY_HEIGHT);
-    dev_tty.ttys[i].bottom_index = VGA_WIDTH*TTY_HEIGHT;
-    dev_tty.ttys[i].color = make_vgaentry(0, make_color(COLOR_WHITE,
+    dev_tty.ttys[i].window_end = VGA_WIDTH*VGA_HEIGHT;
+    dev_tty.ttys[i].screen_end = VGA_WIDTH*VGA_HEIGHT;
+    dev_tty.ttys[i].color = make_vgaentry(0, make_color(COLOR_LIGHT_GREY,
                                                         COLOR_BLACK));
     uint16_t d = dev_tty.ttys[i].color | ' ';
     for (unsigned j = 0; j < VGA_WIDTH*VGA_HEIGHT; ++j) {
       dev_tty.ttys[i].buffer[j] = d;
     }
   }
-  dev_tty_switch_to(0); // makes a copy of the VGA buffer.
   
   struct vfs_filesys filesys;
   memset(&filesys, 0, sizeof(filesys));
@@ -118,18 +141,25 @@ void dev_tty_init() {
 void dev_tty_switch_to(unsigned tty_id) {
   // save old console.
   struct dev_tty_buffer* old_tty = &dev_tty.ttys[dev_tty.current_tty];
-  for (unsigned j = 0; j < VGA_WIDTH*VGA_HEIGHT; ++j) {
-    uint16_t d = vga_buffer[j];
-    old_tty->buffer[j] = d;
-    dev_tty.vga_shadow[j] = d;
+  unsigned index = old_tty->screen_end - WINDOW_SIZE;
+  for (unsigned i = 0; i < WINDOW_SIZE; ++i, ++index) {
+    uint16_t d = vga_buffer[i];
+    if (dev_tty.menu_visible && i < 80) {
+      d = dev_tty.menusave[i];
+    }
+    old_tty->buffer[index % MEMORY_SIZE] = d;
+    dev_tty.vga_shadow[i] = d;
   }
+  
   // save current cursor position.
   outb(0x3D4, 0x0F);
   unsigned position = inb(0x3D5);
   outb(0x3D4, 0x0E);
   position += inb(0x3D5) << 8;
-  old_tty->cursor_offset = position % VGA_WIDTH;
-  old_tty->cursor_index = position - old_tty->cursor_offset;
+  if (position != 0xffff) {
+    old_tty->cursor_index = old_tty->screen_end - WINDOW_SIZE + position;
+  }
+  dev_tty.vga_copied = 1;
 
   // draw new console.
   if (tty_id != dev_tty.current_tty) {
@@ -138,15 +168,28 @@ void dev_tty_switch_to(unsigned tty_id) {
   }
 }
 
+void dev_tty_show_menu() {
+  dev_tty.menu_visible = 1;
+  for (int i = 0; i < 80; ++i) {
+    dev_tty.menusave[i] = dev_tty.vga_shadow[i];
+  }
+  update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
+}
+
+void dev_tty_hide_menu() {
+  dev_tty.menu_visible = 0;
+  update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
+}
+
 __IDCIMPL__ int dev_tty_open(IDC_PTR, struct vfs_file* file, const char *name, int flags) {
   (void)(flags); //TODO: check flags.
-  unsigned idx;
   if (name[3] == '0') {
-    idx = dev_tty.current_tty;
+    file->internal = NULL;
   } else {
-    idx = (unsigned)(name[3] - '1');
+    unsigned idx = (unsigned)(name[3] - '1');
+    file->internal = &dev_tty.ttys[idx];
   }
-  file->internal = &dev_tty.ttys[idx];
+  if (!dev_tty.vga_copied) dev_tty_switch_to(0);
   return 0;
 }
 
@@ -158,6 +201,7 @@ __IDCIMPL__ int dev_tty_close(IDC_PTR, struct vfs_file* file) {
 
 __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, size_t size) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
+  if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
   uint8_t* cbuffer = (uint8_t*)buffer;
   if (dev_tty.current_tty == tty->id) {
     size_t bytes = 0;
@@ -178,72 +222,82 @@ __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, 
 
 __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* data, size_t size) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
+  if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
   uint16_t* buffer = tty->buffer;
-  unsigned start_index = tty->cursor_index + tty->cursor_offset;
   uint8_t* cdata = (uint8_t*)data;
 
-  // not enough to reach end of line 
-  //  => copy data, update vga from that part.
-  unsigned till_eol = VGA_WIDTH - tty->cursor_offset;
-  if (size < till_eol) {
-    uint16_t* start_ptr = buffer + start_index;
-    for (size_t i = 0; i < size; ++i) {
-      start_ptr[i] = tty->color | (uint16_t)(cdata[i]);
+  // Virtual buffer extends from 0 to infinity.
+  // Real buffer extends from buffer_begin to buffer_end.
+  // buffer_end = buffer_begin + VGA_WIDTH*TTY_HEIGHT.
+
+  // Next character is written to cursor_index.
+  // Active area extends from window_begin to window_end.
+  // window_end = window_begin+VGA_WIDTH*VGA_HEIGHT.
+  // cursor_index >= window_begin && cursor_index < window_end.
+  // window_end = buffer_end.
+
+  // If cursor goes past window_end, window_end += VGA_WIDTH.
+  // The revealed line is cleared.
+  
+  // Index to pointer = buffer_base + index % MEMORY_SIZE.
+
+  unsigned cursor_index = tty->cursor_index;
+  unsigned window_begin = tty->window_end - WINDOW_SIZE;
+  unsigned window_end = tty->window_end;
+  unsigned min_cursor = cursor_index;
+  unsigned max_cursor = cursor_index;
+  uint16_t color = tty->color;
+  unsigned eol;
+  unsigned clear_line = 0;
+  for (size_t i = 0; i < size; ++i) {
+    uint8_t byte = cdata[i];
+    switch (byte) {
+    case '\b': // backspace.
+      if (cursor_index > window_begin) {
+        --cursor_index;
+        buffer[cursor_index % MEMORY_SIZE] = color | ' ';
+      }
+      break;
+    case '\n': // new line.
+      eol = VGA_WIDTH - cursor_index % VGA_WIDTH;
+      if (clear_line) {
+        for (unsigned j = 0; j < eol; ++j) {
+          buffer[(cursor_index + j) % MEMORY_SIZE] = color | ' ';
+        }
+      }
+      cursor_index += eol;
+      break;
+    default: // printable chars.
+      buffer[cursor_index % MEMORY_SIZE] = color | (uint16_t)byte;
+      ++cursor_index;
+      break;
     }
-    tty->cursor_offset += size;
-    update_vga_part(tty, start_index, size);
-    
+
+    if (cursor_index >= window_end) {
+      window_end += VGA_WIDTH;
+      window_begin = window_end - WINDOW_SIZE;
+      clear_line = 1;
+    }
+
+    if (cursor_index < min_cursor) min_cursor = cursor_index;
+    if (cursor_index > max_cursor) max_cursor = cursor_index;
+  }
+
+  if (clear_line) {
+    eol = VGA_WIDTH - cursor_index % VGA_WIDTH;
+    for (unsigned j = 0; j < eol; ++j) {
+      buffer[(cursor_index + j) % MEMORY_SIZE] = color | ' ';
+    }
+  }
+
+  tty->cursor_index = cursor_index;
+  tty->screen_end = window_end;
+
+  if (tty->window_end != window_end) {
+    tty->window_end = window_end;
+    update_vga_full(tty);
   } else {
-    // enough to fill the line: fill the first line.
-    unsigned current_index = start_index;
-    size_t remaining = size;
-    int set_bottom = 0;
-    {
-      uint16_t* start_ptr = buffer + current_index;
-      for (size_t i = 0; i < till_eol; ++i) {
-        start_ptr[i] = tty->color | (uint16_t)(cdata[i]);
-      }
-      remaining -= till_eol;
-      data += till_eol;
-      current_index += till_eol;
-      if (current_index == VGA_WIDTH*TTY_HEIGHT) current_index = 0;
-      if (current_index == tty->bottom_index) set_bottom = 1;
-    }
-    // then fill line by line.
-    while (remaining >= VGA_WIDTH) {
-      uint16_t* start_ptr = buffer + current_index;
-      for (size_t i = 0; i < VGA_WIDTH; ++i) {
-        start_ptr[i] = tty->color | (uint16_t)(cdata[i]);
-      }
-      remaining -= VGA_WIDTH;
-      data += VGA_WIDTH;
-      current_index += VGA_WIDTH;
-      if (current_index == VGA_WIDTH*TTY_HEIGHT) current_index = 0;
-      if (current_index == tty->bottom_index) set_bottom = 1;
-    }
-    // then copy the last line; and clear till the end of line.
-    {
-      uint16_t* start_ptr = buffer + current_index;
-      for (size_t i = 0; i < remaining; ++i) {
-        start_ptr[i] = tty->color | (uint16_t)(cdata[i]);
-      }
-      for (size_t i = remaining; i < VGA_WIDTH; ++i) {
-        start_ptr[i] = tty->color | (uint16_t)(' ');
-      }
-    }
-    // update bottom, cursor, and window.
-    tty->cursor_index = current_index;
-    tty->cursor_offset = remaining;
-    if (set_bottom) {
-      tty->bottom_index = current_index + VGA_WIDTH;
-      if (tty->bottom_index == VGA_WIDTH*TTY_HEIGHT) tty->bottom_index = 0;
-      tty->window_index = (VGA_WIDTH*TTY_HEIGHT
-                           + tty->bottom_index
-                           - VGA_WIDTH*VGA_HEIGHT) % (VGA_WIDTH*TTY_HEIGHT);
-      update_vga_full(tty);
-    } else {
-      update_vga_part(tty, start_index, size);
-    }
+    update_vga_part(tty, min_cursor, max_cursor - min_cursor);
   }
 
   return size;
@@ -251,7 +305,8 @@ __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* da
 
 __IDCIMPL__ off_t dev_tty_lseek(IDC_PTR, struct vfs_file* file, off_t offset, int where) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
-
+  if (tty == NULL) return (off_t)(-1);
+  
   switch (where) {
   case SEEK_SET:
     break;

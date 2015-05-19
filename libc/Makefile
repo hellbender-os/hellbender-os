@@ -29,7 +29,9 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
 stdio/sprintf.o \
+stdio/fprintf.o \
 stdio/printf.o \
+stdio/fputc.o \
 stdio/puts.o \
 stdio/putchar.o \
 stdlib/itoa.o \
@@ -79,6 +81,8 @@ unistd/ftruncate.o \
 unistd/lseek.o \
 unistd/read.o \
 unistd/write.o \
+stdio/stdio_init.o \
+stdio/fflush.o \
 stdlib/system.o \
 stdlib/getenv.o \
 sched/sched_yield.o \

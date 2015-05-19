@@ -12,7 +12,7 @@ int open(const char *name, int flags, ...) {
     return -1;
   }
   // ask virtual file system to populate it for the file.
-  struct vfs_file *file = &fcntl_data.handles[handle];
+  struct vfs_file *file = &_fcntl_data.handles[handle];
   if (CORE_IDC(vfs_open, file, name, flags) == 0) {
     return handle;
   } else {

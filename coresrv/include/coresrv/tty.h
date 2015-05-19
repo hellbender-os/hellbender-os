@@ -5,6 +5,8 @@
 
 void dev_tty_init();
 void dev_tty_switch_to(unsigned tty_id);
+void dev_tty_show_menu();
+void dev_tty_hide_menu();
 
 //TODO: add native API for TTYs.
 

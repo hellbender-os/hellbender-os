@@ -8,9 +8,6 @@
 
 #include <hellbender.h>
 #include <coresrv/rtc.h>
-#include <coresrv/kbd.h>
-#include <coresrv/vga.h>
-#include <sys/keymap.h>
 
 const char builtin_help[] = "help";
 const char builtin_pwd[]  = "pwd";
@@ -20,6 +17,7 @@ const char builtin_cat[]  = "cat";
 
 #define PATH_SEPARATOR '/'
 char cwd[PATH_MAX] = "";
+int fd;
 
 int is_whitespace(char c) {
   switch (c) {
@@ -65,36 +63,27 @@ void normalize_cwd() {
 }
 
 void read_command(char *buf, size_t size) {
-  uint8_t color = make_color(COLOR_LIGHT_GREY, COLOR_BLACK);
   unsigned x = strlen(cwd) + 2;
-  unsigned y = 24;
   unsigned n = 0;
   unsigned max_n = 79 - x;
   if (size < max_n + 1) abort();
 
   // prompt, and clear the line.
   printf(cwd);
-  CORE_IDC(coresrv_vga_putc, x-2, y, x, '>', color);
-  for (unsigned i = x; i < 80; ++i)
-    CORE_IDC(coresrv_vga_putc, i, y, x, ' ', color);
+  printf("> ");
+  for (unsigned i = x; i < 80; ++i) putchar(' ');
+  for (unsigned i = x; i < 80; ++i) putchar('\b');
 
   // collect key presses until new-line.
   while (1) {
-    int kc = CORE_IDC(coresrv_kbd_getc);
-    if (kc < 0) {
-      sched_yield();
-      continue;
-    }
-    int c = keymap_code2char(keymap, KBD_GETC_KEYCODE(kc), KBD_GETC_FLAGS(kc));
+    fflush(stdout);
+    int c = 0;
+    read(fd, &c, 1);
     if (c <= 0) continue;
-    //if (c <= 0) {
-    //  printf("code %x = %c\n", (unsigned)KBD_GETC_KEYCODE(kc), (unsigned)c);
-    //  continue;
-    //}
     if (c == '\b') {
       if (n) {
         --n;
-        CORE_IDC(coresrv_vga_putc, x + n, y, x + n, ' ', color);
+        putchar('\b');
       }
       continue;
     }
@@ -103,7 +92,7 @@ void read_command(char *buf, size_t size) {
       return;
     }
     if (n < max_n) {
-      CORE_IDC(coresrv_vga_putc, x + n, y, x + n + 1, c, color);
+      putchar(c);
       buf[n] = c;
       ++n;
       continue;
@@ -121,7 +110,7 @@ void do_help() {
 }
 
 void do_pwd() {
-  printf("%s\n", cwd);
+  puts(cwd);
 }
 
 void do_cd(char *dir) {
@@ -154,7 +143,7 @@ void do_ls() {
   if (dir >= 0) {
     struct dirent dirent;
     while (read(dir, &dirent, sizeof(dirent)) == sizeof(dirent)) {
-      printf("%s\n", dirent.d_name);
+      puts(dirent.d_name);
     }
     close(dir);
   } else {
@@ -178,10 +167,10 @@ void do_cat(char* file) {
   if (fd >= 0) {
     char c;
     while (read(fd, &c, sizeof(c)) == sizeof(c)) {
-      printf("%c", c);
+      putchar(c);
     }
     close(fd);
-    if (c != '\n') printf("\n"); // current terminal overwrites last line..
+    if (c != '\n') putchar('\n'); // current terminal overwrites last line..
   } else {
     printf("Error: failed to open file '%s'\n", file_path);
   }
@@ -193,7 +182,7 @@ void test_shell() {
   while (running) {
     char buffer[200];
     read_command(buffer, 200);
-    printf("\n");
+    putchar('\n');
     if (strncmp(builtin_help, buffer, strlen(builtin_help)) == 0) {
       do_help();
     } else if (strncmp(builtin_pwd, buffer, strlen(builtin_pwd)) == 0) {
@@ -205,12 +194,13 @@ void test_shell() {
     } else if (strncmp(builtin_cat, buffer, strlen(builtin_cat)) == 0) {
       do_cat(buffer + strlen(builtin_cat));
     } else if (strlen(buffer)) {
-        printf("Bad command '%s'.\n", buffer);
-      }
+      printf("Bad command '%s'.\n", buffer);
+    }
   }
 }
 
 int main(void) {
+  fd = open("devfs/tty1", 0);
   printf("Hello, user World!\n");
   test_shell();
   return 0xabba;

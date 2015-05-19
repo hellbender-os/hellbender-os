@@ -8,8 +8,15 @@
 
 #include "kbd_impl.h"
 
+static int magic_down = 0;
+
 static int magic_key(unsigned event_type, unsigned key, unsigned flags) {
   if (flags == (KBD_FLAG_LSHIFT+KBD_FLAG_LCTRL+KBD_FLAG_LALT)) {
+    if (!magic_down) {
+      dev_tty_show_menu();
+      magic_down = 1;
+    }
+    
     if (event_type == KBD_EVENT_KEYDOWN) {
       int c = keymap_code2char(keymap, key, 0);
       switch (c) {
@@ -24,7 +31,14 @@ static int magic_key(unsigned event_type, unsigned key, unsigned flags) {
       }
     }
     return 1;
-  } else return 0;
+
+  } else {
+    if (magic_down) {
+      dev_tty_hide_menu();
+      magic_down = 0;
+    }
+    return 0;
+  }
 }
 
 void kbd_isr() {
@@ -53,14 +67,6 @@ void kbd_isr() {
       key |= 0x80;
     }
 
-    unsigned flags = 0;
-    if (kbd.keydown[KBD_KEY_LSHIFT]) flags |= KBD_FLAG_LSHIFT;
-    if (kbd.keydown[KBD_KEY_RSHIFT]) flags |= KBD_FLAG_RSHIFT;
-    if (kbd.keydown[KBD_KEY_LCTRL]) flags |= KBD_FLAG_LCTRL;
-    if (kbd.keydown[KBD_KEY_RCTRL]) flags |= KBD_FLAG_RCTRL;
-    if (kbd.keydown[KBD_KEY_LALT]) flags |= KBD_FLAG_LALT;
-    if (kbd.keydown[KBD_KEY_RALT]) flags |= KBD_FLAG_RALT;
-
     unsigned event_type = 0;
     if (kbd.break_next) {
       event_type = KBD_EVENT_KEYUP;
@@ -72,6 +78,14 @@ void kbd_isr() {
       else event_type = KBD_EVENT_KEYDOWN;
       kbd.keydown[key] = 1;
     }
+
+    unsigned flags = 0;
+    if (kbd.keydown[KBD_KEY_LSHIFT]) flags |= KBD_FLAG_LSHIFT;
+    if (kbd.keydown[KBD_KEY_RSHIFT]) flags |= KBD_FLAG_RSHIFT;
+    if (kbd.keydown[KBD_KEY_LCTRL]) flags |= KBD_FLAG_LCTRL;
+    if (kbd.keydown[KBD_KEY_RCTRL]) flags |= KBD_FLAG_RCTRL;
+    if (kbd.keydown[KBD_KEY_LALT]) flags |= KBD_FLAG_LALT;
+    if (kbd.keydown[KBD_KEY_RALT]) flags |= KBD_FLAG_RALT;
 
     if (magic_key(event_type, key, flags)) break;
 

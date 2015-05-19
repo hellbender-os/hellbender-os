@@ -7,6 +7,7 @@
 #else
 #include <sys/keymap.h>
 void fcntl_init();
+void stdio_init();
 keymap_t* keymap;
 #endif
 
@@ -30,6 +31,12 @@ void _hellbender_libc_init() {
     printf("Failed to get current domain information.\n");
     abort();
   }
+  int is_core = (uintptr_t)domain.domain_base == CORE_OFFSET;
+  //if (is_core) {
+  //  printf("We are in core srv, some features disabled.\n");
+  //} else {
+  //  printf("ALL features ENABLED.\n");
+  //}
 #endif
   
   // init the malloc heap.
@@ -42,8 +49,11 @@ void _hellbender_libc_init() {
   // kernel doesn't use all features.
   
 #else
-  // file handles.
-  fcntl_init();
+  if (!is_core) {
+    // file handles.
+    fcntl_init();
+    stdio_init();
+  }
 
   // TODO: support actual locales.
   keymap = keymap_create("fi");
