@@ -22,6 +22,7 @@
 void isr_routine_80(void* isr_stack, thread_state_t *params) {
   // standard system call.
   (void)(isr_stack);
+  domain_t *domain;
 
   switch(params->eax) {
   case SYSCALL_PRINT: // edx: const* str
@@ -31,9 +32,25 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
   case SYSCALL_ALLOC: // edx: void* ptr; ecx: size_t size
     // TODO: memory must by contained within thread address space.
     mem_alloc_mapped((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RW);
+    domain = CURRENT_THREAD->home_domain;
+    domain_update_data(domain, (void*)params->edx, (size_t)params->ecx);
+    break;
+  case SYSCALL_MAKE_READONLY: // edx: void* ptr; ecx: size_t size
+    // TODO: memory must by contained within thread address space.
+    mmap_remap((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RO);
+    domain = CURRENT_THREAD->home_domain;
+    domain_update_data(domain, (void*)params->edx, (size_t)params->ecx);
+    break;
+  case SYSCALL_MAKE_EXECUTABLE: // edx: void* ptr; ecx: size_t size
+    // TODO: memory must by contained within thread address space.
+    // TODO: use malware scanning service.
+    mmap_remap((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RO);
+    mmap_mirror((void*)params->edx + CS_BASE, (void*)params->edx, params->ecx);
+    domain = CURRENT_THREAD->home_domain;
+    domain_update_text(domain, (void*)params->edx, (size_t)params->ecx);
     break;
   case SYSCALL_EXIT: // edx: int status
-    printf("Exit: %x\n", (unsigned)params->edx);
+    //printf("Exit: %x\n", (unsigned)params->edx);
     CURRENT_THREAD->state = THREAD_STATE_DEAD;
     break;
   case SYSCALL_CURRENT_DOMAIN: // edx: domain_t* dst

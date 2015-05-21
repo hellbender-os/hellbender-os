@@ -28,7 +28,8 @@
  * Final stage runs an application to test IPC system.
  */
 void early_stage_4() {
-  printf("early_stage_4\n");
+  //printf("early_stage_4\n");
+  
   early_data_t *data = (early_data_t*)kernel.early_data;
   core_service_t *service =
     (core_service_t*)data->modules[MODULE_CORE].module_info;

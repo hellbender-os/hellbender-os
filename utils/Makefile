@@ -18,6 +18,7 @@ CPPFLAGS:=$(CPPFLAGS) -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -static
 LIB_DEPS:=$(DESTDIR)/usr/lib/libc.a
+ARCHDIR:=arch/$(HOSTARCH)
 
 INIT_OBJS:=\
 init/init_main.o \
@@ -27,7 +28,7 @@ all: init
 .PHONY: all clean install
 
 init: $(INIT_OBJS) $(LIB_DEPS)
-	$(CC) -o bin/$@ $(CFLAGS) $(INIT_OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,init.map -T $(ARCHDIR)/linker.ld -o bin/$@ $(CFLAGS) $(INIT_OBJS) $(LDFLAGS) $(LIBS)
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

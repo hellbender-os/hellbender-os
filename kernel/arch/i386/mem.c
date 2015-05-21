@@ -223,3 +223,15 @@ void* mem_alloc_mapped(void *virtual, size_t size, unsigned mmap_attr) {
   return virtual;
 }
 
+void mem_alloc_mapped2(void *virtual1, void *virtual2,
+                       size_t size, unsigned mmap_attr) {
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
+  for (; size; size -= PAGE_SIZE) {
+    uintptr_t physical = mem_alloc_page();
+    mmap_map_page(virtual1, physical, mmap_attr);
+    mmap_map_page(virtual2, physical, mmap_attr);
+    virtual1 += PAGE_SIZE;
+    virtual2 += PAGE_SIZE;
+  }
+}
+

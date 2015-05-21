@@ -66,8 +66,13 @@ void isr_routine_11() {
   abort();
 }
 
-void isr_routine_12() {
-  printf("isr_routine_12\n");
+void isr_routine_12(uint32_t *stack) {
+  printf("isr_routine_12: SSF\n");
+  uint32_t error_code = stack[0];
+  printf("error code = %x\n", (unsigned)error_code);
+  uint32_t code_address = stack[1];
+  uint32_t code_selector = stack[2];
+  printf("at %x:%x\n", (unsigned)code_selector, (unsigned)code_address);
   abort();
 }
 

@@ -34,7 +34,8 @@ extern void _init();
  * in user space.
  */
 void early_stage_3(early_data_t *data) {
-  printf("early_stage_3\n");
+  //printf("early_stage_3\n");
+  
   // setup physical page allocator, and virtual memory allocator.
   mem_stage_3_init(data->memory_map, data->memory_map_elements,
                    data->binaries, MAX_MODULES);

@@ -21,7 +21,7 @@
  * Stage 3 will set up all kernel components.
  */
 void early_stage_2(early_data_t *data) {
-  printf("early_stage_2\n");
+  //printf("early_stage_2\n");
 
   mem_stage_2_init();
   mmap_stage_2_init();

@@ -61,12 +61,12 @@ int main(void) {
 
   // let kernel finish TODO: could we wait for the kernel thread to exit?
   for (int i = 0; i < 100; ++i) sched_yield();
-  
-  printf("Launching init.\n");
+
+  printf("Core init done; launching init.\n");
   pid_t init_pid;
   char* argv[] = { "init", (char*)0 };
   char* envp[] = { (char*)0 };
-  posix_spawn(&init_pid, "initrd/init", NULL, NULL, argv, envp);
+  posix_spawn(&init_pid, "initfs/init", NULL, NULL, argv, envp);
 
   exit(1);
 }

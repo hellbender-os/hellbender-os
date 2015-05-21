@@ -174,10 +174,10 @@ void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
   unsigned value;
   asm volatile("push %%ds;"
                "mov %1, %%ds;"
-               "mov (%2), %0;"
+               "mov %%ds:0(%2), %0;"
                "test $1, %0;"
                "jz 1f;"
-               "mov %3, (%4);"
+               "mov %3, %%ds:0(%4);"
                "1:"
                "pop %%ds;"
                : "=&r"(value)
@@ -210,11 +210,11 @@ uintptr_t mmap_unmap_page(void* virtual) {
   unsigned value;
   asm volatile("push %%ds;"
                "mov %1, %%ds;"
-               "mov (%2), %0;"
+               "mov %%ds:0(%2), %0;"
                "test $1, %0;"
                "jz 1f;"
-               "mov (%3), %0;"
-               "movl $0, (%3);"
+               "mov %%ds:0(%3), %0;"
+               "movl $0, %%ds:0(%3);"
                "1:"
                "pop %%ds;"
                : "=&r"(value)
@@ -241,15 +241,15 @@ uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
   unsigned dir_value, table_value;
   asm volatile("push %%ds;"
                "mov %2, %%ds;"
-               "mov (%3), %0;"
+               "mov %%ds:0(%3), %0;"
                "test $1, %0;"
                "jz 1f;"
-               "mov (%5), %1;"
+               "mov %%ds:0(%5), %1;"
                "test $1, %1;"
                "jz 1f;"
                "andl $0xfffff000, %1;"
                "or %4, %1;"
-               "mov %1, (%5);"
+               "mov %1, %%ds:0(%5);"
                "1:"
                "pop %%ds;"
                : "=&r"(dir_value), "=&r"(table_value)
@@ -263,11 +263,56 @@ uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
   return physical;
 }
 
+void mmap_mirror_page(void* destination, void* source) {
+  uintptr_t dst_address = (uintptr_t)destination;
+  unsigned dst_page_dir_index = dst_address >> 22;
+  unsigned dst_page_table_index = (dst_address >> 12) & 0x3ff;
+
+  uintptr_t src_address = (uintptr_t)source;
+  unsigned src_page_dir_index = src_address >> 22;
+  unsigned src_page_table_index = (src_address >> 12) & 0x3ff;
+
+  uint32_t* page_dir = mmap.page_directory;
+  uint32_t* page_tables = mmap.page_tables;
+  uint32_t *dst_page_table = page_tables + dst_page_dir_index * 0x400;
+  uint32_t *src_page_table = page_tables + src_page_dir_index * 0x400;
+  
+  // ensure that the page tables exists; copy the page entry.
+  unsigned value;
+  asm volatile("push %%ds;"
+               "mov %1, %%ds;"
+               "mov %%ds:0(%2), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "mov %%ds:0(%3), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "mov %%ds:0(%4), %0;"
+               "mov %0, %%ds:0(%5);"
+               "mov $1, %0;"
+               "1:"
+               "pop %%ds;"
+               : "=&r"(value)
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_dir + src_page_dir_index),
+                 "r"(page_dir + dst_page_dir_index),
+                 "r"(src_page_table + src_page_table_index),
+                 "r"(dst_page_table + dst_page_table_index)
+               : "cc");
+  if ((value & 1) == 0) {
+    // TODO: we can skip this test; then it'd create a page fault instead.
+    printf("Page mirror error: %x ti %x!\n",
+           (unsigned)source, (unsigned)destination);
+    abort();
+  }
+
+  invalidate(destination);
+}
+
 void* mmap_map(void* virtual, uintptr_t physical,
                size_t size, unsigned attributes) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE) || (physical % PAGE_SIZE)) {
+  if ((((uintptr_t)virtual) % PAGE_SIZE) || (physical % PAGE_SIZE)) {
     printf("Virtual and physical addresses must be page aligned!\n");
     abort();
   }
@@ -279,8 +324,7 @@ void* mmap_map(void* virtual, uintptr_t physical,
 
 void mmap_unmap(void* virtual, size_t size) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE)) {
+  if (((uintptr_t)virtual) % PAGE_SIZE) {
     printf("Virtual address must be page aligned!\n");
     abort();
   }
@@ -291,13 +335,27 @@ void mmap_unmap(void* virtual, size_t size) {
 
 void mmap_remap(void* virtual, size_t size, unsigned attributes) {
   if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  uintptr_t address = (uintptr_t)virtual;
-  if ((address % PAGE_SIZE)) {
+  if (((uintptr_t)virtual) % PAGE_SIZE) {
     printf("Virtual address must be page aligned!\n");
     abort();
   }
   for (size_t i = 0; i < size; i += PAGE_SIZE) {
     mmap_remap_page(virtual + i, attributes);
+  }
+}
+
+void mmap_mirror(void* destination, void* source, size_t size) {
+  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
+  if (((uintptr_t)destination) % PAGE_SIZE) {
+    printf("Virtual address must be page aligned!\n");
+    abort();
+  }
+  if (((uintptr_t)source) % PAGE_SIZE) {
+    printf("Virtual address must be page aligned!\n");
+    abort();
+  }
+  for (size_t i = 0; i < size; i += PAGE_SIZE) {
+    mmap_mirror_page(destination + i, source + i);
   }
 }
 
@@ -313,7 +371,7 @@ void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
   // just set the page directory entry.
   asm volatile("push %%ds;"
                "mov %0, %%ds;"
-               "mov %1, (%2);"
+               "mov %1, %%ds:0(%2);"
                "pop %%ds;"
                :
                : "r"(SEL_ALL_DATA),

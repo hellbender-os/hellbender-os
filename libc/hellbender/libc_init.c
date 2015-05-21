@@ -49,9 +49,10 @@ void _hellbender_libc_init() {
   // kernel doesn't use all features.
   
 #else
+  fcntl_init();
+  
   if (!is_core) {
     // file handles.
-    fcntl_init();
     stdio_init();
   }
 

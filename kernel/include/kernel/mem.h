@@ -12,5 +12,7 @@ void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
 uintptr_t mem_alloc_page();
 void mem_free_page(uintptr_t page);
 void* mem_alloc_mapped(void *virtual, size_t size, unsigned mmap_attr);
+void mem_alloc_mapped2(void *virtual1, void *virtual2,
+                       size_t size, unsigned mmap_attr);
 
 #endif

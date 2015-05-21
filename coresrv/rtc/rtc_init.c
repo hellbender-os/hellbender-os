@@ -16,6 +16,6 @@ void rtc_init() {
   unsigned mont_bdc = read_reg(8);
   unsigned year_bdc = read_reg(9);
 
-  printf("RTC date: %x.%x.20%x\n", daym_bdc, mont_bdc, year_bdc);
+  printf("RTC date: %x.%x.20%x; ", daym_bdc, mont_bdc, year_bdc);
   printf("RTC time: %x:%x:%x\n", hour_bdc, minu_bdc, seco_bdc);
 }

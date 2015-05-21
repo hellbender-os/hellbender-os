@@ -34,7 +34,7 @@
 void early_stage_1(uint32_t magic, multiboot_info_t *info) {
   // first things first: terminal console to print to.
   terminal_stage_1_init();
-  printf("early_stage_1\n");
+  //printf("early_stage_1\n");
 
   // setup debugging interrupt handlers
   idt_stage_1_init();

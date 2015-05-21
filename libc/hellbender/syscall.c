@@ -12,6 +12,16 @@ void syscall_allocate(void* address, unsigned size) {
       : "a"(SYSCALL_ALLOC), "d"(address), "c"(size));
 }
 
+void syscall_make_readonly(void* address, unsigned size) {
+  asm(SYSCALL : "=m"(__force_order)
+      : "a"(SYSCALL_MAKE_READONLY), "d"(address), "c"(size));
+}
+
+void syscall_make_executable(void* address, unsigned size) {
+  asm(SYSCALL : "=m"(__force_order)
+      : "a"(SYSCALL_MAKE_EXECUTABLE), "d"(address), "c"(size));
+}
+
 __attribute__((__noreturn__)) void syscall_exit(int status) {
   asm(SYSCALL : "=m"(__force_order)
       : "a"(SYSCALL_EXIT), "d"(status));

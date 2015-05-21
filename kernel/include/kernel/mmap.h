@@ -21,10 +21,13 @@ void mmap_stage_2_cleanup();
 void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes);
 uintptr_t mmap_unmap_page(void* address);
 uintptr_t mmap_remap_page(void* virtual, unsigned attributes);
+void mmap_mirror_page(void* destination, void* source);
+
 void* mmap_map(void* virtual, uintptr_t physical,
                size_t size, unsigned attributes);
 void mmap_unmap(void* virtual, size_t size);
 void mmap_remap(void* virtual, size_t size, unsigned attributes);
+void mmap_mirror(void* destination, void* source, size_t size);
 
 void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes);
 

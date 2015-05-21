@@ -55,6 +55,22 @@ domain_t* domain_prepare(domain_t *domain, void* base, size_t size) {
   return domain;
 }
 
+void domain_update_data(domain_t *domain, void* address, size_t size) {
+  void *top = address + size;
+  domain->module_bottom = address < domain->module_bottom
+    ? address : domain->module_bottom;
+  domain->module_top = top > domain->module_top ? top : domain->module_top;
+  domain->heap_bottom = ceil_page(domain->module_top);
+}
+
+void domain_update_text(domain_t *domain, void* address, size_t size) {
+  void *top = address + size;
+  domain->text_bottom = address < domain->text_bottom
+    ? address : domain->text_bottom;
+  domain->text_top = top > domain->text_top ? top : domain->text_top;
+  domain_update_data(domain, address, size);
+}
+
 extern void load_process();
 
 domain_t* domain_create_application() {
@@ -209,6 +225,7 @@ uintptr_t domain_pop() {
     &CURRENT_THREAD->domain_stack[--CURRENT_THREAD->domain_idx];
 
   // TODO: disable domain if not in stack anymore.
+  kernel.current_domain = CURRENT_THREAD->home_domain;
   return stack->return_address;  
 }
 

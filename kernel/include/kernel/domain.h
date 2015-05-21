@@ -32,6 +32,9 @@ domain_t* domain_create_module(kernel_module_t* module,
                                module_binary_t* binary); // from loaded binary.
 domain_t* domain_create_application(); // app bootstrap.
 
+void domain_update_data(domain_t *domain, void* address, size_t size);
+void domain_update_text(domain_t *domain, void* address, size_t size);
+
 void* domain_grow_heap(domain_t *domain, size_t size); // returns new top.
 
 void domain_enable(domain_t* domain);

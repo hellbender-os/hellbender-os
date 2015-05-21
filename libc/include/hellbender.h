@@ -14,6 +14,8 @@ extern unsigned long __force_order;
 
 void syscall_print(const char* str);
 void syscall_allocate(void* address, unsigned size);
+void syscall_make_readonly(void* address, unsigned size);
+void syscall_make_executable(void* address, unsigned size);
 
 __attribute__((__noreturn__)) void syscall_exit(int status);
 __attribute__((__noreturn__)) void syscall_iret(void);
