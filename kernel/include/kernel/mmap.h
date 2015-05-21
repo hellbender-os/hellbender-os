@@ -22,6 +22,7 @@ void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes);
 uintptr_t mmap_unmap_page(void* address);
 uintptr_t mmap_remap_page(void* virtual, unsigned attributes);
 void mmap_mirror_page(void* destination, void* source);
+uintptr_t mmap_find_page(void* address);
 
 void* mmap_map(void* virtual, uintptr_t physical,
                size_t size, unsigned attributes);

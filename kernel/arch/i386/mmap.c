@@ -223,7 +223,7 @@ uintptr_t mmap_unmap_page(void* virtual) {
                  "r"(page_table + page_table_index)
                : "cc");
   invalidate(virtual);
-  return value & ~0x3ff;
+  return value & 1 ? value & ~0x3ff : 0;
 }
 
 uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
@@ -232,13 +232,12 @@ uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
   unsigned page_dir_index = address >> 22;
   unsigned page_table_index = (address >> 12) & 0x3ff;
 
-  uintptr_t physical = 0;
   uint32_t* page_dir = mmap.page_directory;
   uint32_t* page_tables = mmap.page_tables;
   uint32_t *page_table = page_tables + page_dir_index * 0x400;
 
   // ensure that the page table and page exists; reset the page entry.
-  unsigned dir_value, table_value;
+  unsigned dir_value, table_value = 0;
   asm volatile("push %%ds;"
                "mov %2, %%ds;"
                "mov %%ds:0(%3), %0;"
@@ -260,7 +259,7 @@ uintptr_t mmap_remap_page(void* virtual, unsigned attributes) {
                : "cc");
 
   invalidate(virtual);
-  return physical;
+  return table_value & 1 ? table_value & ~0x3ff : 0;
 }
 
 void mmap_mirror_page(void* destination, void* source) {
@@ -307,6 +306,33 @@ void mmap_mirror_page(void* destination, void* source) {
   }
 
   invalidate(destination);
+}
+
+uintptr_t mmap_find_page(void* virtual) {
+  uintptr_t address = (uintptr_t)virtual;
+  unsigned page_dir_index = address >> 22;
+  unsigned page_table_index = (address >> 12) & 0x3ff;
+
+  uint32_t* page_dir = mmap.page_directory;
+  uint32_t* page_tables = mmap.page_tables;
+  uint32_t *page_table = page_tables + page_dir_index * 0x400;
+
+  // ensure that the page table exists; clean the page entry.
+  unsigned value;
+  asm volatile("push %%ds;"
+               "mov %1, %%ds;"
+               "mov %%ds:0(%2), %0;"
+               "test $1, %0;"
+               "jz 1f;"
+               "mov %%ds:0(%3), %0;"
+               "1:"
+               "pop %%ds;"
+               : "=&r"(value)
+               : "r"(SEL_ALL_DATA),
+                 "r"(page_dir + page_dir_index),
+                 "r"(page_table + page_table_index)
+               : "cc");
+  return value & 1 ? value & ~0x3ff : 0;
 }
 
 void* mmap_map(void* virtual, uintptr_t physical,

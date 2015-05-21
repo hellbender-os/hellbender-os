@@ -27,9 +27,6 @@ SECTIONS
                 *(.text.startup .text.startup.*)
                 *(.text.hot .text.hot.*)
                 *(.text .stub .text.* .gnu.linkonce.t.*)
-                . = ALIGN(4K);
-                *(.bootstrap) /* bootstrap must be the sole thing in a page. */
-                . = ALIGN(4K);
 	}
 
 	/* Read-only data. */

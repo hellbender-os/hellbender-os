@@ -29,6 +29,7 @@ typedef struct core_service {
   uint32_t vga_buffer;
   uint32_t initrd_buffer;
   uint32_t initrd_size;
+  uint32_t process_bootstrap;
 } __attribute__((packed)) core_service_t;
 
 #define CORE_MODULE ((kernel_module_t*)(CORE_OFFSET + IDC_TABLE_SIZE))

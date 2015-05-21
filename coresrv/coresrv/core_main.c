@@ -22,7 +22,7 @@ extern void dev_init();
 
 struct vfs_initfs vfs_initfs;
 
-int main(void) {
+void core_initialize() {
   //printf("Core pre-init begins!\n");
   sem_t* to_core = sem_open("kernel_to_core", 0);
   sem_t* to_kernel = sem_open("core_to_kernel", 0);
@@ -61,7 +61,9 @@ int main(void) {
 
   // let kernel finish TODO: could we wait for the kernel thread to exit?
   for (int i = 0; i < 100; ++i) sched_yield();
+}
 
+int core_main() {
   printf("Core init done; launching init.\n");
   pid_t init_pid;
   char* argv[] = { "init", (char*)0 };

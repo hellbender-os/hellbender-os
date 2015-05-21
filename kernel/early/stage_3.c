@@ -14,7 +14,7 @@
 #include <kernel/isr.h>
 #include <kernel/pic.h>
 
-extern void _hellbender_libc_init();
+extern void _hellbender_libc_init_basic();
 extern void _init();
 
 /**
@@ -48,7 +48,7 @@ void early_stage_3(early_data_t *data) {
   // TODO: kernel.heal_* not needed once 'set program break' is used.
   kernel.heap_bottom = ceil_page((void*)data->modules[0].top);
   kernel.heap_limit = (void*)KERNEL_HEAP_TOP;
-  _hellbender_libc_init();
+  _hellbender_libc_init_basic();
   _init();
 
   // kernel thread execution context.

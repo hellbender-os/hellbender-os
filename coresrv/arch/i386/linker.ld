@@ -27,6 +27,10 @@ SECTIONS
                 *(.module_header)
                 KEEP (*(SORT_NONE(.init)))
         }
+        .fini :
+        {
+                KEEP (*(SORT_NONE(.fini)))
+        }
 	.text :
 	{
                 *(.text.unlikely .text.*_unlikely .text.unlikely.*)
@@ -34,11 +38,10 @@ SECTIONS
                 *(.text.startup .text.startup.*)
                 *(.text.hot .text.hot.*)
                 *(.text .stub .text.* .gnu.linkonce.t.*)
+                . = ALIGN(4K);
+                *(.bootstrap) /* bootstrap must be the sole thing in a page. */
+                . = ALIGN(4K);
 	}
-        .fini :
-        {
-                KEEP (*(SORT_NONE(.fini)))
-        }
 
 	/* Read-only data. */
         .rodata : { *(.rodata .rodata.* .gnu.linkonce.r.*) }

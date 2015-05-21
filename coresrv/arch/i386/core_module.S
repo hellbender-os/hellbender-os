@@ -12,4 +12,28 @@ _hellbender_module_info:
         .long vga_buffer
         .long 0 # initrd buffer, filled by early kernel init.
         .long 0 # initrd size.
+        .long load_process
 _hellbender_module_info2:       
+
+
+        .global _start
+        .extern _hellbender_libc_init_basic
+        .extern _hellbender_libc_init_advanced
+        .extern core_initialize
+        .extern core_main
+_start:
+        # Core service init has to be interleaved with libC init.
+        
+	call _hellbender_libc_init_basic
+        call core_initialize
+	call _hellbender_libc_init_advanced
+
+        # run global constructors before the core_main.
+        
+        call _init
+        call core_main
+
+	# Terminate the process in case core_main returns.
+        push %eax
+        call exit
+        

@@ -1,21 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
-
-#if defined(__is_hellbender_kernel)
-#include <kernel/kernel.h>
-#include <kernel/process.h>
-#else
-#include <sys/keymap.h>
-void fcntl_init();
-void stdio_init();
-keymap_t* keymap;
-#endif
-
-#include <kernel/domain.h>
-#include <sys/heap.h>
 #include <hellbender.h>
 
-void _hellbender_libc_init() {
+#include <kernel/kernel.h>
+#include <kernel/domain.h>
+
+#include <sys/heap.h>
+
+static void init_heap();
+
+/**
+ * Initializes all libC features that don't require core services.
+ * These feature can be used in libK, and while initializing core services.
+ */
+void _hellbender_libc_init_basic() {
+  // malloc, free, realloc.
+  init_heap();
+}
+
+static void init_heap() {
   // get the heap address space.
 #if defined(__is_hellbender_kernel)
   void* bottom = kernel.heap_bottom;
@@ -31,12 +34,6 @@ void _hellbender_libc_init() {
     printf("Failed to get current domain information.\n");
     abort();
   }
-  int is_core = (uintptr_t)domain.domain_base == CORE_OFFSET;
-  //if (is_core) {
-  //  printf("We are in core srv, some features disabled.\n");
-  //} else {
-  //  printf("ALL features ENABLED.\n");
-  //}
 #endif
   
   // init the malloc heap.
@@ -44,20 +41,4 @@ void _hellbender_libc_init() {
                        HEAP_DEFAULT_ALLOCATION_SIZE);
   heap_init_tiny(&default_tinyheap, &default_wilderness);
   heap_init_small(&default_smallheap, &default_wilderness);
-
-#if defined(__is_hellbender_kernel)
-  // kernel doesn't use all features.
-  
-#else
-  fcntl_init();
-  
-  if (!is_core) {
-    // file handles.
-    stdio_init();
-  }
-
-  // TODO: support actual locales.
-  keymap = keymap_create("fi");
-#endif
-
 }

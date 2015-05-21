@@ -15,7 +15,8 @@ _start:
 	push %edi
  
 	# Prepare signals, memory allocation, stdio and such.
-	call _hellbender_libc_init
+	call _hellbender_libc_init_basic
+	call _hellbender_libc_init_advanced
 
         # run global constructors, the application, and exit.
         call _init

@@ -68,7 +68,7 @@ heap/heap_grow.o \
 heap/heap_free.o \
 heap/heap_malloc.o \
 heap/heap_realloc.o \
-hellbender/libc_init.o \
+hellbender/libc_init_basic.o \
 hellbender/syscall.o \
 
 HOSTEDOBJS:=\
@@ -90,6 +90,7 @@ keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \
 spawn/posix_spawn.o \
+hellbender/libc_init_advanced.o \
 
 CORE_STUB:=../coresrv/coresrv/coresrv_stub.o
 CORE_SYMS:=../coresrv/coresrv/coresrv_syms.o

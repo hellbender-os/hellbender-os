@@ -71,8 +71,6 @@ void domain_update_text(domain_t *domain, void* address, size_t size) {
   domain_update_data(domain, address, size);
 }
 
-extern void load_process();
-
 domain_t* domain_create_application() {
   domain_t *domain = domain_create();
   domain_prepare(domain, (void*)APPLICATION_OFFSET, TABLE_SIZE);
@@ -80,7 +78,9 @@ domain_t* domain_create_application() {
   // map the process bootstrap code into the application domain (manually).
   uint32_t* tmp_table =
     (uint32_t*)mmap_temp_map(domain->page_table_cs, MMAP_ATTRIB_KERNEL_RW);
-  tmp_table[0] = ((uint32_t)&load_process) | MMAP_ATTRIB_USER_RO;
+  void* bootstrap_code = (void*)CORE_SERVICE->process_bootstrap;
+  uintptr_t bootstrap_page = mmap_find_page(bootstrap_code);
+  tmp_table[0] = ((uint32_t)bootstrap_page) | MMAP_ATTRIB_USER_RO;
   mmap_temp_unmap(tmp_table);
   return domain;
 }
