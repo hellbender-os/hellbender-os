@@ -24,13 +24,6 @@ kernel_t kernel;
 
 uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
-void kernel_main(void) {
-  printf("kernel_main\n");
-  
-  printf("Hello, kernel World!\n");
-  exit(0);
-}
-
 __attribute__((__noreturn__))
 void kernel_to_usermode() {
   if (CURRENT_THREAD->state == THREAD_STATE_NEW) {

@@ -45,6 +45,9 @@ typedef void* coresrv_rtc_beep_ptr;
 void __IDC__coresrv_vga_putc(IDC_PTR, unsigned x, unsigned y, unsigned cursorx, unsigned c, unsigned color);
 typedef void* coresrv_vga_putc_ptr;
 
+void* __IDC__elf_load_process(IDC_PTR);
+typedef void* elf_load_process_ptr;
+
 extern uintptr_t __IDE__coresrv_kbd_getc;
 extern uintptr_t __IDE__coresrv_rtc_beep;
 extern uintptr_t __IDE__coresrv_rtc_ticks;
@@ -56,6 +59,7 @@ extern uintptr_t __IDE__dev_tty_open;
 extern uintptr_t __IDE__dev_tty_read;
 extern uintptr_t __IDE__dev_tty_write;
 extern uintptr_t __IDE__dev_unregister;
+extern uintptr_t __IDE__elf_load_process;
 extern uintptr_t __IDE__vfs_devfs_close;
 extern uintptr_t __IDE__vfs_devfs_lseek;
 extern uintptr_t __IDE__vfs_devfs_open;

@@ -13,7 +13,12 @@ typedef struct process {
 process_t *process_create_kernel(kernel_module_t *module,
                                  void* start_address);
 
+// Does not add the module to scheduler!
 process_t *process_create_module(kernel_module_t *module,
                                  module_binary_t* binary);
+
+process_t *process_create_application(const char* path,
+                                      char *const* argv,
+                                      char *const* envp);
 
 #endif

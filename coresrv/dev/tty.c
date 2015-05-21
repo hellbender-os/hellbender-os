@@ -304,6 +304,7 @@ __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* da
 }
 
 __IDCIMPL__ off_t dev_tty_lseek(IDC_PTR, struct vfs_file* file, off_t offset, int where) {
+  (void)(offset);//TODO implement
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
   if (tty == NULL) return (off_t)(-1);
   

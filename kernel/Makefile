@@ -33,7 +33,6 @@ early/stage_1.o \
 early/stage_2.o \
 early/stage_3.o \
 early/stage_4.o \
-early/stage_5.o \
 kernel/kernel.o \
 kernel/isr_debugger.o \
 kernel/trap_isr.o \
@@ -54,6 +53,8 @@ CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtend.o)
 CRTN_OBJ:=$(ARCHDIR)/crtn.o
 
+CORE_SYMS:=../coresrv/coresrv/coresrv_syms.o
+
 ALL_OUR_OBJS:=\
 $(CRTI_OBJ) \
 $(OBJS) \
@@ -63,6 +64,7 @@ OBJ_LINK_LIST:=\
 $(CRTI_OBJ) \
 $(CRTBEGIN_OBJ) \
 $(OBJS) \
+$(CORE_SYMS) \
 $(CRTEND_OBJ) \
 $(CRTN_OBJ) \
 
@@ -71,7 +73,7 @@ all: hellbender.kernel
 .PHONY: all clean install install-headers install-kernel
 
 hellbender.kernel: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld $(LIB_DEPS)
-	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,kernel.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

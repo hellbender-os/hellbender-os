@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <spawn.h>
+
 #include <kernel/kernel.h>
 #include <kernel/module.h>
 #include <coresrv/vfs.h>
@@ -45,19 +47,26 @@ int main(void) {
     printf("Cannot mount init file system.\n");
     abort();
   }
-  
-  //printf("Core pre-init done.\n");
+
+  // let kernel know that pre-init is done.
   sem_post(to_kernel);
   
   // kernel will enable interrupts.
-  
   sem_wait(to_core);
-  //printf("Core post-init begins.\n");
 
   // do initialization with interrupts.
 
-  //printf("Core post-init done.\n");
+  // let kernel know that post-init is done.
   sem_post(to_kernel);
 
-  while (1) sched_yield();
+  // let kernel finish TODO: could we wait for the kernel thread to exit?
+  for (int i = 0; i < 100; ++i) sched_yield();
+  
+  printf("Launching init.\n");
+  pid_t init_pid;
+  char* argv[] = { "init", (char*)0 };
+  char* envp[] = { (char*)0 };
+  posix_spawn(&init_pid, "initrd/init", NULL, NULL, argv, envp);
+
+  exit(1);
 }

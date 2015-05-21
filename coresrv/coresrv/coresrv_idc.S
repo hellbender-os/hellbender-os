@@ -67,6 +67,12 @@ __IDE__dev_unregister:
     int $83
 .balign 8
 
+.global __IDE__elf_load_process
+__IDE__elf_load_process:
+    calll elf_load_process
+    int $83
+.balign 8
+
 .global __IDE__vfs_devfs_close
 __IDE__vfs_devfs_close:
     calll vfs_devfs_close

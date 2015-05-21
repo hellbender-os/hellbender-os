@@ -15,6 +15,7 @@
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 #include <kernel/semaphore.h>
+#include <kernel/process.h>
 
 #include <stdint.h>
 
@@ -45,8 +46,22 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
       params->eax = 0;
     }
     break;
+  case SYSCALL_CURRENT_EXEC_PATH: // edx: char* path
+    if (CURRENT_THREAD->exec_path) {
+      strcpy((char*)params->edx, CURRENT_THREAD->exec_path);
+    } else {
+      *((char*)params->edx) = 0;
+    }
+    break;
   case SYSCALL_YIELD:
     // nothing to do, just re-schedule.
+    break;
+  case SYSCALL_SPAWN:
+    params->eax =
+      process_create_application((const char*)params->edx,
+                                 (char *const*)params->ebx,
+                                 (char *const*)params->ecx)
+      ->thread->thread_id;
     break;
 
   case SYSCALL_SEM_OPEN: // edx: sem_t* s; ebx: const char* name; ecx: int oflags

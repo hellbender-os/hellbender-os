@@ -12,9 +12,9 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -Wall -Wextra
+CFLAGS:=$(CFLAGS) -Wall -Wextra -fno-builtin
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude
-LIBK_CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin
+LIBK_CFLAGS:=$(CFLAGS) -ffreestanding
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel
 
 ARCHDIR:=arch/$(HOSTARCH)
@@ -89,10 +89,16 @@ sched/sched_yield.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \
+spawn/posix_spawn.o \
+
+CORE_STUB:=../coresrv/coresrv/coresrv_stub.o
+CORE_SYMS:=../coresrv/coresrv/coresrv_syms.o
 
 OBJS:=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
+$(CORE_STUB) \
+$(CORE_SYMS) \
 
 LIBK_OBJS:=$(FREEOBJS:.o=.libk.o)
 

@@ -30,6 +30,7 @@ typedef struct domain {
 domain_t* domain_create_kernel(kernel_module_t* module);
 domain_t* domain_create_module(kernel_module_t* module,
                                module_binary_t* binary); // from loaded binary.
+domain_t* domain_create_application(); // app bootstrap.
 
 void* domain_grow_heap(domain_t *domain, size_t size); // returns new top.
 

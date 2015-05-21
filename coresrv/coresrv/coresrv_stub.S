@@ -26,6 +26,9 @@ coresrv_stub:
 .global __IDC__dev_unregister
 .set __IDC__dev_unregister, coresrv_stub
 
+.global __IDC__elf_load_process
+.set __IDC__elf_load_process, coresrv_stub
+
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 

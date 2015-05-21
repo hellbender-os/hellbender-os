@@ -1,5 +1,5 @@
 SYSTEM_HEADER_PROJECTS="libc kernel coresrv"
-PROJECTS="libc kernel coresrv"
+PROJECTS="libc kernel coresrv utils"
 
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}

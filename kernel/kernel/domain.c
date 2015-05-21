@@ -36,8 +36,15 @@ domain_t* domain_prepare(domain_t *domain, void* base, size_t size) {
     domain->page_table_ds = 0;
     domain->page_table_cs = 0;
   } else {
+    // allocate and clear the page tables.
     domain->page_table_ds = mem_alloc_page();
     domain->page_table_cs = mem_alloc_page();
+    void *tmp_ds = mmap_temp_map(domain->page_table_ds, MMAP_ATTRIB_KERNEL_RW);
+    memset(tmp_ds, 0, PAGE_SIZE);
+    mmap_temp_unmap(tmp_ds);
+    void *tmp_cs = mmap_temp_map(domain->page_table_cs, MMAP_ATTRIB_KERNEL_RW);
+    memset(tmp_cs, 0, PAGE_SIZE);
+    mmap_temp_unmap(tmp_cs);
   }
   domain->domain_base = base;
   domain->domain_size = size;
@@ -48,14 +55,21 @@ domain_t* domain_prepare(domain_t *domain, void* base, size_t size) {
   return domain;
 }
 
-/*
+extern void load_process();
+
 domain_t* domain_create_application() {
   domain_t *domain = domain_create();
-  return domain_prepare(domain, (void*)APPLICATION_OFFSET, TABLE_SIZE);
-  //void *base = vmem_alloc_bottom_table();
-  //return domain_prepare(domain, base, TABLE_SIZE);
+  domain_prepare(domain, (void*)APPLICATION_OFFSET, TABLE_SIZE);
+
+  // map the process bootstrap code into the application domain (manually).
+  uint32_t* tmp_table =
+    (uint32_t*)mmap_temp_map(domain->page_table_cs, MMAP_ATTRIB_KERNEL_RW);
+  tmp_table[0] = ((uint32_t)&load_process) | MMAP_ATTRIB_USER_RO;
+  mmap_temp_unmap(tmp_table);
+  return domain;
 }
 
+/*
 domain_t* domain_create_service() {
   domain_t *domain = domain_create();
   void *base = vmem_alloc_top_table();

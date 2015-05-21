@@ -57,11 +57,9 @@ uint8_t mem_free_pages1[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mem_free_pages2[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 /**
- * Initializes the free memory information based on GRUB memory maps.
- * Kernel and core service module area are excluded.
+ * Setup the free memory lists.
  */
-void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
-                      module_binary_t *binaries, unsigned nof_binaries) {
+void mem_stage_2_init() {
   memset(&mem, 0, sizeof(mem));
   memset(mem_free_pages1, 0, PAGE_SIZE);
   memset(mem_free_pages2, 0, PAGE_SIZE);
@@ -71,7 +69,14 @@ void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
   mem.first->header.this = (uintptr_t)mem_free_pages1;
   mem.first->header.next = (uintptr_t)mem_free_pages2;
   mem.second->header.this = (uintptr_t)mem_free_pages2;
+}
 
+/**
+ * Initializes the free memory information based on GRUB memory maps.
+ * Kernel and core service module area are excluded.
+ */
+void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
+                      module_binary_t *binaries, unsigned nof_binaries) {
   // round the input values to page boundaries.
   for (unsigned j = 0; j < nof_binaries; ++j) {
     if (!binaries[j].bottom) continue;

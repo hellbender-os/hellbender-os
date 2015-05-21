@@ -11,7 +11,9 @@ Minimum Acceptable Value: {_POSIX_AIO_MAX} [Option End]
 {AIO_PRIO_DELTA_MAX}
 The maximum amount by which a process can decrease its asynchronous I/O priority level from its own scheduling priority.
 Minimum Acceptable Value: 0 [Option End]
-{ARG_MAX}
+*/
+#define ARG_MAX 4096
+/*
 Maximum length of argument to the exec functions including environment data.
 Minimum Acceptable Value: {_POSIX_ARG_MAX}
 {ATEXIT_MAX}
@@ -186,7 +188,9 @@ Value: 2 [Option End]
 {_POSIX_AIO_MAX}
 The number of outstanding asynchronous I/O operations.
 Value: 1 [Option End]
-{_POSIX_ARG_MAX}
+*/
+#define _POSIX_ARG_MAX 4096
+/*
 Maximum length of argument to the exec functions including environment data.
 Value: 4 096
 {_POSIX_CHILD_MAX}

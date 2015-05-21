@@ -22,6 +22,7 @@ mmap_t mmap;
 uint8_t mmap_page_directory[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mmap_page_table_ds[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mmap_page_table_cs[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint8_t mmap_tmp_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 
 extern unsigned long __force_order;
 static inline void invalidate(void *virtual) {
@@ -150,6 +151,9 @@ void mmap_stage_2_cleanup() {
   mmap_unmap_page(CS_BASE + &mmap_page_directory);
   mmap_unmap_page(CS_BASE + &mmap_page_table_ds);
   mmap_unmap_page(CS_BASE + &mmap_page_table_cs);
+
+  // we just want the virtual memory of tmp_page.
+  mem_free_page(mmap_unmap_page(mmap_tmp_page));
 }
 
 void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
@@ -319,4 +323,14 @@ void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
 
   invalidate_all(); // TODO: or just all pages in the page table.
   return virtual;
+}
+
+void* mmap_temp_map(uintptr_t page, unsigned attributes) {
+  // TODO: critical section until unmap called.
+  return mmap_map_page(mmap_tmp_page, page, attributes);
+}
+
+void mmap_temp_unmap(void* address) {
+  (void)(address);//we just have one tmp_page for now..
+  mmap_unmap_page(mmap_tmp_page);
 }

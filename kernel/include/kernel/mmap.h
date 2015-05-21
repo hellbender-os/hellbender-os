@@ -28,4 +28,7 @@ void mmap_remap(void* virtual, size_t size, unsigned attributes);
 
 void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes);
 
+void* mmap_temp_map(uintptr_t page, unsigned attributes);
+void mmap_temp_unmap(void*);
+
 #endif

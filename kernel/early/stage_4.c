@@ -30,15 +30,14 @@
 void early_stage_4() {
   printf("early_stage_4\n");
   early_data_t *data = (early_data_t*)kernel.early_data;
+  core_service_t *service =
+    (core_service_t*)data->modules[MODULE_CORE].module_info;
 
   // create core service process.
   unsigned core_idx = kernel.core_module = kernel.nof_processes++;
   kernel.processes[core_idx] =
     process_create_module(&data->modules[MODULE_CORE],
                           &data->binaries[MODULE_CORE]);
-  scheduler_add_thread(kernel.processes[core_idx]->thread);
-  core_service_t *service =
-    (core_service_t*)data->modules[MODULE_CORE].module_info;
 
   // map VGA memory to core service:
   mmap_map_page((void*)service->vga_buffer, (uintptr_t)VGA_MEMORY,
@@ -57,7 +56,10 @@ void early_stage_4() {
                 "orl $0x3000, (%esp);"
                 "popf;"
                 );
-  
+
+  // core is ready to run.
+  scheduler_add_thread(kernel.processes[core_idx]->thread);
+
   // wait until core service notifies that the pre-init is done.
   sem_t* to_core = sem_open("kernel_to_core", O_CREAT, (mode_t)0, (unsigned)0);
   sem_t* to_kernel = sem_open("core_to_kernel", O_CREAT, (mode_t)0, (unsigned)0);
@@ -81,5 +83,8 @@ void early_stage_4() {
   sem_unlick("core_to_kernel");
   */
   
-  early_stage_5();
+  // enter scheduling loop.
+  free(kernel.early_data);
+  kernel.early_data = NULL;
+  exit(0);
 }

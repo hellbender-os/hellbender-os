@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <kernel/kernel.h>
+#include <kernel/mem.h>
 #include <kernel/mmap.h>
 #include <kernel/tty.h>
 #include <kernel/gdt.h>
@@ -22,7 +23,9 @@
 void early_stage_2(early_data_t *data) {
   printf("early_stage_2\n");
 
+  mem_stage_2_init();
   mmap_stage_2_init();
+  
   // map kernel code into CS section.
   size_t kernel_size = (data->modules[MODULE_KERNEL].top
                         - data->modules[MODULE_KERNEL].bottom);

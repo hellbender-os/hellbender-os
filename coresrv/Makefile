@@ -60,6 +60,7 @@ dev/dev_init.o \
 dev/dev_register.o \
 dev/dev_unregister.o \
 dev/tty.o \
+elf/load_process.o \
 
 APP_OBJS:=\
 $(HEADER_OBJ) \
@@ -89,7 +90,6 @@ coresrv/coresrv_syms.S: coresrv.map make_coresrv_syms.pl
 test.app: $(APP_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -Wl,-Map,testapp.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(APP_OBJS) $(LDFLAGS) $(LIBS)
 # To see the linker script: -Wl,-verbose
-# To see the link process:  -Xlinker --print-map
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

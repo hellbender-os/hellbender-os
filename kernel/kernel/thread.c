@@ -31,17 +31,16 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
   uintptr_t page_table = mem_alloc_page();
   uintptr_t thread_page = mem_alloc_page();
   uintptr_t stack_page = mem_alloc_page();
-  // we have a virtual memory slot for this thread at thread_id*PAGE_SIZE.
-  // first we use that slot to clear the page table:
-  void* tmp = (thread_t*)mmap_map_page((void*)(thread_id * PAGE_SIZE),
-                                       page_table, MMAP_ATTRIB_KERNEL_RW);
-  memset(tmp, 0, PAGE_SIZE);
+
   // we don't want to put the page table into the page directory yet,
   // so we just manually map the two pages into it. no biggie..
-  uint32_t* table_entries = (uint32_t*)tmp;
+  uint32_t* table_entries =
+    (uint32_t*)mmap_temp_map(page_table, MMAP_ATTRIB_KERNEL_RW);
+  memset(table_entries, 0, PAGE_SIZE);
   table_entries[0] = thread_page | MMAP_ATTRIB_KERNEL_RW;
   table_entries[1] = stack_page | MMAP_ATTRIB_KERNEL_RW;
   table_entries[2] = thread_page | MMAP_ATTRIB_USER_RO;
+  mmap_temp_unmap(table_entries);
 
   // then we can map the actual thread page into memory slot.
   // this way kernel can access the thread structure of in-active threads.

@@ -6,7 +6,9 @@
 
 static void print(FILE *file, const char* data, size_t data_length)
 {
-#if !defined(__is_hellbender_kernel)
+#if defined(__is_hellbender_kernel)
+  (void)(file);
+#else
   if (file == NULL || file->buffer == NULL) {
 #endif
     for (size_t i = 0; i < data_length; i++) {

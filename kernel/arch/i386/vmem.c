@@ -15,7 +15,7 @@ void vmem_stage_3_init() {
   // second table for current thread.
   // last for recursive page directory.
   // TODO: it would be better to do accocation explicitely from kernel_init.
-  vmem_free_tables[0] &= ~1;
+  vmem_free_tables[0] &= ~3;
   vmem_free_tables[511/8] &= ~128; 
 }
 

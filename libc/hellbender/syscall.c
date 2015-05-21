@@ -30,9 +30,23 @@ unsigned syscall_current_domain(domain_t *domain) {
   return retval;
 }
 
+unsigned syscall_current_exec_path(char *path) {
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_CURRENT_EXEC_PATH), "d"(path));
+  return retval;
+}
+
 void syscall_yield(void) {
   asm(SYSCALL : "=m"(__force_order)
       : "a"(SYSCALL_YIELD));
+}
+
+int syscall_spawn(const char *path, char *const argv[], char *const envp[]) {
+  register int retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_SPAWN), "d"(path), "b"(argv), "c"(envp));
+  return retval;
 }
 
 int syscall_sem_open(sem_t *s, const char* name, int oflag) {

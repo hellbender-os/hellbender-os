@@ -5,6 +5,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/module.h>
 
+void mem_stage_2_init();
 void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
                       module_binary_t *binaries, unsigned nof_binaries);
 

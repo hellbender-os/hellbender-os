@@ -68,6 +68,5 @@ void early_stage_3(early_data_t *data) {
   // from this point onwards, the original kernel stack will be reset
   // on context switches. initiazation will start using the stack of
   // the processing domain.
-  scheduler_add_thread(kernel.processes[0]->thread);
   scheduler_goto_next();
 }

@@ -46,6 +46,10 @@ typedef struct thread {
   uint32_t state; // new or old, depending if thread has been running.
   wait_state_t wait_state;
 
+  char* exec_path; // path to the binary that is beign executed.
+  uintptr_t exec_args; // physical address where argv, envp are stored.
+  unsigned exec_envp; // index into exec_args where environ variables begin.
+  
   void* start_address; // start address for new threads.
   unsigned pic_line; // one based PIC line number; for PIC interrupt handlers.
 
