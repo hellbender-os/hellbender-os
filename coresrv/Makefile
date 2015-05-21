@@ -13,9 +13,9 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -Wall -Wextra
+CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -Iinclude
-LDFLAGS:=$(LDFLAGS)
+LDFLAGS:=$(LDFLAGS) -nostartfiles -Wl,--strip-debug -Wl,-s
 LIBS:=$(LIBS) -static
 LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libc.a
 ARCHDIR:=arch/$(HOSTARCH)
@@ -24,7 +24,7 @@ include $(ARCHDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(ARCH_CFLAGS)
 CPFLAGS:=$(CPPFLAGS) $(ARCH_CPPFLAGS)
-LDFLAGS:=$(LDFLAGS) $(ARCH_LDFLAGS) -nostartfiles
+LDFLAGS:=$(LDFLAGS) $(ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(ARCH_LIBS)
 
 HEADER_OBJ:=$(ARCHDIR)/module_header.o

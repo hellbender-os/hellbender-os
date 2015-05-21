@@ -12,7 +12,7 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -Wall -Wextra -fno-builtin
+CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -fno-builtin
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude
 LIBK_CFLAGS:=$(CFLAGS) -ffreestanding
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel

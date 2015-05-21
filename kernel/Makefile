@@ -13,9 +13,9 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra
+CFLAGS:=$(CFLAGS) -s -ffreestanding -fbuiltin -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
-LDFLAGS:=$(LDFLAGS)
+LDFLAGS:=$(LDFLAGS) -Wl,--strip-debug -Wl,-s
 LIBS:=$(LIBS) -static -nostdlib -lk -lgcc
 LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libk.a
 ARCHDIR:=arch/$(HOSTARCH)
@@ -71,6 +71,7 @@ all: hellbender.kernel
 
 hellbender.kernel: $(ALL_OUR_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -Wl,-Map,kernel.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
+	strip -R .comment $@
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
