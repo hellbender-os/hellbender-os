@@ -9,20 +9,21 @@
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 
-process_t *process_create_kernel(kernel_module_t *module,
+process_t *process_create_kernel(domain_t *kernel_domain,
                                  void* start_address) {
   process_t *process = (process_t*)malloc(sizeof(process_t));
-  process->domain = domain_create_kernel(module);
+  memset(process, 0, sizeof(process_t));
+  process->domain = kernel_domain;
   process->thread = thread_create(process->domain, start_address);
   process->thread->is_kernel = 1;
   scheduler_add_thread(process->thread);
   return process;
 }
 
-process_t *process_create_module(kernel_module_t *module,
-                                 module_binary_t* binary) {
+process_t *process_create_coresrv(kernel_module_t *module,
+                                  module_binary_t* binary) {
   process_t *process = (process_t*)malloc(sizeof(process_t));
-  process->domain = domain_create_module(module, binary);
+  process->domain = domain_create_coresrv(module, binary);
   process->thread = thread_create(process->domain, (void*)module->start);
   return process;
 }
@@ -35,8 +36,9 @@ process_t *process_create_application(const char* path,
                                       char *const* envp) {
   process_t *process = (process_t*)malloc(sizeof(process_t));
   process->domain = domain_create_application();
-  process->thread = thread_create(process->domain,
-                                  process->domain->text_bottom);
+  process->thread =
+    thread_create(process->domain,
+                  process->domain->domain_base + APPLICATION_BOOTSTRAP_START);
 
   // store path.
   unsigned path_size = strlen(path) + 1;

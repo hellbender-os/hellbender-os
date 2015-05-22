@@ -25,7 +25,7 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
   char path[PATH_MAX];
   syscall_current_exec_path(path);
   printf("elf_load_process: %s\n", path);
-  
+
   int fd = open(path, O_RDONLY);
   if (fd < 0) {
     printf("Could not open '%s'.\n", path);
@@ -57,6 +57,8 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
   }
   printf("Elf entry point = %x\n", (unsigned)elf_header.e_entry);
 
+  void *min_addr = syscall_set_program_break(NULL, 0);
+  void *max_addr = min_addr;
   Elf32_Phdr prog_header;
   for (unsigned i = 0; i < elf_header.e_phnum; ++i) {
     lseek(fd, elf_header.e_phoff + i * elf_header.e_phentsize, SEEK_SET);
@@ -73,9 +75,17 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
     if (prog_header.p_type != PT_LOAD) continue;
 
     // allocate physical memory for each segment in correct virtual address.
-    syscall_allocate((void*)prog_header.p_vaddr,
-                     (size_t)prog_header.p_memsz);
-    memset((void*)prog_header.p_vaddr, 0, (size_t)prog_header.p_memsz);
+    void *vaddr = (void*)prog_header.p_vaddr;
+    if (vaddr < min_addr) {
+      printf("Cannot map program below virtual address space.\n");
+      abort();
+    }
+    void *vaddr_end = vaddr + prog_header.p_memsz;
+    if (vaddr_end > max_addr) {
+      syscall_set_program_break(vaddr_end, 0);
+      max_addr = vaddr_end;
+    }
+    memset(vaddr, 0, (size_t)prog_header.p_memsz);
 
     // load the segment.
     lseek(fd, (off_t)prog_header.p_offset, SEEK_SET);

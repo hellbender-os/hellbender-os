@@ -60,8 +60,7 @@ typedef struct thread {
   void* stack_top;
 
   domain_t *home_domain;
-  void* heap_bottom;
-  void* heap_limit;
+  domain_t *current_domain;
 
   struct domain_stack {
     uintptr_t entry_address;

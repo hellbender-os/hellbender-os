@@ -7,9 +7,11 @@ void syscall_print(const char* str) {
       : "a"(SYSCALL_PRINT), "d"(str));
 }
 
-void syscall_allocate(void* address, unsigned size) {
-  asm(SYSCALL : "=m"(__force_order)
-      : "a"(SYSCALL_ALLOC), "d"(address), "c"(size));
+void* syscall_set_program_break(void* set_or_null, intptr_t delta_or_zero) {
+  register void* retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_SET_PROGRAM_BREAK), "d"(set_or_null), "c"(delta_or_zero));
+  return retval;
 }
 
 void syscall_make_readonly(void* address, unsigned size) {
@@ -31,13 +33,6 @@ __attribute__((__noreturn__)) void syscall_exit(int status) {
 __attribute__((__noreturn__)) void syscall_iret(void) {
   asm(SYSIRET : "=m"(__force_order));
   __builtin_unreachable();
-}
-
-unsigned syscall_current_domain(domain_t *domain) {
-  register unsigned retval __asm__("eax");
-  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
-      : "a"(SYSCALL_CURRENT_DOMAIN), "d"(domain));
-  return retval;
 }
 
 unsigned syscall_current_exec_path(char *path) {

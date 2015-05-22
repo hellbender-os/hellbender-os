@@ -15,7 +15,7 @@ tinyheap_t default_tinyheap;
 smallheap_t default_smallheap;
 
 void heap_init_wilderness(wilderness_t *wild,
-                          void *start, void *end, size_t alloc_size) {
+                          void *start, size_t alloc_size) {
   if (alloc_size % PAGE_SIZE) {
     printf("heap allocation size must be page aligned.\n");
     abort();
@@ -23,7 +23,6 @@ void heap_init_wilderness(wilderness_t *wild,
   wild->base = (uint8_t*)start;
   wild->bottom = (uint8_t*)start;
   wild->top = (uint8_t*)start;
-  wild->limit = (uint8_t*)end;
   wild->step = alloc_size;
   heap_grow_wilderness(wild);
 }

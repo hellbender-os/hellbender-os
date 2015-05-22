@@ -3,10 +3,9 @@
 
 #define SYSCALL "int $80"
 #define SYSCALL_PRINT             0x01
-#define SYSCALL_ALLOC             0x02
+#define SYSCALL_SET_PROGRAM_BREAK 0x02
 #define SYSCALL_MAKE_READONLY     0x03
 #define SYSCALL_MAKE_EXECUTABLE   0x04
-#define SYSCALL_CURRENT_DOMAIN    0x05
 #define SYSCALL_CURRENT_EXEC_PATH 0x06
 #define SYSCALL_YIELD             0x07
 #define SYSCALL_SPAWN             0x08

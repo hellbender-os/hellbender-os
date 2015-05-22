@@ -138,6 +138,14 @@ void mem_stage_3_init(memory_map_t *memory_map, unsigned map_elements,
           (unsigned)mem.total_memory, (unsigned)mem.available_memory);
 }
 
+uintptr_t mem_alloc_page_cleared() {
+  uintptr_t page = mem_alloc_page();
+  void *tmp = mmap_temp_map(page, MMAP_ATTRIB_KERNEL_RW);
+  memset(tmp, 0, PAGE_SIZE);
+  mmap_temp_unmap(tmp);
+  return page;
+}
+
 uintptr_t mem_alloc_page() {
   // if current directories are empty, try to get a pages from ranges:
   if (mem.first->header.free == 0 && mem.second->header.free == 0

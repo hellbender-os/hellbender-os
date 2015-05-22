@@ -5,62 +5,35 @@
 #include <kernel/domain.h>
 #include <kernel/module.h>
 #include <kernel/process.h>
+#include <kernel/kernel.h>
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 #include <kernel/vmem.h>
 
-void* domain_grow_heap(domain_t *domain, size_t size) {
-  if (size % PAGE_SIZE) {
-    printf("Can grow only full pages.\n");
-    abort();
-  }
-  if (domain->heap_top + PAGE_SIZE < domain->heap_limit) {
-    mem_alloc_mapped(domain->heap_top, size, MMAP_ATTRIB_USER_RW);
-    domain->heap_top += size;
-  } else {
-    printf("Domain out of virtual address space!\n");
-    abort();
-  }
-  return domain->heap_top;
-}
+void* domain_set_break(domain_t *domain,
+                       void* end_or_null,
+                       intptr_t delta_or_zero) {
+  if (end_or_null == NULL) end_or_null = domain->program_break + delta_or_zero;
 
-domain_t* domain_create() {
-  domain_t *domain = malloc(sizeof(domain_t));
-  memset(domain, 0, sizeof(domain_t));
-  return domain;
-}
-
-domain_t* domain_prepare(domain_t *domain, void* base, size_t size) {
-  // kernel is special case, page tables are always mapped.
-  if (base == KERNEL_BASE) {
-    domain->page_table_ds = 0;
-    domain->page_table_cs = 0;
-  } else {
-    // allocate and clear the page tables.
-    domain->page_table_ds = mem_alloc_page();
-    domain->page_table_cs = mem_alloc_page();
-    void *tmp_ds = mmap_temp_map(domain->page_table_ds, MMAP_ATTRIB_KERNEL_RW);
-    memset(tmp_ds, 0, PAGE_SIZE);
-    mmap_temp_unmap(tmp_ds);
-    void *tmp_cs = mmap_temp_map(domain->page_table_cs, MMAP_ATTRIB_KERNEL_RW);
-    memset(tmp_cs, 0, PAGE_SIZE);
-    mmap_temp_unmap(tmp_cs);
+  void *end = ceil_page(end_or_null);
+  void *limit = domain->domain_base + domain->domain_size;
+  if (end < domain->heap_bottom) return (void*)-1;
+  if (end > limit) return (void*)-1;
+  while (end < domain->program_break) {
+    domain->program_break -= PAGE_SIZE;
+    mem_free_page(mmap_unmap_page(domain->program_break));
   }
-  domain->domain_base = base;
-  domain->domain_size = size;
-  domain->module_bottom = domain->module_top = base;
-  domain->text_bottom = domain->text_top = base;
-  domain->heap_bottom = domain->heap_top = base;
-  domain->heap_limit = base + size;
-  return domain;
+  if (end > domain->program_break) {
+    size_t delta = end - domain->program_break;
+    mem_alloc_mapped(domain->program_break, delta, MMAP_ATTRIB_USER_RW);
+    domain->program_break += delta;
+  }
+  return domain->program_break;
 }
 
 void domain_update_data(domain_t *domain, void* address, size_t size) {
-  void *top = address + size;
-  domain->module_bottom = address < domain->module_bottom
-    ? address : domain->module_bottom;
-  domain->module_top = top > domain->module_top ? top : domain->module_top;
-  domain->heap_bottom = ceil_page(domain->module_top);
+  void *top = ceil_page(address + size);
+  domain->heap_bottom = top > domain->heap_bottom ? top : domain->heap_bottom;
 }
 
 void domain_update_text(domain_t *domain, void* address, size_t size) {
@@ -71,17 +44,51 @@ void domain_update_text(domain_t *domain, void* address, size_t size) {
   domain_update_data(domain, address, size);
 }
 
-domain_t* domain_create_application() {
-  domain_t *domain = domain_create();
-  domain_prepare(domain, (void*)APPLICATION_OFFSET, TABLE_SIZE);
+static domain_t* domain_create(void* base, size_t size) {
+  domain_t *domain = malloc(sizeof(domain_t));
+  memset(domain, 0, sizeof(domain_t));
 
-  // map the process bootstrap code into the application domain (manually).
-  uint32_t* tmp_table =
+  // allocate page tables.x
+  domain->page_table_ds = mem_alloc_page_cleared();
+  domain->page_table_cs = mem_alloc_page_cleared();
+
+  // setup domain structure.
+  domain->domain_base = base;
+  domain->domain_size = size;
+  domain->text_bottom = base;
+  domain->text_top = base;
+  domain->heap_bottom = base;
+  domain->program_break = base;
+
+  // setup the first page structure.
+  domain->first_page = mem_alloc_page();
+  struct domain_first_page *tmp = (struct domain_first_page*)
+    mmap_temp_map(domain->first_page, MMAP_ATTRIB_KERNEL_RW);
+  tmp->domain = domain;
+  mmap_temp_unmap(tmp);
+  
+  uint32_t* tmp_ds =
+    (uint32_t*)mmap_temp_map(domain->page_table_ds, MMAP_ATTRIB_KERNEL_RW);
+  tmp_ds[0] = domain->first_page | MMAP_ATTRIB_USER_RO;
+  mmap_temp_unmap(tmp_ds);
+
+  uint32_t* tmp_cs =
     (uint32_t*)mmap_temp_map(domain->page_table_cs, MMAP_ATTRIB_KERNEL_RW);
+  tmp_cs[0] = domain->first_page | MMAP_ATTRIB_USER_RO;
+  mmap_temp_unmap(tmp_cs);
+
+  return domain;
+}
+
+domain_t* domain_create_application() {
+  domain_t *domain = domain_create((void*)APPLICATION_OFFSET, TABLE_SIZE);
+
+  // copy the bootstrap code into the application domain.
+  void* tmp = mmap_temp_map(domain->first_page, MMAP_ATTRIB_KERNEL_RW);
   void* bootstrap_code = (void*)CORE_SERVICE->process_bootstrap;
-  uintptr_t bootstrap_page = mmap_find_page(bootstrap_code);
-  tmp_table[0] = ((uint32_t)bootstrap_page) | MMAP_ATTRIB_USER_RO;
-  mmap_temp_unmap(tmp_table);
+  memcpy(tmp + APPLICATION_BOOTSTRAP_START,
+         bootstrap_code, APPLICATION_BOOTSTRAP_SIZE);
+  mmap_temp_unmap(tmp);
   return domain;
 }
 
@@ -93,33 +100,35 @@ domain_t* domain_create_service() {
 }
 */
 
+domain_t kernel_domain;
+
 domain_t* domain_create_kernel(kernel_module_t* module) {
-  domain_t *domain = domain_create();
-  domain_prepare(domain, (void*)KERNEL_BASE, TABLE_SIZE);
+  domain_t *domain = &kernel_domain;
+  memset(domain, 0 , sizeof(domain_t));
   
-  domain->module_bottom = (void*)KERNEL_BASE;
-  domain->module_top = (void*)module->top;
+  domain->domain_base = (void*)KERNEL_BASE;
+  domain->domain_size = TABLE_SIZE;
   domain->text_bottom = (void*)module->text_bottom;
   domain->text_top = (void*)module->text_top;
-  domain->heap_bottom = domain->heap_top = ceil_page(domain->module_top);
+  domain->heap_bottom = ceil_page((void*)module->top);
+  domain->program_break = domain->heap_bottom;
   domain->start = (void*)module->start;
   return domain;
 }
 
-domain_t* domain_create_module(kernel_module_t* module,
-                               module_binary_t* binary) {
+domain_t* domain_create_coresrv(kernel_module_t* module,
+                                module_binary_t* binary) {
   if (!module_check_header(module)) {
-    printf("invalid kernel module!\n");
+    printf("invalid core server module!\n");
     abort();
   }
 
-  domain_t *domain = domain_create();
-  void* base = vmem_alloc_existing_table((void*)module->bottom);
-  domain_prepare(domain, base, TABLE_SIZE);
+  void* base = (void*)CORE_OFFSET;
   if ((uintptr_t)base != module->bottom) {
-    printf("Module not loaded at expected address.\n");
+    printf("core server module not loaded at expected address.\n");
     abort();
   }
+  domain_t *domain = domain_create(base, TABLE_SIZE);
 
   // map module to its page table (we have to activate page table for this).
   domain_enable(domain);
@@ -166,17 +175,15 @@ domain_t* domain_create_module(kernel_module_t* module,
   // no need for the page table until some thread accesses it.
   domain_disable(domain);
   
-  domain->module_bottom = base;
-  domain->module_top = (void*)module->top;
   domain->text_bottom = (void*)module->text_bottom;
   domain->text_top = (void*)module->text_top;
-  domain->heap_bottom = domain->heap_top = ceil_page(domain->module_top);
+  domain->heap_bottom = ceil_page((void*)module->top);
+  domain->program_break = domain->heap_bottom;
   domain->start = (void*)module->start;
   return domain;
 }
 
 void domain_enable(domain_t* domain) {
-  kernel.current_domain = domain;
   if (domain->page_table_ds) {
     mmap_map_table(domain->domain_base, domain->page_table_ds,
                    MMAP_ATTRIB_USER_RW);
@@ -225,7 +232,6 @@ uintptr_t domain_pop() {
     &CURRENT_THREAD->domain_stack[--CURRENT_THREAD->domain_idx];
 
   // TODO: disable domain if not in stack anymore.
-  kernel.current_domain = CURRENT_THREAD->home_domain;
   return stack->return_address;  
 }
 

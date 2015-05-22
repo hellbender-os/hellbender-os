@@ -2,6 +2,7 @@
 #define _HELLBENDER_H
 
 #include <sys/types.h>
+#include <stdint.h>
 
 #ifndef BREAK
 extern unsigned long __force_order;
@@ -13,15 +14,12 @@ extern unsigned long __force_order;
 #endif
 
 void syscall_print(const char* str);
-void syscall_allocate(void* address, unsigned size);
+void* syscall_set_program_break(void* set_or_null, intptr_t delta_or_zero);
 void syscall_make_readonly(void* address, unsigned size);
 void syscall_make_executable(void* address, unsigned size);
 
 __attribute__((__noreturn__)) void syscall_exit(int status);
 __attribute__((__noreturn__)) void syscall_iret(void);
-
-typedef struct domain domain_t;
-unsigned syscall_current_domain(domain_t *domain);
 
 unsigned syscall_current_exec_path(char* path);
 

@@ -34,6 +34,10 @@ extern unsigned long __force_order;
 // all applications are mapped into this address, in their own address spaces.
 #define APPLICATION_OFFSET 0x800000
 
+// address of the application bootstrap code, relative to the _OFFSET.
+#define APPLICATION_BOOTSTRAP_START 0x100
+#define APPLICATION_BOOTSTRAP_SIZE 0x100
+
 // Anything above this limit is reserved to OS services.
 #define APPLICATION_LIMIT 0x70000000
 
@@ -78,12 +82,9 @@ typedef struct kernel {
   process_t* processes[MAX_MODULES]; // domain and thread.
 
   void* early_data; // holds multiboot information during initialization.
-  void* heap_bottom; // heap limits for libK (before processes are set up).
-  void* heap_limit;
   int up_and_running; // 0 until initialization done.
 
   thread_t* current_thread;
-  domain_t* current_domain;
 
   semaphore_t* semaphores;
 } kernel_t;

@@ -43,17 +43,16 @@ void early_stage_3(early_data_t *data) {
 
   // this will release the memory that is covered by the VGA buffer.
   terminal_stage_3_cleanup();
+
+  // kernel domain needs to be setup so that heap can be allocated.
+  domain_t* domain = domain_create_kernel(&data->modules[0]);
   
   // C language initialization.
-  // TODO: kernel.heal_* not needed once 'set program break' is used.
-  kernel.heap_bottom = ceil_page((void*)data->modules[0].top);
-  kernel.heap_limit = (void*)KERNEL_HEAP_TOP;
   _hellbender_libc_init_basic();
   _init();
 
   // kernel thread execution context.
-  kernel.processes[0] = process_create_kernel(&data->modules[0],
-                                              &early_stage_4);
+  kernel.processes[0] = process_create_kernel(domain, &early_stage_4);
   kernel.nof_processes = 1;
   thread_set_current(kernel.processes[0]->thread);
 
@@ -69,5 +68,6 @@ void early_stage_3(early_data_t *data) {
   // from this point onwards, the original kernel stack will be reset
   // on context switches. initiazation will start using the stack of
   // the processing domain.
+  printf("going multithreaded.\n");
   scheduler_goto_next();
 }

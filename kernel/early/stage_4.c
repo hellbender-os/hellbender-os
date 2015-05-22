@@ -37,8 +37,8 @@ void early_stage_4() {
   // create core service process.
   unsigned core_idx = kernel.core_module = kernel.nof_processes++;
   kernel.processes[core_idx] =
-    process_create_module(&data->modules[MODULE_CORE],
-                          &data->binaries[MODULE_CORE]);
+    process_create_coresrv(&data->modules[MODULE_CORE],
+                           &data->binaries[MODULE_CORE]);
 
   // map VGA memory to core service:
   mmap_map_page((void*)service->vga_buffer, (uintptr_t)VGA_MEMORY,

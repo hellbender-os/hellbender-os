@@ -10,13 +10,11 @@ typedef struct wilderness {
     uint8_t *base; // original memory start address.
     uint8_t *bottom; // address where more physical memory will be allocated.
     uint8_t *top; // address where more physical memory will be allocated.
-    uint8_t *limit; // address that may not be exceeded.
     size_t step; // how much more memory to allocate in one go.
 } wilderness_t;
 extern wilderness_t default_wilderness;
 
-void heap_init_wilderness(wilderness_t *wild,
-                          void *start, void *end, size_t alloc_size);
+void heap_init_wilderness(wilderness_t *wild, void *start, size_t alloc_size);
 void heap_grow_wilderness(wilderness_t *wild);
 
 // ================================

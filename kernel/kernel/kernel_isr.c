@@ -29,11 +29,12 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
     // TODO: limit string length, don't write out of screen.
     printf((const char*)params->edx);
     break;
-  case SYSCALL_ALLOC: // edx: void* ptr; ecx: size_t size
+  case SYSCALL_SET_PROGRAM_BREAK: // edx: void* end_or_null ; edc intptr_t delta
     // TODO: memory must by contained within thread address space.
-    mem_alloc_mapped((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RW);
-    domain = CURRENT_THREAD->home_domain;
-    domain_update_data(domain, (void*)params->edx, (size_t)params->ecx);
+    domain = CURRENT_THREAD->current_domain;
+    params->eax = (uintptr_t)domain_set_break(domain,
+                                              (void*)params->edx,
+                                              (intptr_t)params->ecx);
     break;
   case SYSCALL_MAKE_READONLY: // edx: void* ptr; ecx: size_t size
     // TODO: memory must by contained within thread address space.
@@ -52,16 +53,6 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
   case SYSCALL_EXIT: // edx: int status
     //printf("Exit: %x\n", (unsigned)params->edx);
     CURRENT_THREAD->state = THREAD_STATE_DEAD;
-    break;
-  case SYSCALL_CURRENT_DOMAIN: // edx: domain_t* dst
-    // TODO: check permissions.
-    if (kernel.current_domain) {
-      memcpy((void*)params->edx, kernel.current_domain, sizeof(domain_t));
-      params->eax = 1;
-    } else {
-      memset((void*)params->edx, 0, sizeof(domain_t));
-      params->eax = 0;
-    }
     break;
   case SYSCALL_CURRENT_EXEC_PATH: // edx: char* path
     if (CURRENT_THREAD->exec_path) {
