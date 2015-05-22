@@ -23,6 +23,7 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
   // standard system call.
   (void)(isr_stack);
   domain_t *domain;
+  process_t *process;
 
   switch(params->eax) {
   case SYSCALL_PRINT: // edx: const* str
@@ -61,15 +62,21 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
       *((char*)params->edx) = 0;
     }
     break;
+  case SYSCALL_GET_ENVIRONMENT: // edx = int*; ebx = int*; ecx = char**
+    domain_restore_environment(CURRENT_THREAD->current_domain,
+                               (int*)params->edx,
+                               (int*)params->ebx,
+                               (char**)params->ecx);
+    break;
   case SYSCALL_YIELD:
     // nothing to do, just re-schedule.
     break;
-  case SYSCALL_SPAWN:
-    params->eax =
-      process_create_application((const char*)params->edx,
-                                 (char *const*)params->ebx,
-                                 (char *const*)params->ecx)
-      ->thread->thread_id;
+  case SYSCALL_SPAWN: // edx = char*; ebx = char**; ecx = char**
+    process = process_create_application((const char*)params->edx);
+    domain_store_environment(process->domain,
+                             (char *const*)params->ebx,
+                             (char *const*)params->ecx);
+    params->eax = process->thread->thread_id;
     break;
 
   case SYSCALL_SEM_OPEN: // edx: sem_t* s; ebx: const char* name; ecx: int oflags

@@ -42,6 +42,11 @@ unsigned syscall_current_exec_path(char *path) {
   return retval;
 }
 
+void syscall_get_environment(int *argc, int *envc, char** strings) {
+  asm(SYSCALL : "=m"(__force_order)
+      : "a"(SYSCALL_GET_ENVIRONMENT), "d"(argc), "b"(envc), "c"(strings));
+}
+
 void syscall_yield(void) {
   asm(SYSCALL : "=m"(__force_order)
       : "a"(SYSCALL_YIELD));

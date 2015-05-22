@@ -17,8 +17,6 @@ process_t *process_create_kernel(domain_t *kernel_domain,
 process_t *process_create_coresrv(kernel_module_t *module,
                                   module_binary_t* binary);
 
-process_t *process_create_application(const char* path,
-                                      char *const* argv,
-                                      char *const* envp);
+process_t *process_create_application(const char* path);
 
 #endif

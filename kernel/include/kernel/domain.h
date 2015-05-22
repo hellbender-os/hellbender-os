@@ -14,6 +14,7 @@ typedef struct domain {
   uintptr_t page_table_ds; // physical address of the page table.
   uintptr_t page_table_cs; // physical address of the page table.
   uintptr_t first_page; // the first page in DS and CS segments.
+  uintptr_t arg_table; // address to the page containing arg data pages.
 
   void* text_bottom; // range that contains all code.
   void* text_top;
@@ -23,7 +24,6 @@ typedef struct domain {
   void* start; // address of the entry function.
   size_t argc; // number of arguments, environment variables.
   size_t envc;
-  uintptr_t arg_table; // address to the page containing arg data pages.
 } domain_t;
 
 // this struct is in the first page of the domain address space (RO for users).
@@ -52,5 +52,10 @@ void domain_disable(domain_t* domain);
 
 void domain_push(uintptr_t entry_address, uintptr_t return_address);
 uintptr_t domain_pop();
+
+void domain_store_environment(domain_t *domain,
+                              char *const* argv, char *const* envp);
+void domain_restore_environment(domain_t *domain,
+                                int *argc, int *envc, char **ptr);
 
 #endif

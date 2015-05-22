@@ -33,14 +33,14 @@ void* domain_set_break(domain_t *domain,
 
 void domain_update_data(domain_t *domain, void* address, size_t size) {
   void *top = ceil_page(address + size);
-  domain->heap_bottom = top > domain->heap_bottom ? top : domain->heap_bottom;
+  if (top > domain->heap_bottom) domain->heap_bottom = top;
+  if (top > domain->program_break) domain->program_break = top;
 }
 
 void domain_update_text(domain_t *domain, void* address, size_t size) {
   void *top = address + size;
-  domain->text_bottom = address < domain->text_bottom
-    ? address : domain->text_bottom;
-  domain->text_top = top > domain->text_top ? top : domain->text_top;
+  if (address < domain->text_bottom)  domain->text_bottom = address;
+  if (top > domain->text_top) domain->text_top = top;
   domain_update_data(domain, address, size);
 }
 
@@ -235,21 +235,83 @@ uintptr_t domain_pop() {
   return stack->return_address;  
 }
 
+void domain_restore_environment(domain_t *domain,
+                                int *argc, int *envc, char **ptr) {
+  *argc = domain->argc;
+  *envc = domain->envc;
+  void* next = *ptr = (char*)domain->program_break;
+  
+  // map all pages that were used when storing arguments and environment.
+  uint32_t* pages =
+    (uint32_t*)mmap_temp_map(domain->arg_table, MMAP_ATTRIB_KERNEL_RW);
+  for (unsigned i = 0; i < PAGE_SIZE / sizeof(uint32_t); ++i) {
+    if (pages[i]) {
+      mmap_map_page(next, pages[i], MMAP_ATTRIB_USER_RW);
+      next += PAGE_SIZE;
+    } else break;
+  }
+  mmap_temp_unmap(pages);
 
-/*
-void* domain_alloc_data(domain_t *domain, size_t size) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  // TODO: support non-multiple-of-page-size.
-  void* virtual = domain->data_top;
-  domain->data_top = mem_alloc_mapped(virtual, size);
-  return virtual;
+  domain->program_break = next;
 }
 
-void* domain_alloc_code(domain_t *domain, size_t size) {
-  if (size % PAGE_SIZE) size += PAGE_SIZE - size % PAGE_SIZE;
-  // TODO: support non-multiple-of-page-size.
-  void* virtual = domain->code_top;
-  domain->code_top = mem_alloc_mapped(CS_BASE + virtual, size);
-  return virtual;
+struct unmapped {
+  uint32_t *tmp_table;
+  char *tmp_data;
+  unsigned n_pages;
+  unsigned index;
+};
+
+static inline void init_unmapped(struct unmapped *um, uint32_t page_table) {
+  um->tmp_table = (uint32_t*)mmap_temp_map(page_table, MMAP_ATTRIB_KERNEL_RW);
+  um->n_pages = 1;
+  um->index = 0;
+
+  uint32_t page = mem_alloc_page();
+  um->tmp_table[0] = page;
+  um->tmp_data = mmap_temp_map(page, MMAP_ATTRIB_KERNEL_RW);;
 }
-*/
+
+static inline void tear_unmapped(struct unmapped *um) {
+  mmap_temp_unmap(um->tmp_data);
+  mmap_temp_unmap(um->tmp_table);
+}
+
+static inline void put_unmapped(struct unmapped *um, char c) {
+  if (um->index == PAGE_SIZE) {
+    if (um->n_pages == PAGE_SIZE/sizeof(uint32_t)) {
+      printf("Too large environment.\n");
+      abort();
+    }
+    uint32_t page = mem_alloc_page();
+    um->tmp_table[um->n_pages++] = page;
+    mmap_map_page(um->tmp_data, page, MMAP_ATTRIB_KERNEL_RW);
+    um->index = 0;
+  }
+  um->tmp_data[um->index++] = c;
+}
+
+void domain_store_environment(domain_t *domain,
+                              char *const* argv, char *const* envp) {
+  // we copy data to pages that are not mapped in virtual memory.
+  // thus, we collect all physical pages into a table.
+  domain->arg_table = mem_alloc_page();
+  struct unmapped um;
+  init_unmapped(&um, domain->arg_table);
+
+  // copy args
+  int argc = 0;
+  for (char *ptr = *(argv++); ptr; ptr = *(argv++), ++argc) {
+    // copy next string, including terminator.
+    do { put_unmapped(&um, *ptr); } while (*ptr++);
+  }
+  domain->argc = argc;
+
+  // copy envp
+  int envc = 0;
+  for (char *ptr = *(envp++); ptr; ptr = *(envp++), ++envc) {
+    // copy next string, including terminator.
+    do { put_unmapped(&um, *ptr); } while (*ptr++);
+  }
+  domain->envc = envc;
+}

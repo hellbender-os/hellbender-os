@@ -12,7 +12,7 @@ Minimum Acceptable Value: {_POSIX_AIO_MAX} [Option End]
 The maximum amount by which a process can decrease its asynchronous I/O priority level from its own scheduling priority.
 Minimum Acceptable Value: 0 [Option End]
 */
-#define ARG_MAX 4096
+#define ARG_MAX 4194304
 /*
 Maximum length of argument to the exec functions including environment data.
 Minimum Acceptable Value: {_POSIX_ARG_MAX}
@@ -42,9 +42,18 @@ The maximum number of message priorities supported by the implementation.
 Minimum Acceptable Value: {_POSIX_MQ_PRIO_MAX} [Option End]
 */
 #define OPEN_MAX 20
+/*
+Maximum number of files that one process can have open at any one time.
+Minimum Acceptable Value: {_POSIX_OPEN_MAX}
+*/
 #define PAGESIZE 4096
+/*
+Size in bytes of a page.
+Minimum Acceptable Value: 1
+*/
 #define PAGE_SIZE 4096
 /*
+Equivalent to {PAGESIZE}. If either {PAGESIZE} or {PAGE_SIZE} is defined, the other is defined with the same value.
 {PTHREAD_DESTRUCTOR_ITERATIONS}
 Maximum number of attempts made to destroy a thread's thread-specific data values on thread exit.
 Minimum Acceptable Value: {_POSIX_THREAD_DESTRUCTOR_ITERATIONS} [Option End]
@@ -102,6 +111,8 @@ Minimum Acceptable Value: {_POSIX_TTY_NAME_MAX}
 */
 #define TZNAME_MAX 6
 /*
+Maximum number of bytes supported for the name of a timezone (not of the TZ variable).
+Minimum Acceptable Value: {_POSIX_TZNAME_MAX}
 
 {FILESIZEBITS}
 Minimum number of bits needed to represent, as a signed integer value, the maximum size of a regular file allowed in the specified directory.
@@ -223,13 +234,21 @@ Value: 32 [Option End]
 */
 #define _POSIX_NAME_MAX 14
 /*
+Maximum number of bytes in a filename (not including terminating null).
+Value: 14
 {_POSIX_NGROUPS_MAX}
 Maximum number of simultaneous supplementary group IDs per process.
 Value: 8
 */
 #define _POSIX_OPEN_MAX 20
+/*
+Maximum number of files that one process can have open at any one time.
+Value: 20
+*/
 #define _POSIX_PATH_MAX 256
 /*
+Maximum number of bytes in a pathname.
+Value: 256
 {_POSIX_PIPE_BUF}
 Maximum number of bytes that is guaranteed to be atomic when writing to a pipe.
 Value: 512
@@ -293,6 +312,8 @@ Value: 9
 */
 #define _POSIX_TZNAME_MAX 6
 /*
+Maximum number of bytes supported for the name of a timezone (not of the TZ variable).
+Value: 6
 {_POSIX2_BC_BASE_MAX}
 Maximum obase values allowed by the bc utility.
 Value: 99
@@ -337,8 +358,8 @@ Value: 1024 [Option End]
 #define INT_MAX 2147483647
 #define LONG_BIT 32
 #define LONG_MAX 2147483647
+#define MB_LEN_MAX 4
 /*
-{MB_LEN_MAX}
 Maximum number of bytes in a character, for any supported locale.
 Minimum Acceptable Value: 1
 */

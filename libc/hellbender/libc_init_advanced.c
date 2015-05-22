@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <sys/keymap.h>
-
 void fcntl_init();
 void stdio_init();
-keymap_t* keymap;
 
 /**
  * Initializes all libC feature that require core services.
@@ -18,7 +15,4 @@ void _hellbender_libc_init_advanced() {
 
   // fopen, fclose, fprintf, etc.
   stdio_init();
-
-  // TODO: support actual locales.
-  keymap = keymap_create("fi");
 }

@@ -66,8 +66,8 @@ void core_initialize() {
 int core_main() {
   printf("Core init done; launching init.\n");
   pid_t init_pid;
-  char* argv[] = { "init", (char*)0 };
-  char* envp[] = { (char*)0 };
+  char* argv[] = { "init", "tty=devfs/tty2", (char*)0 };
+  char* envp[] = { "PATH=test", "kissa=koira", (char*)0 };
   posix_spawn(&init_pid, "initfs/init", NULL, NULL, argv, envp);
 
   exit(1);

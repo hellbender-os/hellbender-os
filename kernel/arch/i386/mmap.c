@@ -22,7 +22,9 @@ mmap_t mmap;
 uint8_t mmap_page_directory[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mmap_page_table_ds[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
 uint8_t mmap_page_table_cs[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
-uint8_t mmap_tmp_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint8_t mmap_tmp1_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint8_t mmap_tmp2_page[PAGE_SIZE] __attribute__((aligned(PAGE_SIZE)));
+uint32_t mmap_tmp_in_use = 0;
 
 extern unsigned long __force_order;
 static inline void invalidate(void *virtual) {
@@ -153,7 +155,8 @@ void mmap_stage_2_cleanup() {
   mmap_unmap_page(CS_BASE + &mmap_page_table_cs);
 
   // we just want the virtual memory of tmp_page.
-  mem_free_page(mmap_unmap_page(mmap_tmp_page));
+  mem_free_page(mmap_unmap_page(mmap_tmp1_page));
+  mem_free_page(mmap_unmap_page(mmap_tmp2_page));
 }
 
 void* mmap_map_page(void* virtual, uintptr_t physical, unsigned attributes) {
@@ -411,10 +414,27 @@ void* mmap_map_table(void* virtual, uintptr_t page_table, unsigned attributes) {
 
 void* mmap_temp_map(uintptr_t page, unsigned attributes) {
   // TODO: critical section until unmap called.
-  return mmap_map_page(mmap_tmp_page, page, attributes);
+  if ((mmap_tmp_in_use & 1) == 0) {
+    return mmap_map_page(mmap_tmp1_page, page, attributes);
+    mmap_tmp_in_use |= 1;
+  }
+  if ((mmap_tmp_in_use & 2) == 0) {
+    return mmap_map_page(mmap_tmp2_page, page, attributes);
+    mmap_tmp_in_use |= 2;
+  }
+  return NULL;
 }
 
 void mmap_temp_unmap(void* address) {
-  (void)(address);//we just have one tmp_page for now..
-  mmap_unmap_page(mmap_tmp_page);
+  mmap_unmap_page(address);
+  if (address == mmap_tmp1_page) {
+    mmap_tmp_in_use &= ~1;
+  }
+  else if (address == mmap_tmp2_page) {
+    mmap_tmp_in_use &= ~1;
+  }
+  else {
+    printf("mmap_temp_unmapped wrong page %x\n", (unsigned)address);
+    abort();
+  }
 }

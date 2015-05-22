@@ -12,8 +12,6 @@
 #include <kernel/elf32.h>
 
 __IDCIMPL__ void* elf_load_process(IDC_PTR) {
-  // TODO: supports argv, envp.
-  
   // bootstrap: COREIDC(proc_bootstrap)
   //   open file.
   //   allocate enough memory for the binary.

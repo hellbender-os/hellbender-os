@@ -22,6 +22,7 @@ __attribute__((__noreturn__)) void syscall_exit(int status);
 __attribute__((__noreturn__)) void syscall_iret(void);
 
 unsigned syscall_current_exec_path(char* path);
+void syscall_get_environment(int *argc, int *envc, char** strings);
 
 void syscall_yield();
 int syscall_spawn(const char *path, char *const argv[], char *const envp[]);
