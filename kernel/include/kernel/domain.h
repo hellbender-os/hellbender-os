@@ -32,7 +32,11 @@ struct domain_first_page {
   // add any "public" domain info.
 };
 
+#define APPLICATION_DOMAIN (((struct domain_first_page*)APPLICATION_OFFSET)->domain)
+                            
 extern domain_t kernel_domain;
+
+domain_t* domain_from_address(void* virtual);
 
 //domain_t* domain_create_service(); // allocated from the top of address space.
 domain_t* domain_create_kernel(kernel_module_t* module);

@@ -10,6 +10,13 @@
 #include <kernel/mmap.h>
 #include <kernel/vmem.h>
 
+domain_t* domain_from_address(void* virtual) {
+  uintptr_t addr = (uintptr_t)virtual;
+  if (addr < KERNEL_LIMIT) return &kernel_domain;
+  else if (addr < APPLICATION_LIMIT) return APPLICATION_DOMAIN;
+  else return ((struct domain_first_page*)(addr & 0x7fc00000))->domain;
+}
+
 void* domain_set_break(domain_t *domain,
                        void* end_or_null,
                        intptr_t delta_or_zero) {
@@ -82,6 +89,8 @@ static domain_t* domain_create(void* base, size_t size) {
 
 domain_t* domain_create_application() {
   domain_t *domain = domain_create((void*)APPLICATION_OFFSET, TABLE_SIZE);
+  domain->heap_bottom += PAGE_SIZE; // first page reserved for domain info.
+  domain->program_break += PAGE_SIZE;
 
   // copy the bootstrap code into the application domain.
   void* tmp = mmap_temp_map(domain->first_page, MMAP_ATTRIB_KERNEL_RW);
@@ -171,6 +180,10 @@ domain_t* domain_create_coresrv(kernel_module_t* module,
   mmap_map((void*)module->text_bottom,
            binary->bottom + text_offset,
            text_size, MMAP_ATTRIB_USER_RO);
+
+  // write the domain address into the first page.
+  struct domain_first_page *first_page = (struct domain_first_page*)base;
+  first_page->domain = domain;
   
   // no need for the page table until some thread accesses it.
   domain_disable(domain);
@@ -180,6 +193,7 @@ domain_t* domain_create_coresrv(kernel_module_t* module,
   domain->heap_bottom = ceil_page((void*)module->top);
   domain->program_break = domain->heap_bottom;
   domain->start = (void*)module->start;
+
   return domain;
 }
 
@@ -206,21 +220,37 @@ void domain_push(uintptr_t entry_address, uintptr_t return_address) {
     printf("Too many recursive IDC calls!\n");
     abort();
   }
-  struct domain_stack *stack =
-    &CURRENT_THREAD->domain_stack[CURRENT_THREAD->domain_idx++];
-  stack->entry_address = entry_address;
-  stack->return_address = return_address;
   
   if (entry_address >= APPLICATION_LIMIT
       && entry_address < SERVICE_LIMIT
-      && (entry_address & 0x3FF007) == 0) {
+      && (entry_address & 0x3FF007) == 0
+      && (entry_address & 0xFFF) != 0) {
 
-    // TODO: map (address>>22) to domain_t.
-    domain_enable(kernel.processes[kernel.core_module]->domain);
+    domain_t *domain = domain_from_address((void*)entry_address);
+    CURRENT_THREAD->current_domain = domain;
+    int found = 0;
+    for (size_t i = 0; i < CURRENT_THREAD->domain_idx; ++i) {
+      if (CURRENT_THREAD->domain_stack[i].domain == domain) {
+        found = 1;
+        break;
+      }
+    }
+    if (!found) {
+      domain_enable(domain);
+    }
+    
+    struct domain_stack *stack =
+      &CURRENT_THREAD->domain_stack[CURRENT_THREAD->domain_idx++];
+    stack->domain = domain;
+    stack->return_address = return_address;
+
   } else {
     printf("Illegal IDC address %x.\n", (unsigned)entry_address);
     abort();
   }
+
+  CURRENT_THREAD->current_domain =
+    CURRENT_THREAD->domain_stack[CURRENT_THREAD->domain_idx - 1].domain;
 }
 
 uintptr_t domain_pop() {
@@ -231,7 +261,19 @@ uintptr_t domain_pop() {
   struct domain_stack *stack =
     &CURRENT_THREAD->domain_stack[--CURRENT_THREAD->domain_idx];
 
-  // TODO: disable domain if not in stack anymore.
+  int found = 0;
+  for (size_t i = 0; i < CURRENT_THREAD->domain_idx; ++i) {
+    if (CURRENT_THREAD->domain_stack[i].domain == stack->domain) {
+      found = 1;
+      break;
+    }
+  }
+  if (!found) {
+    domain_disable(stack->domain);
+  }
+  
+  CURRENT_THREAD->current_domain =
+    CURRENT_THREAD->domain_stack[CURRENT_THREAD->domain_idx - 1].domain;
   return stack->return_address;  
 }
 

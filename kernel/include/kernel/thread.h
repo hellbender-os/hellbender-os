@@ -56,11 +56,11 @@ typedef struct thread {
   void* stack_bottom; // range that contains stack; top of the address space.
   void* stack_top;
 
-  domain_t *home_domain;
-  domain_t *current_domain;
+  domain_t *home_domain;   // TODO: these two are just the first and the last 
+  domain_t *current_domain;// elements of domain stack.
 
   struct domain_stack {
-    uintptr_t entry_address;
+    domain_t *domain;
     uintptr_t return_address;
   } domain_stack[IDC_CALL_MAX];
   size_t domain_idx;

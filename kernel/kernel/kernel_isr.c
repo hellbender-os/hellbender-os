@@ -32,7 +32,9 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
     break;
   case SYSCALL_SET_PROGRAM_BREAK: // edx: void* end_or_null ; edc intptr_t delta
     // TODO: memory must by contained within thread address space.
-    domain = CURRENT_THREAD->current_domain;
+    if (params->edx) {
+      domain = domain_from_address((void*)params->edx);
+    } else domain = CURRENT_THREAD->home_domain;
     params->eax = (uintptr_t)domain_set_break(domain,
                                               (void*)params->edx,
                                               (intptr_t)params->ecx);
@@ -40,7 +42,7 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
   case SYSCALL_MAKE_READONLY: // edx: void* ptr; ecx: size_t size
     // TODO: memory must by contained within thread address space.
     mmap_remap((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RO);
-    domain = CURRENT_THREAD->home_domain;
+    domain = domain_from_address((void*)params->edx);
     domain_update_data(domain, (void*)params->edx, (size_t)params->ecx);
     break;
   case SYSCALL_MAKE_EXECUTABLE: // edx: void* ptr; ecx: size_t size
@@ -48,7 +50,7 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
     // TODO: use malware scanning service.
     mmap_remap((void*)params->edx, params->ecx, MMAP_ATTRIB_USER_RO);
     mmap_mirror((void*)params->edx + CS_BASE, (void*)params->edx, params->ecx);
-    domain = CURRENT_THREAD->home_domain;
+    domain = domain_from_address((void*)params->edx);
     domain_update_text(domain, (void*)params->edx, (size_t)params->ecx);
     break;
   case SYSCALL_EXIT: // edx: int status
@@ -63,7 +65,7 @@ void isr_routine_80(void* isr_stack, thread_state_t *params) {
     }
     break;
   case SYSCALL_GET_ENVIRONMENT: // edx = int*; ebx = int*; ecx = char**
-    domain_restore_environment(CURRENT_THREAD->current_domain,
+    domain_restore_environment(CURRENT_THREAD->home_domain,
                                (int*)params->edx,
                                (int*)params->ebx,
                                (char**)params->ecx);

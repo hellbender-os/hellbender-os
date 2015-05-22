@@ -59,12 +59,18 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
   // stack will be allocated when the thread becomes active the first time.
 
   thread->home_domain = home_domain;
+  thread->domain_stack[0] = (struct domain_stack){ home_domain, 0 };
+  thread->domain_idx++;
   return thread;
 }
 
 void thread_set_current(thread_t* thread) {
-  // TODO: Disable all domain in current idc-stack.
-  
+  // Disable all domain in current idc-stack.
+  for (size_t i = 0; i < thread->domain_idx; ++i) {
+    domain_disable(thread->domain_stack[i].domain);
+  }
+
+  // Switch the thread page table.
   mmap_map_table((void*)THREAD_OFFSET, thread->page_table, MMAP_ATTRIB_USER_RW);
   kernel.current_thread = thread;
 
@@ -72,9 +78,12 @@ void thread_set_current(thread_t* thread) {
   if (thread->stack_bottom == thread->stack_top) {
     thread_grow_stack(thread, 4*PAGE_SIZE);
   }
-  // TODO: Enable all domains in idc-stack
-  CURRENT_THREAD->current_domain = thread->home_domain;
-  domain_enable(thread->home_domain);
+  
+  // Enable all domains in idc-stack
+  for (size_t i = 0; i < thread->domain_idx; ++i) {
+    domain_enable(thread->domain_stack[i].domain);
+    CURRENT_THREAD->current_domain = thread->domain_stack[i].domain;
+  }
 }
 
 void* thread_grow_stack(thread_t *thread, size_t size) {

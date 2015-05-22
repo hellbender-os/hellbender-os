@@ -21,8 +21,9 @@ extern unsigned long __force_order;
 
 // kernel is loaded into this address.
 #define KERNEL_BASE 0
+#define KERNEL_LIMIT  (KERNEL_BASE+TABLE_SIZE)
 #define KERNEL_OFFSET (KERNEL_BASE + 0x100000)
-#define KERNEL_HEAP_TOP    (KERNEL_OFFSET+TABLE_SIZE)
+#define KERNEL_HEAP_TOP    (KERNEL_BASE+TABLE_SIZE)
 
 // current thread page table is mapped into this address.
 #define THREAD_OFFSET 0x400000
