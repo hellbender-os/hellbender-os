@@ -36,11 +36,11 @@ typedef void* vfs_read_ptr;
 ssize_t __IDC__vfs_write(IDC_PTR, struct vfs_file*, const void *, size_t);
 typedef void* vfs_write_ptr;
 
-unsigned __IDC__coresrv_rtc_ticks(IDC_PTR);
-typedef void* coresrv_rtc_ticks_ptr;
+uint64_t __IDC__rtc_ticks(IDC_PTR);
+typedef void* rtc_ticks_ptr;
 
-void __IDC__coresrv_rtc_beep(IDC_PTR, unsigned freq, unsigned ticks);
-typedef void* coresrv_rtc_beep_ptr;
+uint64_t __IDC__rtc_time(IDC_PTR);
+typedef void* rtc_time_ptr;
 
 void __IDC__coresrv_vga_putc(IDC_PTR, unsigned x, unsigned y, unsigned cursorx, unsigned c, unsigned color);
 typedef void* coresrv_vga_putc_ptr;
@@ -48,9 +48,10 @@ typedef void* coresrv_vga_putc_ptr;
 void* __IDC__elf_load_process(IDC_PTR);
 typedef void* elf_load_process_ptr;
 
+void __IDC__rtc_beep(IDC_PTR, unsigned freq, unsigned ticks);
+typedef void* rtc_beep_ptr;
+
 extern uintptr_t __IDE__coresrv_kbd_getc;
-extern uintptr_t __IDE__coresrv_rtc_beep;
-extern uintptr_t __IDE__coresrv_rtc_ticks;
 extern uintptr_t __IDE__coresrv_vga_putc;
 extern uintptr_t __IDE__dev_register;
 extern uintptr_t __IDE__dev_tty_close;
@@ -60,6 +61,9 @@ extern uintptr_t __IDE__dev_tty_read;
 extern uintptr_t __IDE__dev_tty_write;
 extern uintptr_t __IDE__dev_unregister;
 extern uintptr_t __IDE__elf_load_process;
+extern uintptr_t __IDE__rtc_beep;
+extern uintptr_t __IDE__rtc_ticks;
+extern uintptr_t __IDE__rtc_time;
 extern uintptr_t __IDE__vfs_devfs_close;
 extern uintptr_t __IDE__vfs_devfs_lseek;
 extern uintptr_t __IDE__vfs_devfs_open;

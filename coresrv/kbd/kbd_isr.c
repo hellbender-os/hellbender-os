@@ -88,6 +88,7 @@ void kbd_isr() {
     if (kbd.keydown[KBD_KEY_RALT]) flags |= KBD_FLAG_RALT;
 
     if (magic_key(event_type, key, flags)) break;
+      dev_tty_show_menu();
 
     unsigned event_idx = (kbd.last_event + 1) % KBD_MAX_EVENTS;
     if (event_idx != kbd.first_event) {
@@ -98,7 +99,7 @@ void kbd_isr() {
       BARRIER;
       kbd.last_event = event_idx;
     } else {
-      coresrv_rtc_beep(NO_IDC, 800, 4);
+      rtc_beep(NO_IDC, 800, 4);
     }
   }
   syscall_iret();

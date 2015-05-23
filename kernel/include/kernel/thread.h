@@ -86,16 +86,7 @@ typedef struct thread_state {
   uint32_t eax;
 } __attribute__((packed)) thread_state_t;
 
-#if defined(__is_hellbender_kernel)
-// kernel has full access to thread.
 #define CURRENT_THREAD ((thread_t*)THREAD_OFFSET)
-#define CURRENT_STATE ((thread_state_t*)(CURRENT_THREAD->kernel_stack_ptr))
-
-#else
-// ring3 has only read only access to thread info.
-#define CURRENT_THREAD ((thread_t*)(THREAD_OFFSET + 2*PAGE_SIZE))
-
-#endif
 
 void thread_initialize();
 thread_t* thread_create(domain_t *home_domain, void *start_address);

@@ -8,6 +8,7 @@
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/scheduler.h>
+#include <kernel/pit.h>
 #include <kernel/pic.h>
 #include <kernel/isr.h>
 #include <kernel/pic_isr.h>
@@ -67,6 +68,7 @@ void early_stage_4() {
   sem_wait(to_kernel);
 
   // setup hardware interrupts.
+  pit_stage_4_init();
   isr_stage_4_pic();
   pic_isr_stage_4_init(service, kernel.processes[core_idx]);
   printf("Hardware interrupts activated.\n");

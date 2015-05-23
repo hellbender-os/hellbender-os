@@ -11,12 +11,6 @@ coresrv_stub:
 .global __IDC__coresrv_kbd_getc
 .set __IDC__coresrv_kbd_getc, coresrv_stub
 
-.global __IDC__coresrv_rtc_beep
-.set __IDC__coresrv_rtc_beep, coresrv_stub
-
-.global __IDC__coresrv_rtc_ticks
-.set __IDC__coresrv_rtc_ticks, coresrv_stub
-
 .global __IDC__coresrv_vga_putc
 .set __IDC__coresrv_vga_putc, coresrv_stub
 
@@ -28,6 +22,15 @@ coresrv_stub:
 
 .global __IDC__elf_load_process
 .set __IDC__elf_load_process, coresrv_stub
+
+.global __IDC__rtc_beep
+.set __IDC__rtc_beep, coresrv_stub
+
+.global __IDC__rtc_ticks
+.set __IDC__rtc_ticks, coresrv_stub
+
+.global __IDC__rtc_time
+.set __IDC__rtc_time, coresrv_stub
 
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub

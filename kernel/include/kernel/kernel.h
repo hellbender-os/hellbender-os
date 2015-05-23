@@ -28,6 +28,7 @@ extern unsigned long __force_order;
 // current thread page table is mapped into this address.
 #define THREAD_OFFSET 0x400000
 #define THREAD_TSS_STACK_TOP (THREAD_OFFSET + 2*PAGE_SIZE)
+#define THREAD_LOCAL_PAGE (THREAD_OFFSET + 2*PAGE_SIZE)
 #define THREAD_HEAP_BOTTOM (THREAD_OFFSET+16*PAGE_SIZE)
 #define THREAD_HEAP_TOP    (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
 #define THREAD_STACK_TOP (THREAD_OFFSET+TABLE_SIZE-PAGE_SIZE)

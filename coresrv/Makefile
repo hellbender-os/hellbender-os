@@ -47,6 +47,7 @@ kbd/kbd_getc.o \
 rtc/rtc_init.o \
 rtc/rtc_isr.o \
 rtc/rtc_ticks.o \
+rtc/rtc_time.o \
 rtc/rtc_beep.o \
 vga/vga_init.o \
 vga/vga_putc.o \

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void print(FILE *file, const char* data, size_t data_length)
+static size_t print(FILE *file, const char* data, size_t data_length)
 {
 #if defined(__is_hellbender_kernel)
   (void)(file);
@@ -23,6 +23,7 @@ static void print(FILE *file, const char* data, size_t data_length)
     }
   }
 #endif
+  return data_length;
 }
 
 int fprintf(FILE *file, const char* restrict format, ...)
@@ -45,9 +46,8 @@ int vfprintf(FILE* file, const char* restrict format, va_list parameters) {
       amount = 1;
       while ( format[amount] && format[amount] != '%' )
         amount++;
-      print(file, format, amount);
+      written += print(file, format, amount);
       format += amount;
-      written += amount;
       continue;
     }
 
@@ -66,33 +66,33 @@ int vfprintf(FILE* file, const char* restrict format, va_list parameters) {
     if ( *format == 'c' ) {
       format++;
       char c = (char) va_arg(parameters, int /* char promotes to int */);
-      print(file, &c, sizeof(c));
+      written += print(file, &c, sizeof(c));
     }
     else if ( *format == 's' ) {
       format++;
       const char* s = va_arg(parameters, const char*);
-      print(file, s, strlen(s));
+      written += print(file, s, strlen(s));
     }
     else if ( *format == 'd' || *format == 'i') {
       format++;
       int i = va_arg(parameters, int);
       char s[16];
       _itoa(i, s, 10);
-      print(file, s, strlen(s));
+      written += print(file, s, strlen(s));
     }
     else if ( *format == 'u') {
       format++;
       unsigned i = va_arg(parameters, unsigned);
       char s[16];
       _utoa(i, s, 10);
-      print(file, s, strlen(s));
+      written += print(file, s, strlen(s));
     }
     else if ( *format == 'x') {
       format++;
       unsigned i = va_arg(parameters, unsigned);
       char s[10];
       _utoa(i, s, 16);
-      print(file, s, strlen(s));
+      written += print(file, s, strlen(s));
     }
     else {
       goto incomprehensible_conversion;

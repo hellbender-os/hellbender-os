@@ -8,18 +8,6 @@ __IDE__coresrv_kbd_getc:
     int $83
 .balign 8
 
-.global __IDE__coresrv_rtc_beep
-__IDE__coresrv_rtc_beep:
-    calll coresrv_rtc_beep
-    int $83
-.balign 8
-
-.global __IDE__coresrv_rtc_ticks
-__IDE__coresrv_rtc_ticks:
-    calll coresrv_rtc_ticks
-    int $83
-.balign 8
-
 .global __IDE__coresrv_vga_putc
 __IDE__coresrv_vga_putc:
     calll coresrv_vga_putc
@@ -71,6 +59,24 @@ __IDE__dev_unregister:
 .global __IDE__elf_load_process
 __IDE__elf_load_process:
     calll elf_load_process
+    int $83
+.balign 8
+
+.global __IDE__rtc_beep
+__IDE__rtc_beep:
+    calll rtc_beep
+    int $83
+.balign 8
+
+.global __IDE__rtc_ticks
+__IDE__rtc_ticks:
+    calll rtc_ticks
+    int $83
+.balign 8
+
+.global __IDE__rtc_time
+__IDE__rtc_time:
+    calll rtc_time
     int $83
 .balign 8
 

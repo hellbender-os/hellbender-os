@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
+
 #include <sys/keymap.h>
 
 #include <kernel/kernel.h>
@@ -95,10 +97,18 @@ static void update_vga_full(struct dev_tty_buffer *tty) {
   if (dev_tty.menu_visible) {
     uint16_t color = make_vgaentry(0, make_color(COLOR_WHITE,
                                                  COLOR_BLUE));
-    char menu[81] = "  1  2  3                                        16M/133M  L:1.3/0.7/0.5  21:42 ";
+    char menu[81] = ("  1  2  3                               "
+                     "         16M/133M  L:1.3/0.7/0.5  xx:xx ";
+    // draw current time:
+    time_t rawtime = time(NULL);
+    struct tm* ltime = localtime(&rawtime);
+    //TODO: use %02i when printf supports it.
+    sprintf(menu+74, "%i:%i", ltime->tm_hour, ltime->tm_min);
+    // draw brackets:
     unsigned idx = dev_tty.current_tty;
     menu[3*idx+1] = '[';
     menu[3*idx+3] = ']';
+    // paint the menu:
     for (int i = 0; i < 80; ++i) {
       uint16_t d = color | menu[i];
       dev_tty.vga_shadow[i] = d;

@@ -31,6 +31,7 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
   uintptr_t page_table = mem_alloc_page();
   uintptr_t thread_page = mem_alloc_page();
   uintptr_t stack_page = mem_alloc_page();
+  uintptr_t local_page = mem_alloc_page();
 
   // we don't want to put the page table into the page directory yet,
   // so we just manually map the two pages into it. no biggie..
@@ -39,7 +40,7 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
   memset(table_entries, 0, PAGE_SIZE);
   table_entries[0] = thread_page | MMAP_ATTRIB_KERNEL_RW;
   table_entries[1] = stack_page | MMAP_ATTRIB_KERNEL_RW;
-  table_entries[2] = thread_page | MMAP_ATTRIB_USER_RO;
+  table_entries[2] = local_page | MMAP_ATTRIB_USER_RW;
   mmap_temp_unmap(table_entries);
 
   // then we can map the actual thread page into memory slot.

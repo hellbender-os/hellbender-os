@@ -1,6 +1,8 @@
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H
 
+#include <stdint.h> // nonconforming
+
 typedef unsigned blkcnt_t;
 typedef unsigned blksize_t;
 typedef unsigned clock_t;

@@ -254,7 +254,7 @@ void domain_push(uintptr_t entry_address, uintptr_t return_address) {
 }
 
 uintptr_t domain_pop() {
-  if (CURRENT_THREAD->domain_idx == 0) {
+  if (CURRENT_THREAD->domain_idx == 1) {
     printf("Too many IDC pops!\n");
     abort();
   }

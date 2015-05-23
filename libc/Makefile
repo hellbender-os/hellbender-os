@@ -63,6 +63,8 @@ string/strrchr.o \
 semaphore/sem_open.o \
 semaphore/sem_post.o \
 semaphore/sem_wait.o \
+time/localtime.o \
+time/time.o \
 heap/heap_init.o \
 heap/heap_grow.o \
 heap/heap_free.o \

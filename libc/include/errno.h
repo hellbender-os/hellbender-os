@@ -83,4 +83,7 @@
 
 typedef int errno_t;
 
+// This depends on THREAD_LOCAL_PAGE in "kernel.h", and threadlocal.h struct.
+#define errno (*((int*)0x402000))
+
 #endif
