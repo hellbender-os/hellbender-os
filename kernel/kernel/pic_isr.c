@@ -13,6 +13,10 @@
 #include <kernel/scheduler.h>
 
 typedef struct pic_isr {
+  volatile uint64_t ticks;
+  uint64_t tick_time;  // now long one tick takes, in RDTSC units.
+  uint64_t tick_start; // used to estimate measure tick_time.
+  
   thread_t* timer_thread;
   thread_t* thread;
   uint32_t pending; // boolean flags telling which interrupts are pending.
@@ -84,6 +88,26 @@ void pic_isr_process(unsigned int_num) {
 
 void isr_routine_32() {
   //printf("isr_routine_32\n");
+
+  // estimate the RDTSC time between ticks.
+  if (pic_isr.ticks < 100) {
+    if (pic_isr.ticks == 0) {
+      pic_isr.tick_start = rdtsc();
+    } else if (pic_isr.ticks < 5) {
+      // we want the first estimate of tick_time as soon as possible,
+      // but we will skip the first few interrupts for the final estimate
+      // because emulator speeds seem to fluctuate after start.
+      uint64_t tick_end = rdtsc();
+      pic_isr.tick_time = tick_end - pic_isr.tick_start;
+      pic_isr.tick_start = rdtsc();
+    } else {
+      uint64_t tick_end = rdtsc();
+      pic_isr.tick_time =
+        (tick_end - pic_isr.tick_start) / (pic_isr.ticks - 4);
+    }
+  }
+  ++pic_isr.ticks;
+  
   pic_isr.timer_thread->pic_line = 1;
   pic_isr.timer_thread->start_address = pic_isr.routines[0];
   pic_isr.timer_thread->state = THREAD_STATE_NEW;

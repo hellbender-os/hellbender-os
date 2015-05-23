@@ -105,6 +105,12 @@ static inline void* ceil_page(void* address) {
   return (void*)tmp;
 }
 
+static inline uint64_t rdtsc() {
+  uint64_t ret;
+  asm volatile ( "rdtsc" : "=A"(ret) );
+  return ret;
+}
+
 __attribute__((__noreturn__))
 void kernel_to_usermode();
 

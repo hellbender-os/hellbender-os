@@ -82,7 +82,14 @@ void thread_set_current(thread_t* thread) {
   // Enable all domains in idc-stack
   for (size_t i = 0; i < thread->domain_idx; ++i) {
     domain_enable(thread->domain_stack[i].domain);
-    CURRENT_THREAD->current_domain = thread->domain_stack[i].domain;
+  }
+}
+
+void thread_calc_time() {
+  if (kernel.up_and_running) {
+    uint64_t time_end = rdtsc();
+    uint64_t time_total = time_end - CURRENT_THREAD->time_start;
+    CURRENT_THREAD->time_total += time_total;
   }
 }
 

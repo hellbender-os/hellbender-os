@@ -45,6 +45,9 @@ typedef struct thread {
 
   uint32_t state; // new or old, depending if thread has been running.
   wait_state_t wait_state;
+  
+  uint64_t time_start;
+  uint64_t time_total; // measures the total time consumed by thread.
 
   char* exec_path; // path to the binary that is beign executed.
   void* start_address; // start address for new threads.
@@ -97,6 +100,7 @@ typedef struct thread_state {
 void thread_initialize();
 thread_t* thread_create(domain_t *home_domain, void *start_address);
 void thread_set_current(thread_t* thread);
+void thread_calc_time();
 
 void* thread_grow_stack(thread_t *thread, size_t size); // returns new bottom.
 

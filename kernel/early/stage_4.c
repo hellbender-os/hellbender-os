@@ -87,5 +87,6 @@ void early_stage_4() {
   // enter scheduling loop.
   free(kernel.early_data);
   kernel.early_data = NULL;
+  kernel.up_and_running = 1;
   exit(0);
 }

@@ -26,6 +26,7 @@ uint8_t kernel_stack[KERNEL_STACK_SIZE+2*PAGE_SIZE] __attribute__((aligned(PAGE_
 
 __attribute__((__noreturn__))
 void kernel_to_usermode() {
+  CURRENT_THREAD->time_start = rdtsc();
   if (CURRENT_THREAD->state == THREAD_STATE_NEW) {
     CURRENT_THREAD->state = THREAD_STATE_OLD;
     if (CURRENT_THREAD->is_kernel) {

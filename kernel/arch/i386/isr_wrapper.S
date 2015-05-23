@@ -1,4 +1,5 @@
         .section .text
+        .extern thread_calc_time
 
         .altmacro
         .macro define_wrapper IDX
@@ -59,6 +60,7 @@ isr_wrapper_\IDX\():
         push %eax             // 2nd parameter: all registers.
         add $(12*4), %eax
         push %eax             // 1st parameter: interrupt specific
+        call thread_calc_time // now it's safe to update the thread exec time.
         cld
         push $0               // fake return address because
         jmp isr_routine_\IDX  // we use kernel_return_ring3 to go back.
@@ -106,6 +108,7 @@ isr_wrapper_81:
 
         // and then we jump to the interrupt service routine -routine.
         push %eax             // 1st parameter: interrupt specific
+        call thread_calc_time // now it's safe to update the thread exec time.
         cld
         push $0               // fake return address because
         jmp isr_routine_81    // we use kernel_return_ring3 to go back.
