@@ -60,6 +60,7 @@ string/strcat_s.o \
 string/strcpy.o \
 string/strcpy_s.o \
 string/strrchr.o \
+semaphore/sem_init.o \
 semaphore/sem_open.o \
 semaphore/sem_post.o \
 semaphore/sem_wait.o \

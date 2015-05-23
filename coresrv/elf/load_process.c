@@ -87,7 +87,9 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
 
     // load the segment.
     lseek(fd, (off_t)prog_header.p_offset, SEEK_SET);
-    if (read(fd, (void*)prog_header.p_vaddr, (size_t)prog_header.p_filesz)
+    if ((size_t)read(fd,
+                     (void*)prog_header.p_vaddr,
+                     (size_t)prog_header.p_filesz)
         != prog_header.p_filesz) {
       printf("Failed to load elf program.\n");
       abort();

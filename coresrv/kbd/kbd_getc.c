@@ -6,6 +6,7 @@
 
 __IDCIMPL__ int coresrv_kbd_getc(IDC_PTR) {
   while (kbd.first_event != kbd.last_event) {
+    sem_wait(&kbd.event_sema);
     unsigned event_idx = kbd.first_event;
     kbd_event_t event = kbd.events[event_idx];
     BARRIER;

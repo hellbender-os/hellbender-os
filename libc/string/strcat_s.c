@@ -1,7 +1,7 @@
 #include <string.h>
 #include <errno.h>
 
-errno_t strcat_s(char* destination, size_t dest_size, const char* source) {
+int strcat_s(char* destination, size_t dest_size, const char* source) {
   if (destination == NULL) return EINVAL;
   --dest_size; // leave room for terminator.
   size_t i = 0;

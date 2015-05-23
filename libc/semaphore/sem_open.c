@@ -15,7 +15,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
       return s;
     } else {
       free(s);
-      return NULL;
+      return SEM_FAILED;
     }
     
   } else {
@@ -23,7 +23,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
       return s;
     } else {
       free(s);
-      return NULL;
+      return SEM_FAILED;
     }
   }
 }

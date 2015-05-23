@@ -98,7 +98,7 @@ static void update_vga_full(struct dev_tty_buffer *tty) {
     uint16_t color = make_vgaentry(0, make_color(COLOR_WHITE,
                                                  COLOR_BLUE));
     char menu[81] = ("  1  2  3                               "
-                     "         16M/133M  L:1.3/0.7/0.5  xx:xx ";
+                     "         16M/133M  L:1.3/0.7/0.5  xx:xx ");
     // draw current time:
     time_t rawtime = time(NULL);
     struct tm* ltime = localtime(&rawtime);

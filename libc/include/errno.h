@@ -1,89 +1,178 @@
 #ifndef _ERRNO_H
 #define _ERRNO_H
 
-#define E2BIG 1
-#define EACCES 2
-#define EADDRINUSE 3
-#define EADDRNOTAVAIL 4
-#define EAFNOSUPPORT 5
-#define EAGAIN 6
-#define EALREADY 7
-#define EBADF 8
-#define EBADMSG 9
-#define EBUSY 10
-#define ECANCELED 11
-#define ECHILD 12
-#define ECONNABORTED 13
-#define ECONNREFUSED 14
-#define ECONNRESET 15
-#define EDEADLK 16
-#define EDESTADDRREQ 17
-#define EDOM 18
-#define EDQUOT 19
-#define EEXIST 20
-#define EFAULT 21
-#define EFBIG 22
-#define EHOSTUNREACH 23
-#define EIDRM 24
-#define EILSEQ 25
-#define EINPROGRESS 26
-#define EINTR 27
-#define EINVAL 28
-#define EIO 29
-#define EISCONN 30
-#define EISDIR 31
-#define ELOOP 32
-#define EMFILE 33
-#define EMLINK 34
-#define EMSGSIZE 35
-#define EMULTIHOP 36
-#define ENAMETOOLONG 37
-#define ENETDOWN 38
-#define ENETRESET 39
-#define ENETUNREACH 40
-#define ENFILE 41
-#define ENOBUFS 42
-#define ENODATA 43
-#define ENODEV 44
-#define ENOENT 45
-#define ENOEXEC 46
-#define ENOLCK 47
-#define ENOLINK 48
-#define ENOMEM 49
-#define ENOMSG 50
-#define ENOPROTOOPT 51
-#define ENOSPC 52
-#define ENOSR 53
-#define ENOSTR 54
-#define ENOSYS 55
-#define ENOTCONN 56
-#define ENOTDIR 57
-#define ENOTEMPTY 58
-#define ENOTSOCK 59
-#define ENOTSUP 60
-#define ENOTTY 61
-#define ENXIO 62
-#define EOPNOTSUPP 63
-#define EOVERFLOW 64
-#define EPERM 65
-#define EPIPE 66
-#define EPROTO 67
-#define EPROTONOSUPPORT 68
-#define EPROTOTYPE 69
-#define ERANGE 70
-#define EROFS 71
-#define ESPIPE 72
-#define ESRCH 73
-#define ESTALE 74
-#define ETIME 75
-#define ETIMEDOUT 76
-#define ETXTBSY 77
-#define EWOULDBLOCK 78
-#define EXDEV 79
-
-typedef int errno_t;
+// The Open Group Base Specifications Issue 7
 
 // This depends on THREAD_LOCAL_PAGE in "kernel.h", and threadlocal.h struct.
 #define errno (*((int*)0x402000))
+
+/*
+[E2BIG]
+Argument list too long.
+[EACCES]
+Permission denied.
+[EADDRINUSE]
+Address in use.
+[EADDRNOTAVAIL]
+Address not available.
+[EAFNOSUPPORT]
+Address family not supported.
+[EAGAIN]
+Resource unavailable, try again (may be the same value as [EWOULDBLOCK]).
+[EALREADY]
+Connection already in progress.
+[EBADF]
+Bad file descriptor.
+[EBADMSG]
+Bad message.
+[EBUSY]
+Device or resource busy.
+[ECANCELED]
+Operation canceled.
+[ECHILD]
+No child processes.
+[ECONNABORTED]
+Connection aborted.
+[ECONNREFUSED]
+Connection refused.
+[ECONNRESET]
+Connection reset.
+[EDEADLK]
+Resource deadlock would occur.
+[EDESTADDRREQ]
+Destination address required.
+[EDOM]
+Mathematics argument out of domain of function.
+[EDQUOT]
+Reserved.
+[EEXIST]
+File exists.
+[EFAULT]
+Bad address.
+[EFBIG]
+File too large.
+[EHOSTUNREACH]
+Host is unreachable.
+[EIDRM]
+Identifier removed.
+[EILSEQ]
+Illegal byte sequence.
+[EINPROGRESS]
+Operation in progress.
+[EINTR]
+Interrupted function.
+*/
+#define EINVAL 12
+// Invalid argument.
+/*
+[EIO]
+I/O error.
+[EISCONN]
+Socket is connected.
+[EISDIR]
+Is a directory.
+[ELOOP]
+Too many levels of symbolic links.
+[EMFILE]
+File descriptor value too large.
+[EMLINK]
+Too many links.
+[EMSGSIZE]
+Message too large.
+[EMULTIHOP]
+Reserved.
+[ENAMETOOLONG]
+Filename too long.
+[ENETDOWN]
+Network is down.
+[ENETRESET]
+Connection aborted by network.
+[ENETUNREACH]
+Network unreachable.
+[ENFILE]
+Too many files open in system.
+[ENOBUFS]
+No buffer space available.
+[ENODATA]
+[OB XSR] [Option Start] No message is available on the STREAM head read queue. [Option End]
+[ENODEV]
+No such device.
+[ENOENT]
+No such file or directory.
+[ENOEXEC]
+Executable file format error.
+[ENOLCK]
+No locks available.
+[ENOLINK]
+Reserved.
+[ENOMEM]
+Not enough space.
+[ENOMSG]
+No message of the desired type.
+[ENOPROTOOPT]
+Protocol not available.
+[ENOSPC]
+No space left on device.
+[ENOSR]
+[OB XSR] [Option Start] No STREAM resources. [Option End]
+[ENOSTR]
+[OB XSR] [Option Start] Not a STREAM. [Option End]
+[ENOSYS]
+Function not supported.
+[ENOTCONN]
+The socket is not connected.
+[ENOTDIR]
+Not a directory or a symbolic link to a directory.
+[ENOTEMPTY]
+Directory not empty.
+[ENOTRECOVERABLE]
+State not recoverable.
+[ENOTSOCK]
+Not a socket.
+[ENOTSUP]
+Not supported (may be the same value as [EOPNOTSUPP]).
+[ENOTTY]
+Inappropriate I/O control operation.
+[ENXIO]
+No such device or address.
+[EOPNOTSUPP]
+Operation not supported on socket (may be the same value as [ENOTSUP]).
+[EOVERFLOW]
+Value too large to be stored in data type.
+[EOWNERDEAD]
+Previous owner died.
+[EPERM]
+Operation not permitted.
+[EPIPE]
+Broken pipe.
+[EPROTO]
+Protocol error.
+[EPROTONOSUPPORT]
+Protocol not supported.
+[EPROTOTYPE]
+Protocol wrong type for socket.
+*/
+#define ERANGE 123
+// Result too large.
+/*
+[EROFS]
+Read-only file system.
+[ESPIPE]
+Invalid seek.
+[ESRCH]
+No such process.
+[ESTALE]
+Reserved.
+[ETIME]
+[OB XSR] [Option Start] Stream ioctl() timeout. [Option End]
+[ETIMEDOUT]
+Connection timed out.
+[ETXTBSY]
+Text file busy.
+[EWOULDBLOCK]
+Operation would block (may be the same value as [EAGAIN]).
+[EXDEV]
+Cross-device link.
+*/
 
 #endif

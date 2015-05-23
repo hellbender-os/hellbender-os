@@ -25,10 +25,12 @@ semaphore_t* semaphore_create(const char* name, unsigned value) {
   semaphore_t* s = (semaphore_t*)malloc(sizeof(semaphore_t) + len);
   memset(s, 0, sizeof(semaphore_t));
   s->count = value;
-  s->name = ((char*)s) + sizeof(semaphore_t);
-  memcpy((char*)s->name, name, len);
-  s->next = kernel.semaphores;
-  kernel.semaphores = s;
+  if (len) {
+    s->name = ((char*)s) + sizeof(semaphore_t);
+    memcpy((char*)s->name, name, len);
+    s->next = kernel.semaphores;
+    kernel.semaphores = s;
+  }
   return s;
 }
 
