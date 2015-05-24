@@ -3,9 +3,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-FILE _stdin = { NULL, 0, STDIN_FILENO };
-FILE _stdout = { NULL, 0, STDOUT_FILENO };
-FILE _stderr = { NULL, 0, STDERR_FILENO };
+FILE _stdin  = { NULL, 0,  STDIN_FILENO, 0 };
+FILE _stdout = { NULL, 0, STDOUT_FILENO, 0 };
+FILE _stderr = { NULL, 0, STDERR_FILENO, 0 };
 
 void stdio_init() {
   // init FILE* API.

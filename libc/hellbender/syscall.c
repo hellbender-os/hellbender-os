@@ -89,3 +89,59 @@ int syscall_sem_wait(sem_t *s) {
   return retval;
 }
 
+int syscall_mutex_init(pthread_mutex_t *mutex,
+                       const pthread_mutexattr_t *attr) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_MUTEX_INIT), "d"(mutex), "b"(attr));
+  return retval;
+           */
+}
+
+int syscall_mutex_lock(pthread_mutex_t *mutex) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_MUTEX_LOCK), "d"(mutex));
+  return retval;
+           */
+}
+
+int syscall_mutex_unlock(pthread_mutex_t *mutex) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_MUTEX_UNLOCK), "d"(mutex));
+  return retval;
+           */
+}
+
+int syscall_cond_init(pthread_cond_t *cond,
+                      const pthread_condattr_t *attr) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_COND_INIT), "d"(cond), "b"(attr));
+  return retval;
+           */
+}
+
+int syscall_cond_wait(pthread_cond_t *cond,
+                      pthread_mutex_t *mutex) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_COND_WAIT), "d"(cond), "b"(mutex));
+  return retval;
+           */
+}
+
+int syscall_cond_broadcast(pthread_cond_t *cond) {
+  return 0;/*
+  register unsigned retval __asm__("eax");
+  asm(SYSCALL : "=r"(retval), "=m"(__force_order)
+      : "a"(SYSCALL_COND_BROADCAST), "d"(cond));
+  return retval;
+           */
+}

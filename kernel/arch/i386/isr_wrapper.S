@@ -21,7 +21,7 @@ isr_wrapper_debug:
         mov %esp, %eax        // remember the thread kernel stack pointer.
         
         // we can use the botton of the stack in this emergency.
-	movl $(kernel_stack+2048+4096-8), %esp
+	movl $(kernel_stack+2048+4096-8), %esp // -8 to respect stack boundary.
 
         // and then we jump to the debugging routine.
         push %eax             // 2nd parameter: all registers.
@@ -49,7 +49,7 @@ isr_wrapper_\IDX\():
         mov %eax, (0x400000)  // current thread structure is there.
         
         // now the context has been saved. time to switch to kernel stack.
-	movl $(kernel_stack+16384+4096), %esp
+	movl $(kernel_stack+16384+4096-8), %esp // -8 to respect stack boundary.
         mov %ss, %bx          // copy kernel data selector into all registers.
         mov %bx, %ds
         mov %bx, %es
@@ -99,7 +99,7 @@ isr_wrapper_\IDX\():
 isr_wrapper_81:
         // don't save the state because we are not returning.
         //xchg %bx,%bx
-	movl $(kernel_stack+16384+4096), %esp
+	movl $(kernel_stack+16384+4096-12), %esp // -12 for stack boundary.
         mov %ss, %bx          // copy kernel data selector into all registers.
         mov %bx, %ds
         mov %bx, %es
@@ -123,10 +123,11 @@ isr_wrapper_82:
         // eax: target_address; edx: return address
         // kernel stack: ss, esp, flags, cs, eip
         mov %eax, (%esp)
+        sub $8, %esp // to respect stack boundary.
         push %edx
         push %eax
         call domain_push // checks that target_address is valid, enables domain.
-        add $8, %esp // might be needed if we were called from ring0.
+        add $16, %esp // might be needed if we were called from ring0.
         // kernel stack: ss, esp, flags, cs, target_address
         iret // returns to ring3 at the target_address.
 

@@ -62,11 +62,11 @@ typedef struct {
 } pthread_barrierattr_t;
 // Used to define a barrier attributes object.
 
-typedef struct {
+typedef struct pthread_cond {
 } pthread_cond_t;
 // Used for condition variables.
 
-typedef struct {
+typedef struct pthread_condattr {
 } pthread_condattr_t;
 // Used to identify a condition attribute object.
 
@@ -74,11 +74,11 @@ typedef struct {
 } pthread_key_t;
 // Used for thread-specific data keys.
 
-typedef struct {
+typedef struct pthread_mutex {
 } pthread_mutex_t;
 // Used for mutexes.
 
-typedef struct {
+typedef struct pthread_mutexattr {
 } pthread_mutexattr_t;
 // Used to identify a mutex attribute object.
 

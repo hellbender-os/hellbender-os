@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <stdio.h>
 #include "../fcntl/fcntl_impl.h"
 
 int dup2(int old_fd, int new_fd) {
@@ -20,4 +21,5 @@ int dup2(int old_fd, int new_fd) {
     close(new_fd);
   }
   *new_file = *old_file;
+  return new_fd;
 }
