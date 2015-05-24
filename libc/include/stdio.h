@@ -12,6 +12,7 @@ typedef struct {
   char *buffer;
   unsigned buf_bytes;
   int fd;
+  int row; // Read Or Write: 0 == write, 1 == read.
 } FILE;
 // A structure containing information about a file.
 
@@ -100,7 +101,7 @@ off_t    ftello(FILE *);
 int      ftrylockfile(FILE *);
 void     funlockfile(FILE *);
 size_t   fwrite(const void *restrict, size_t, size_t, FILE *restrict);
-int      getc(FILE *);
+#define  getc(FILE) fgetc(FILE)
 int      getchar(void);
 int      getc_unlocked(FILE *);
 int      getchar_unlocked(void);

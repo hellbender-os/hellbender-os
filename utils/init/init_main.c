@@ -1,15 +1,20 @@
 #include <stdio.h>
+#include <spawn.h>
 
-extern char** environ;
-
-int main(int argc, char** argv) {
-
-  printf("Init argc = %i\n", argc);
-  for (int i = 0; i < argc; ++i) {
-    printf("Init argv = '%s'\n", argv[i]);
+int main(void) {
+  printf("Init launching shells on terminals TTY2, TTY3\n");
+  {
+    pid_t pid;
+    char* argv[] = { "hellish", "devfs/tty2", (char*)0 };
+    char* envp[] = { (char*)0 };
+    posix_spawn(&pid, "initfs/hellish", NULL, NULL, argv, envp);
   }
-  for (char** ptr = environ; *ptr; ptr++) {
-    printf("Env: '%s'\n", *ptr);
+  {
+    pid_t pid;
+    char* argv[] = { "hellish", "devfs/tty3", (char*)0 };
+    char* envp[] = { (char*)0 };
+    posix_spawn(&pid, "initfs/hellish", NULL, NULL, argv, envp);
   }
+  
   return 2;
 }

@@ -9,6 +9,7 @@ mkdir -p isodir/boot/grub
 cp sysroot/boot/hellbender.kernel isodir/boot/hellbender.kernel
 cp sysroot/boot/core.srv isodir/boot/core.srv
 cp utils/bin/init initrd/init
+cp utils/bin/hellish initrd/hellish
 
 (cd initrd && { find . -type d -printf "%p/\n"; find . \! -type d ; } | sort | cpio -v -o > ../isodir/boot/init.rd )
 #objcopy --strip-debug isodir/boot/hellbender.kernel

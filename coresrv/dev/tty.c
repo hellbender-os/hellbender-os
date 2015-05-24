@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
 
 #include <sys/keymap.h>
 
@@ -31,7 +32,10 @@ struct dev_tty_buffer {
 
 struct dev_tty {
   struct dev_tty_buffer ttys[N_TTYS];
-  unsigned current_tty;
+  volatile unsigned current_tty;
+  pthread_cond_t cond; // syncs access to current_tty.
+  pthread_mutex_t mutex;
+  
   uint16_t vga_shadow[WINDOW_SIZE];
   unsigned vga_cursor_x;
   unsigned vga_cursor_y;
@@ -142,6 +146,9 @@ void dev_tty_init() {
   //filesys.fsync = MAKE_IDC_PTR(vfs_fsync, dev_tty_fsync);
   //filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, dev_tty_ftruncate);
 
+  pthread_cond_init(&dev_tty.cond, NULL);
+  pthread_mutex_init(&dev_tty.mutex, NULL);
+  
   dev_register(NO_IDC, "tty0", &filesys); // current virtual console
   dev_register(NO_IDC, "tty1", &filesys); // 1st virtual console
   dev_register(NO_IDC, "tty2", &filesys); // 2nd virtual console
@@ -174,6 +181,7 @@ void dev_tty_switch_to(unsigned tty_id) {
   // draw new console.
   if (tty_id != dev_tty.current_tty) {
     dev_tty.current_tty = tty_id;
+    pthread_cond_broadcast(&dev_tty.cond);
     update_vga_full(&dev_tty.ttys[tty_id]);
   }
 }
@@ -213,8 +221,15 @@ __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, 
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
   if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
   uint8_t* cbuffer = (uint8_t*)buffer;
+
+  // block until we are the active console
+  pthread_mutex_lock(&dev_tty.mutex);
+  while (dev_tty.current_tty != tty->id) {
+    pthread_cond_wait(&dev_tty.cond, &dev_tty.mutex);
+  }
+
+  size_t bytes = 0;
   if (dev_tty.current_tty == tty->id) {
-    size_t bytes = 0;
     while (bytes < size) {
       int kc = CORE_IDC(coresrv_kbd_getc);
       if (kc < 0) break;
@@ -222,12 +237,9 @@ __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, 
                                KBD_GETC_KEYCODE(kc), KBD_GETC_FLAGS(kc));
       if (c > 0) cbuffer[bytes++] = (uint8_t)c;
     }
-    return bytes;
-    
-  } else {
-    // block until console change?
-    return 0;
   }
+  pthread_mutex_unlock(&dev_tty.mutex);
+  return bytes;
 }
 
 __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* data, size_t size) {

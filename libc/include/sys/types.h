@@ -54,40 +54,52 @@ typedef struct {
 } pthread_attr_t;
 // Used to identify a thread attribute object.
 
-//pthread_barrier_t;
+typedef struct {
+} pthread_barrier_t;
 // Used to identify a barrier.
 
-//pthread_barrierattr_t
+typedef struct {
+} pthread_barrierattr_t;
 // Used to define a barrier attributes object.
 
-//pthread_cond_t
+typedef struct {
+} pthread_cond_t;
 // Used for condition variables.
 
-//pthread_condattr_t
+typedef struct {
+} pthread_condattr_t;
 // Used to identify a condition attribute object.
 
-//pthread_key_t
+typedef struct {
+} pthread_key_t;
 // Used for thread-specific data keys.
 
-//pthread_mutex_t
+typedef struct {
+} pthread_mutex_t;
 // Used for mutexes.
 
-//pthread_mutexattr_t
+typedef struct {
+} pthread_mutexattr_t;
 // Used to identify a mutex attribute object.
 
-//pthread_once_t
+typedef struct {
+} pthread_once_t;
 // Used for dynamic package initialization.
 
-//pthread_rwlock_t
+typedef struct {
+} pthread_rwlock_t;
 // Used for read-write locks.
 
-//pthread_rwlockattr_t
+typedef struct {
+} pthread_rwlockattr_t;
 // Used for read-write lock attributes.
 
-//pthread_spinlock_t
+typedef struct {
+} pthread_spinlock_t;
 // Used to identify a spin lock.
 
-typedef unsigned pthread_t;
+typedef struct {
+} pthread_t;
 // Used to identify a thread.
 
 typedef __SIZE_TYPE__ size_t;

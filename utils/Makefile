@@ -23,18 +23,24 @@ ARCHDIR:=arch/$(HOSTARCH)
 INIT_OBJS:=\
 init/init_main.o \
 
-all: init
+HELLISH_OBJS:=\
+hellish/hellish_main.o \
+
+all: init hellish
 
 .PHONY: all clean install
 
 init: $(INIT_OBJS) $(LIB_DEPS)
 	$(CC) -Wl,-Map,init.map -T $(ARCHDIR)/linker.ld -o bin/$@ $(CFLAGS) $(INIT_OBJS) $(LDFLAGS) $(LIBS)
 
+hellish: $(HELLISH_OBJS) $(LIB_DEPS)
+	$(CC) -Wl,-Map,hellish.map -T $(ARCHDIR)/linker.ld -o bin/$@ $(CFLAGS) $(HELLISH_OBJS) $(LDFLAGS) $(LIBS)
+
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	rm -f bin/* $(INIT_OBJS)
+	rm -f bin/* $(INIT_OBJS) $(HELLISH_OBJS)
 #	rm -f *.o */*.o */*/*.o *~ */*~ */*/*~
 
-install: init
+install: init hellish

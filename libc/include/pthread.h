@@ -1,6 +1,8 @@
 #ifndef _PTHREAD_H
 #define _PTHREAD_H
 
+#include <sys/types.h> // nonconforming: lots of pthread_ types.
+
 // The Open Group Base Specifications Issue 7
 
 #include <sched.h>
@@ -198,4 +200,4 @@ int   pthread_spin_trylock(pthread_spinlock_t *);
 int   pthread_spin_unlock(pthread_spinlock_t *);
 void  pthread_testcancel(void);
 
-#endi
+#endif
