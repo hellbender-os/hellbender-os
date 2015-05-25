@@ -1,7 +1,7 @@
 HOST?=$(shell ../default-host.sh)
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g0 -dDEBUG
+CFLAGS?=
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -46,7 +46,17 @@ kernel/scheduler.o \
 kernel/pit.o \
 kernel/pic.o \
 kernel/process.o \
-kernel/semaphore.o \
+syscall/syscall_kstub.o \
+syscall/syscall_table.o \
+syscall/get_environment.o \
+syscall/current_exec_path.o \
+syscall/spawn.o \
+syscall/exit.o \
+syscall/make_executable.o \
+syscall/make_readonly.o \
+syscall/set_program_break.o \
+syscall/print.o \
+syscall/yield.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)
@@ -65,6 +75,8 @@ $(OBJS) \
 $(CRTEND_OBJ) \
 $(CRTN_OBJ) \
 
+HEADERS=$(shell find . -name "*\.h")
+
 all: hellbender.kernel
 
 .PHONY: all clean install install-headers install-kernel
@@ -72,6 +84,11 @@ all: hellbender.kernel
 hellbender.kernel: $(ALL_OUR_OBJS) $(ARCHDIR)/linker.ld $(LIB_DEPS)
 	$(CC) -Wl,-Map,kernel.map -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
 	strip -R .comment $@
+
+syscall/syscall_stub.S: $(HEADERS) make_syscall_size.pl make_syscall_stub.pl
+	./make_syscall_size.pl
+	$(CC) -S syscall/syscall_size.c -o syscall/syscall_size.S -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+	./make_syscall_stub.pl
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
@@ -85,7 +102,7 @@ clean:
 
 install: install-headers install-kernel
 
-install-headers:
+install-headers: syscall/syscall_stub.o
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -RT include $(DESTDIR)$(INCLUDEDIR)
 

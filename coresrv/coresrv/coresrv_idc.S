@@ -80,6 +80,30 @@ __IDE__rtc_time:
     int $83
 .balign 8
 
+.global __IDE__semaphore_create
+__IDE__semaphore_create:
+    calll semaphore_create
+    int $83
+.balign 8
+
+.global __IDE__semaphore_open
+__IDE__semaphore_open:
+    calll semaphore_open
+    int $83
+.balign 8
+
+.global __IDE__semaphore_post
+__IDE__semaphore_post:
+    calll semaphore_post
+    int $83
+.balign 8
+
+.global __IDE__semaphore_wait
+__IDE__semaphore_wait:
+    calll semaphore_wait
+    int $83
+.balign 8
+
 .global __IDE__vfs_devfs_close
 __IDE__vfs_devfs_close:
     calll vfs_devfs_close

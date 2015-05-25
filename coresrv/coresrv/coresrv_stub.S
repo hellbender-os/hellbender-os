@@ -32,6 +32,18 @@ coresrv_stub:
 .global __IDC__rtc_time
 .set __IDC__rtc_time, coresrv_stub
 
+.global __IDC__semaphore_create
+.set __IDC__semaphore_create, coresrv_stub
+
+.global __IDC__semaphore_open
+.set __IDC__semaphore_open, coresrv_stub
+
+.global __IDC__semaphore_post
+.set __IDC__semaphore_post, coresrv_stub
+
+.global __IDC__semaphore_wait
+.set __IDC__semaphore_wait, coresrv_stub
+
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 

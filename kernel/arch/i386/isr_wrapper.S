@@ -12,7 +12,7 @@
         .balign 4
 isr_wrapper_debug:
         // save the state for debugging
-        xchg %bx,%bx
+        //xchg %bx,%bx
         pushal
         push %ds
         push %es
@@ -63,7 +63,7 @@ isr_wrapper_\IDX\():
         call thread_calc_time // now it's safe to update the thread exec time.
         cld
         push $0               // fake return address because
-        jmp isr_routine_\IDX  // we use kernel_return_ring3 to go back.
+        jmp isr_routine_\IDX  // we use kernel_restore_context to go back.
         .endm
 
         
@@ -88,8 +88,65 @@ isr_wrapper_\IDX\():
         .set idx, (idx+1)
         .endr
         
-        // kernel interrupts
-        define_wrapper 80
+        // Stack based syscall mechanism.
+        .extern syscall_table
+        .global isr_wrapper_80
+        .balign 4
+isr_wrapper_80:
+        // TSS stack: ss, esp, flags, cs, eip
+        // User stack: parameters, real_return
+        // Syscall index in eax
+        
+        // save the state to active thread kernel stack.
+        //xchg %bx,%bx
+        pushal   // pushes 8 dwords
+        push %ds // pushes 4 dwords
+        push %es
+        push %fs
+        push %gs
+        mov %esp, %ebp        // remember the thread kernel stack pointer.
+        mov %ebp, (0x400000)  // current thread structure is there.
+        
+        // now the context has been saved. time to switch to kernel stack.
+	movl $(kernel_stack+16384+4096), %esp
+        mov %ss, %bx          // copy kernel data selector into all registers.
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
+
+        // resolve user esp (depends on source ring)
+        mov 13*4(%ebp), %edx // we check the code segment value.
+        lea 15*4(%ebp), %esi // this has the ring 0 stack, or ring 3 esp value.
+        and $3, %edx
+        jz 1f
+        mov (%esi), %esi     // now esi is user stack.
+1:      
+        // prepare for the syscall:
+        mov $syscall_table, %edx
+        and $0x3ff, %eax           // force to a valid syscall idx.
+        mov 4(%edx, %eax, 8), %ecx // size of the stack call frame.
+        mov 0(%edx, %eax, 8), %ebx // address of the syscall.
+
+        // we copy parameters from user stack into kernel stack.
+        // TODO: make sure user stack pointer is valid!
+
+        add $4, %esi          // end of parameters.
+        mov %ecx, %eax
+        add $15, %eax
+        and $0xfffffff0, %eax // eax is the size rounded to next 16 bytes.
+        sub %eax, %esp        // make room for stack frame.
+        mov %esp, %edi
+        rep movsb
+
+        // now it's good time to update the thread exec time.
+        call thread_calc_time
+
+        // and then we jump to the interrupt service routine -routine.
+        cld
+        call *%ebx            // we use kernel_to_usermode to go back
+        mov %eax, 11*4(%ebp)  // but want to keep the return value.
+        jmp kernel_to_usermode
 
 
         // IRET syscall doesn't save state because it's not needed.

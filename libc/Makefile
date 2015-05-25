@@ -38,6 +38,7 @@ stdio/getchar.o \
 stdio/fgetc.o \
 stdio/fread.o \
 stdio/setbuf.o \
+stdlib/abort.o \
 stdlib/itoa.o \
 stdlib/utoa.o \
 stdlib/calloc.o \
@@ -50,8 +51,6 @@ stdlib/ldiv.o \
 stdlib/div.o \
 stdlib/qsort.o \
 stdlib/bsearch.o \
-stdlib/abort.o \
-stdlib/exit.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
@@ -64,10 +63,6 @@ string/strcat_s.o \
 string/strcpy.o \
 string/strcpy_s.o \
 string/strrchr.o \
-semaphore/sem_init.o \
-semaphore/sem_open.o \
-semaphore/sem_post.o \
-semaphore/sem_wait.o \
 time/localtime.o \
 time/time.o \
 heap/heap_init.o \
@@ -76,7 +71,6 @@ heap/heap_free.o \
 heap/heap_malloc.o \
 heap/heap_realloc.o \
 hellbender/libc_init_basic.o \
-hellbender/syscall.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
@@ -92,20 +86,27 @@ unistd/write.o \
 unistd/dup2.o \
 stdio/stdio_init.o \
 stdio/fflush.o \
+stdlib/exit.o \
 stdlib/system.o \
 stdlib/getenv.o \
 sched/sched_yield.o \
-pthread/cond_init.o \
-pthread/cond_broadcast.o \
-pthread/cond_wait.o \
-pthread/mutex_init.o \
-pthread/mutex_lock.o \
-pthread/mutex_unlock.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \
 spawn/posix_spawn.o \
+semaphore/sem_init.o \
+semaphore/sem_open.o \
+semaphore/sem_post.o \
+semaphore/sem_wait.o \
 hellbender/libc_init_advanced.o \
+../kernel/syscall/syscall_stub.o \
+
+#pthread/cond_init.o \
+#pthread/cond_broadcast.o \
+#pthread/cond_wait.o \
+#pthread/mutex_init.o \
+#pthread/mutex_lock.o \
+#pthread/mutex_unlock.o \
 
 CORE_STUB:=../coresrv/coresrv/coresrv_stub.o
 CORE_SYMS:=../coresrv/coresrv/coresrv_syms.o

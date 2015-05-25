@@ -6,6 +6,7 @@
 _hellbender_module_info:
         .long _hellbender_module_info2-_hellbender_module_info
         # core service isr functions.
+        .long init_stage
         .long rtc_isr
         .long ps2_chan1_isr
         .long ps2_chan2_isr
@@ -29,7 +30,6 @@ _start:
 	call _hellbender_libc_init_advanced
 
         # run global constructors before the core_main.
-        
         call _init
         call core_main
 

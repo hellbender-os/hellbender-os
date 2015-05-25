@@ -1,6 +1,6 @@
 #include <semaphore.h>
-#include <hellbender.h>
+#include <coresrv/semaphore.h>
 
 int sem_wait(sem_t *sem) {
-  return syscall_sem_wait(sem);
+  return CORE_IDC(semaphore_wait, sem);
 }

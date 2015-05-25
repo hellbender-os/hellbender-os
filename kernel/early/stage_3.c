@@ -54,6 +54,7 @@ void early_stage_3(early_data_t *data) {
   // kernel thread execution context.
   kernel.processes[0] = process_create_kernel(domain, &early_stage_4);
   kernel.nof_processes = 1;
+  kernel.current_thread = kernel.processes[0]->thread;
   thread_set_current(kernel.processes[0]->thread);
 
   // we have current thread context, so we can setup proper ISRs.

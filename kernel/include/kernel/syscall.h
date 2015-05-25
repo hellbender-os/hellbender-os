@@ -1,29 +1,34 @@
 #ifndef _KERNEL_SYSCALL_H
 #define _KERNEL_SYSCALL_H
 
+#include <kernel/kernel.h>
+
 #define SYSCALL "int $80"
-#define SYSCALL_PRINT             0x01
-#define SYSCALL_SET_PROGRAM_BREAK 0x02
-#define SYSCALL_MAKE_READONLY     0x03
-#define SYSCALL_MAKE_EXECUTABLE   0x04
-#define SYSCALL_CURRENT_EXEC_PATH 0x05
-#define SYSCALL_GET_ENVIRONMENT   0x06
-#define SYSCALL_YIELD             0x07
-#define SYSCALL_SPAWN             0x08
-
-#define SYSCALL_EXIT              0xfe
-
-#define SYSCALL_SEM_OPEN   0x10
-#define SYSCALL_SEM_CREATE 0x11
-#define SYSCALL_SEM_POST   0x12
-#define SYSCALL_SEM_WAIT   0x13
-
-
-
 #define SYSIRET "int $81"
-
 
 #define IDCALL "int $82"
 #define IDRET "int $83"
+
+#define __SYS__
+
+__SYS__ void syscall_print(const char* str);
+__SYS__ void* syscall_set_program_break(void* set_or_null, intptr_t delta_or_zero);
+__SYS__ void syscall_make_readonly(void* address, unsigned size);
+__SYS__ void syscall_make_executable(void* address, unsigned size);
+
+__SYS__ __attribute__((__noreturn__)) void syscall_exit(int status);
+
+__SYS__ int syscall_spawn(const char *path, char *const* argv, char *const* envp);
+__SYS__ void syscall_current_exec_path(char* path);
+__SYS__ void syscall_get_environment(int *argc, int *envc, char** strings);
+
+__SYS__ void syscall_yield();
+
+//__ SYS__ void syscall_wait_object(void *obj, unsigned seq_nr);
+//__ SYS__ void syscall_notify_object(void *obj, unsigned seq_nr);
+
+#define syscall_iret() \
+  asm(SYSIRET : "=m"(__force_order)); \
+  __builtin_unreachable();
 
 #endif

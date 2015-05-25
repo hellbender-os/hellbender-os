@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <semaphore.h>
 
 #include <kernel/kernel.h>
 #include <kernel/process.h>
@@ -14,6 +13,9 @@
 #include <kernel/pic_isr.h>
 #include <kernel/vga.h>
 #include <kernel/mmap.h>
+
+void ksyscall_yield();
+void ksyscall_exit(int);
 
 /**
  * The whole kernel is now on-line, and we are in multiprocessing
@@ -60,12 +62,13 @@ void early_stage_4() {
                 );
 
   // core is ready to run.
+  volatile int* init_stage = (volatile int*)service->init_stage;
+  *init_stage = CORE_INIT_STAGE_BEGIN;
   scheduler_add_thread(kernel.processes[core_idx]->thread);
 
   // wait until core service notifies that the pre-init is done.
-  sem_t* to_core = sem_open("kernel_to_core", O_CREAT, (mode_t)0, (unsigned)0);
-  sem_t* to_kernel = sem_open("core_to_kernel", O_CREAT, (mode_t)0, (unsigned)0);
-  sem_wait(to_kernel);
+  while (*init_stage != CORE_INIT_STAGE_READY_FOR_INTERRUPTS)
+    ksyscall_yield();
 
   // setup hardware interrupts.
   pit_stage_4_init();
@@ -73,22 +76,14 @@ void early_stage_4() {
   pic_isr_stage_4_init(service, kernel.processes[core_idx]);
   printf("Hardware interrupts activated.\n");
 
-  // notify core service to continue; wait it till completes.
-  sem_post(to_core);
-  sem_wait(to_kernel);
+  // notify core service to continue.
+  *init_stage = CORE_INIT_STAGE_INTERRUPTS_ACTIVATED;
 
-  printf("Kernel initialization done.\n");
-
-  /*TODO cleanup
-  sem_close(to_core);
-  sem_close(to_kernel);
-  sem_unlink("kernel_to_core");
-  sem_unlick("core_to_kernel");
-  */
+  //printf("Kernel initialization done.\n");
   
   // enter scheduling loop.
   free(kernel.early_data);
   kernel.early_data = NULL;
   kernel.up_and_running = 1;
-  exit(0);
+  ksyscall_exit(0);
 }

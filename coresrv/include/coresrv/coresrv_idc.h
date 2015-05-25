@@ -9,6 +9,18 @@ typedef void* dev_register_ptr;
 int __IDC__dev_unregister(IDC_PTR, const char*);
 typedef void* dev_unregister_ptr;
 
+int __IDC__semaphore_create(IDC_PTR, sem_t *sem, const char* name, int oflag, mode_t mode, unsigned value);
+typedef void* semaphore_create_ptr;
+
+int __IDC__semaphore_open(IDC_PTR, sem_t *sem, const char* name, int oflag);
+typedef void* semaphore_open_ptr;
+
+int __IDC__semaphore_post(IDC_PTR, sem_t* sem);
+typedef void* semaphore_post_ptr;
+
+int __IDC__semaphore_wait(IDC_PTR, sem_t* sem);
+typedef void* semaphore_wait_ptr;
+
 int __IDC__vfs_close(IDC_PTR, struct vfs_file*);
 typedef void* vfs_close_ptr;
 
@@ -64,6 +76,10 @@ extern uintptr_t __IDE__elf_load_process;
 extern uintptr_t __IDE__rtc_beep;
 extern uintptr_t __IDE__rtc_ticks;
 extern uintptr_t __IDE__rtc_time;
+extern uintptr_t __IDE__semaphore_create;
+extern uintptr_t __IDE__semaphore_open;
+extern uintptr_t __IDE__semaphore_post;
+extern uintptr_t __IDE__semaphore_wait;
 extern uintptr_t __IDE__vfs_devfs_close;
 extern uintptr_t __IDE__vfs_devfs_lseek;
 extern uintptr_t __IDE__vfs_devfs_open;

@@ -10,6 +10,7 @@ struct vfs_file;
 struct vfs_filesys;
 struct vfs_rootfs;
 struct vfs_initfs;
+typedef struct sem sem_t;
 
 #include <coresrv/coresrv_idc.h>
 

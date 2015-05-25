@@ -19,10 +19,15 @@ typedef struct kernel_module {
   uint32_t checksum; // cast structure as uint16_t array, excluding the checksum field. checksum == the sum of the array.
 } __attribute__((packed)) kernel_module_t;
 
+#define CORE_INIT_STAGE_BEGIN 0
+#define CORE_INIT_STAGE_READY_FOR_INTERRUPTS 1
+#define CORE_INIT_STAGE_INTERRUPTS_ACTIVATED 2
+
 // core service module is loaded by GRUB.
 // core provides some basic services to get things running.
 typedef struct core_service {
   uint32_t this_size;
+  uint32_t init_stage;
   uint32_t timer_isr;
   uint32_t ps2_chan1_isr;
   uint32_t ps2_chan2_isr;

@@ -3,7 +3,6 @@
 #include <sched.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <semaphore.h>
 #include <spawn.h>
 
 #include <kernel/kernel.h>
@@ -21,11 +20,10 @@ extern void vfs_init();
 extern void dev_init();
 
 struct vfs_initfs vfs_initfs;
+volatile int init_stage = 0;
 
 void core_initialize() {
   //printf("Core pre-init begins!\n");
-  sem_t* to_core = sem_open("kernel_to_core", 0);
-  sem_t* to_kernel = sem_open("core_to_kernel", 0);
 
   // do initialization without interrupts.
 
@@ -49,18 +47,14 @@ void core_initialize() {
   }
 
   // let kernel know that pre-init is done.
-  sem_post(to_kernel);
+  init_stage = CORE_INIT_STAGE_READY_FOR_INTERRUPTS;
   
   // kernel will enable interrupts.
-  sem_wait(to_core);
+  while (init_stage != CORE_INIT_STAGE_INTERRUPTS_ACTIVATED) sched_yield();
 
-  // do initialization with interrupts.
-
-  // let kernel know that post-init is done.
-  sem_post(to_kernel);
-
-  // let kernel finish TODO: could we wait for the kernel thread to exit?
-  for (int i = 0; i < 100; ++i) sched_yield();
+  // continue with interrupts activated.
+  // we'll return into _start, which will finish libC init
+  // and then calls core_main.
 }
 
 int core_main() {

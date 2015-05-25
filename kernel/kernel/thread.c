@@ -67,8 +67,8 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
 
 void thread_set_current(thread_t* thread) {
   // Disable all domain in current idc-stack.
-  for (size_t i = 0; i < thread->domain_idx; ++i) {
-    domain_disable(thread->domain_stack[i].domain);
+  for (size_t i = 0; i < kernel.current_thread->domain_idx; ++i) {
+    domain_disable(kernel.current_thread->domain_stack[i].domain);
   }
 
   // Switch the thread page table.
