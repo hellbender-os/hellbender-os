@@ -1,6 +1,15 @@
 #include <pthread.h>
-#include <hellbender.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/threadlocal.h>
+#include <kernel/syscall.h>
 
-int pthread_mutex_unlock(pthread_mutex_t *mutex) {
-  return syscall_mutex_unlock(mutex);
+int pthread_mutex_unlock(pthread_mutex_t *m) {
+  if (m->owner != THREADLOCAL->thread_id) {
+    printf("Not mutex owner!\n");
+    abort();
+  }
+  __sync_fetch_and_add(&m->count, 1);
+  syscall_notify(&m->count);
+  return 0;
 }

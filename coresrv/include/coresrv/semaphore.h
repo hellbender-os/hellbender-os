@@ -9,6 +9,16 @@
 
 typedef struct sem sem_t;
 
+typedef struct semaphore {
+  struct semaphore* next;
+  const char* name;
+  volatile unsigned count;
+  volatile unsigned entry_nr;
+  volatile unsigned exit_nr;
+} semaphore_t;
+
+extern semaphore_t *semaphores;
+
 __IDC__ int semaphore_create(IDC_PTR, sem_t *sem, const char* name, int oflag, mode_t mode, unsigned value);
 __IDC__ int semaphore_open(IDC_PTR, sem_t *sem, const char* name, int oflag);
 __IDC__ int semaphore_post(IDC_PTR, sem_t* sem);

@@ -6,6 +6,7 @@
 struct threadlocal {
   // errno must be first.
   int errno;
+  pid_t thread_id;
   struct tm tm;
 };
 

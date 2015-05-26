@@ -47,6 +47,10 @@ isr_wrapper_\IDX\():
         push %gs
         mov %esp, %eax        // remember the thread kernel stack pointer.
         mov %eax, (0x400000)  // current thread structure is there.
+        //cmp $0x401fbc, %eax
+        //jz 1f
+        //xchg %bx,%bx
+        //1:      
         
         // now the context has been saved. time to switch to kernel stack.
 	movl $(kernel_stack+16384+4096-8), %esp // -8 to respect stack boundary.
@@ -106,6 +110,10 @@ isr_wrapper_80:
         push %gs
         mov %esp, %ebp        // remember the thread kernel stack pointer.
         mov %ebp, (0x400000)  // current thread structure is there.
+        //cmp $0x401fbc, %ebp
+        //jz 1f
+        //xchg %bx,%bx
+        //1:
         
         // now the context has been saved. time to switch to kernel stack.
 	movl $(kernel_stack+16384+4096), %esp

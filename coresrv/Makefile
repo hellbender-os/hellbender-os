@@ -63,8 +63,9 @@ dev/dev_unregister.o \
 dev/tty.o \
 elf/load_process.o \
 semaphore/create.o \
-
-#mutex/init.o \
+semaphore/open.o \
+semaphore/post.o \
+semaphore/wait.o \
 
 CRTI_OBJ:=$(DESTDIR)/$(LIBDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

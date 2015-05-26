@@ -57,6 +57,9 @@ syscall/make_readonly.o \
 syscall/set_program_break.o \
 syscall/print.o \
 syscall/yield.o \
+syscall/wait_eq.o \
+syscall/wait_neq.o \
+syscall/notify.o \
 
 CRTI_OBJ:=$(ARCHDIR)/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

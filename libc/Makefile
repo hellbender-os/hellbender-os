@@ -98,15 +98,15 @@ semaphore/sem_init.o \
 semaphore/sem_open.o \
 semaphore/sem_post.o \
 semaphore/sem_wait.o \
+pthread/cond_init.o \
+pthread/cond_broadcast.o \
+pthread/cond_signal.o \
+pthread/cond_wait.o \
+pthread/mutex_init.o \
+pthread/mutex_lock.o \
+pthread/mutex_unlock.o \
 hellbender/libc_init_advanced.o \
 ../kernel/syscall/syscall_stub.o \
-
-#pthread/cond_init.o \
-#pthread/cond_broadcast.o \
-#pthread/cond_wait.o \
-#pthread/mutex_init.o \
-#pthread/mutex_lock.o \
-#pthread/mutex_unlock.o \
 
 CORE_STUB:=../coresrv/coresrv/coresrv_stub.o
 CORE_SYMS:=../coresrv/coresrv/coresrv_syms.o

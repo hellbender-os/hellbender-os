@@ -24,8 +24,9 @@ __SYS__ void syscall_get_environment(int *argc, int *envc, char** strings);
 
 __SYS__ void syscall_yield();
 
-//__ SYS__ void syscall_wait_object(void *obj, unsigned seq_nr);
-//__ SYS__ void syscall_notify_object(void *obj, unsigned seq_nr);
+__SYS__ void syscall_wait_eq(volatile unsigned *obj, unsigned value);
+__SYS__ void syscall_wait_neq(volatile unsigned *obj, unsigned value);
+__SYS__ void syscall_notify(volatile unsigned *obj);
 
 #define syscall_iret() \
   asm(SYSIRET : "=m"(__force_order)); \

@@ -52,14 +52,11 @@ Name
 
 Initializer for Type
 
-PTHREAD_COND_INITIALIZER
+*/
+#define PTHREAD_COND_INITIALIZER (pthread_cond_t){ .waiting = 0, .released = 0, .entry_nr = 0, .exit_nr = 0 }
 
-pthread_cond_t
-
-PTHREAD_MUTEX_INITIALIZER
-
-pthread_mutex_t
-
+#define PTHREAD_MUTEX_INITIALIZER (pthread_mutex_t){ .count = 1, .entry_nr = 0, .exit_nr = 0, .owner = 0 }
+/*
 PTHREAD_RWLOCK_INITIALIZER
 
 pthread_rwlock_t

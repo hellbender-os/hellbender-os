@@ -2,6 +2,7 @@
 #define _KERNEL_THREAD_H
 
 #include <stdint.h>
+#include <sys/types.h>
 
 #include <kernel/kernel.h>
 #include <kernel/domain.h>
@@ -12,17 +13,14 @@
 #define THREAD_STATE_WAIT 0xF00dBabe
 #define THREAD_STATE_DEAD 0xDeadBeef
 
-typedef unsigned wait_result_t;
-#define WAIT_NO_MORE 0
-#define WAIT_STILL 1
+#define THREAD_WAIT_EQ  1
+#define THREAD_WAIT_NEQ 2
 
-typedef struct wait_state wait_state_t;
-typedef wait_result_t (*wait_func_ptr)(wait_state_t* state);
-
+typedef struct thread thread_t;
 typedef struct wait_state {
-  wait_func_ptr wait_func;
-  void* wait_obj;
-  unsigned seq_nr;
+  volatile unsigned *obj;
+  unsigned value;
+  int op; // 1 == wait for equality, 2 == wait for inequality.
 } wait_state_t;
 
 
@@ -40,7 +38,7 @@ typedef struct wait_state {
 typedef struct thread {
   void* kernel_stack_ptr; // current pointer of the kernel stack. MUST BE FIRST!
 
-  uint32_t thread_id; // unique identifier.
+  pid_t thread_id; // unique identifier.
   unsigned is_kernel; // true, if the thread runs using kernel selectors.
 
   uint32_t state; // new or old, depending if thread has been running.

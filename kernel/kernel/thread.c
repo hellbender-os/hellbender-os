@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/threadlocal.h>
 
 #include <kernel/kernel.h>
 #include <kernel/domain.h>
@@ -12,7 +13,7 @@
 
 // thread data structure is mapped to thread_id*PAGE_SIZE.
 // we start from id 1 to keep the zero page empty (to catch NULL pointers).
-static uint32_t next_thread_id = 1; 
+static pid_t next_thread_id = 1; 
 
 void thread_initialize() {
   void *ptr = vmem_alloc_existing_table((void*)THREAD_OFFSET);
@@ -25,7 +26,7 @@ thread_t* thread_create(domain_t *home_domain, void *start_address) {
     printf("Out of threads.\n");
     abort();
   }
-  uint32_t thread_id = next_thread_id++;
+  pid_t thread_id = next_thread_id++;
 
   // allocate required pages.
   uintptr_t page_table = mem_alloc_page();
@@ -74,6 +75,7 @@ void thread_set_current(thread_t* thread) {
   // Switch the thread page table.
   mmap_map_table((void*)THREAD_OFFSET, thread->page_table, MMAP_ATTRIB_USER_RW);
   kernel.current_thread = thread;
+  THREADLOCAL->thread_id = thread->thread_id;
 
   // we post-poned stack allocation until it was actually needed.
   if (thread->stack_bottom == thread->stack_top) {

@@ -63,6 +63,10 @@ typedef struct {
 // Used to define a barrier attributes object.
 
 typedef struct pthread_cond {
+  volatile unsigned waiting;
+  volatile unsigned released;
+  volatile unsigned entry_nr;
+  volatile unsigned exit_nr;
 } pthread_cond_t;
 // Used for condition variables.
 
@@ -75,6 +79,10 @@ typedef struct {
 // Used for thread-specific data keys.
 
 typedef struct pthread_mutex {
+  volatile unsigned count; // 0 == locked; 1 == unlocked.
+  volatile unsigned entry_nr;
+  volatile unsigned exit_nr;
+  pid_t owner;
 } pthread_mutex_t;
 // Used for mutexes.
 

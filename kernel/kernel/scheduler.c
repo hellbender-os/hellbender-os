@@ -45,8 +45,17 @@ void scheduler_goto_next() {
     }
     thread_t *this = scheduler.threads[scheduler.next_thread];
     if (this->state == THREAD_STATE_WAIT) {
-      if ((*this->wait_state.wait_func)(&this->wait_state) == WAIT_NO_MORE) {
-        this->state = THREAD_STATE_OLD;
+      switch (this->wait_state.op) {
+      case THREAD_WAIT_EQ:
+        if (*this->wait_state.obj == this->wait_state.value) {
+          this->state = THREAD_STATE_OLD;
+        }
+        break;
+      case THREAD_WAIT_NEQ:
+        if (*this->wait_state.obj != this->wait_state.value) {
+          this->state = THREAD_STATE_OLD;
+        }
+        break;
       }
     }
     if (this->state != THREAD_STATE_DEAD && this->state != THREAD_STATE_WAIT) {

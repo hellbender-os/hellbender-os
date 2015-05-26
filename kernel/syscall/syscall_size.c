@@ -43,4 +43,18 @@ struct __attribute__((__packed__)) {
 struct __attribute__((__packed__)) {
 } _syscall_yield__size;
 
+struct __attribute__((__packed__)) {
+  volatile unsigned *obj;
+  unsigned value;
+} _syscall_wait_eq__size;
+
+struct __attribute__((__packed__)) {
+  volatile unsigned *obj;
+  unsigned value;
+} _syscall_wait_neq__size;
+
+struct __attribute__((__packed__)) {
+  volatile unsigned *obj;
+} _syscall_notify__size;
+
 void main() {}

@@ -6,6 +6,8 @@
 #include <sched.h>
 
 #include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <kernel/thread.h>
 #include <kernel/scheduler.h>
 
 extern void kernel_enter_ring0(uint32_t data_selector,
@@ -48,6 +50,11 @@ void kernel_to_usermode() {
 
 __attribute__((__noreturn__))
 void kernel_halt(void) {
+  // we switch the current thread before enabling interrupts, otherwise
+  // we'd screw up thread state on the next interrupt (we are in ring 0).
+  // ISRs should never return, so this thread will not get executed.
+  // TODO: should we make this thread "idle" in some infinite loop?
+  thread_set_current(kernel.processes[0]->thread);
   while (1) { asm("sti; hlt"); }
   __builtin_unreachable();
 }

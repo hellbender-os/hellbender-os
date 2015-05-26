@@ -30,8 +30,8 @@ close(SIZES);
 exit;
 
 sub wanted {
-    /^.*\.h\z/s;
-    #&& print("$name\n");
+    /^.*\.h\z/s || return;
+    #print("$name\n");
     open(HEADER, "<$_") or die "$!";
     while (<HEADER>) {
         if (/__SYS__\s+(__attribute__\(\(.*?\)\)\s*)?([^\(]+)\(([^\)]*)\)/) {

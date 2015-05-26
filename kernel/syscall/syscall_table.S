@@ -4,6 +4,18 @@
 .balign 4096
 syscall_table:
 
+.extern syscall_notify
+.int syscall_notify
+.int 4
+
+.extern syscall_wait_neq
+.int syscall_wait_neq
+.int 8
+
+.extern syscall_wait_eq
+.int syscall_wait_eq
+.int 8
+
 .extern syscall_yield
 .int syscall_yield
 .int 0
