@@ -37,6 +37,10 @@ stdio/putchar.o \
 stdio/getchar.o \
 stdio/fgetc.o \
 stdio/fread.o \
+stdio/fseek.o \
+stdio/ftell.o \
+stdio/fopen.o \
+stdio/fclose.o \
 stdio/setbuf.o \
 stdlib/abort.o \
 stdlib/itoa.o \
