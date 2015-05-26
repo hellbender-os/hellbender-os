@@ -19,13 +19,13 @@ __IDCIMPL__ int semaphore_create(IDC_PTR, sem_t *sem, const char* name, int ofla
 
   semaphore_t* s = (semaphore_t*)malloc(sizeof(semaphore_t) + len);
   memset(s, 0, sizeof(semaphore_t));
-  s->count = value;
+  sem_init(&s->sem, 1, value);
   if (len) {
     s->name = ((char*)s) + sizeof(semaphore_t);
     memcpy((char*)s->name, name, len);
     s->next = semaphores;
     semaphores = s;
   }
-  sem->id = s;
+  sem->named_id = s;
   return 0;
 }

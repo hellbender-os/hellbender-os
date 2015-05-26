@@ -10,6 +10,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
   }
   
   sem_t *s = malloc(sizeof(sem_t));
+  *s = SEMAPHORE_INITIALIZER;
   if (oflag & O_CREAT) {
     va_list arguments;
     va_start(arguments, oflag);

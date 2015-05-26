@@ -3,6 +3,7 @@
 
 #include <coresrv/coresrv.h>
 #include <sys/types.h>
+#include <semaphore.h>
 
 // maximum length of semaphore name buffer (including trailing 0).
 #define SEMAPHORE_MAX_NAME 32
@@ -12,9 +13,7 @@ typedef struct sem sem_t;
 typedef struct semaphore {
   struct semaphore* next;
   const char* name;
-  volatile unsigned count;
-  volatile unsigned entry_nr;
-  volatile unsigned exit_nr;
+  sem_t sem;
 } semaphore_t;
 
 extern semaphore_t *semaphores;

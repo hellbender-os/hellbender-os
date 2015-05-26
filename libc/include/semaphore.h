@@ -7,9 +7,13 @@
 #include <time.h>
 
 typedef struct sem {
-  void* id;
+  void* named_id;
+  volatile unsigned count;
+  volatile unsigned entry_nr;
+  volatile unsigned exit_nr;
 } sem_t;
 
+#define SEMAPHORE_INITIALIZER (sem_t){.named_id = (void*)0, .count = 0,. entry_nr = 0, .exit_nr = 0 }
 #define SEM_FAILED ((sem_t*)0)
 
 int    sem_close(sem_t *);
