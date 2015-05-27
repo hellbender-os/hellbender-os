@@ -753,6 +753,18 @@ case "${targ}" in
     targ_defvec=i386_elf32_vec
     targ_selfvecs=i386chaos_vec
     ;;
+  i[3-7]86-*-hellbender*)
+    targ_defvec=i386_elf32_vec
+    targ_selfvecs=
+    targ64_selvecs=x86_64_elf32_vec
+    ;;
+#ifdef BFD64
+  x86_64-*-hellbender*)
+    targ_defvec=x86_64_elf64_vec
+    targ_selvecs=i386_elf32_vec
+    want64=true
+    ;;
+#endif
 
   i860-*-mach3* | i860-*-osf1* | i860-*-coff*)
     targ_defvec=i860_coff_vec

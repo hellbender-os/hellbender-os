@@ -277,6 +277,7 @@ ALL_EMULATION_SOURCES = \
 	eelf_i386_nacl.c \
 	eelf_i386_sol2.c \
 	eelf_i386_vxworks.c \
+	eelf_i386_hellbender.c \
 	eelf_s390.c \
 	egld960.c \
 	egld960coff.c \
@@ -480,6 +481,7 @@ ALL_64_EMULATION_SOURCES = \
 	eelf_x86_64_fbsd.c \
 	eelf_x86_64_nacl.c \
 	eelf_x86_64_sol2.c \
+	eelf_x86_64_hellbender.c \
 	ehppa64linux.c \
 	ei386pep.c \
 	emmo.c \
@@ -1282,6 +1284,9 @@ eelf_i386_vxworks.c: $(srcdir)/emulparams/elf_i386_vxworks.sh \
   $(srcdir)/emulparams/vxworks.sh $(srcdir)/emultempl/vxworks.em \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
+eelf_i386_hellbender.c: $(srcdir)/emulparams/elf_i386_hellbender.sh \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+
 eelf_s390.c: $(srcdir)/emulparams/elf_s390.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
@@ -1924,6 +1929,9 @@ eelf_x86_64_sol2.c: $(srcdir)/emulparams/elf_x86_64_sol2.sh \
   $(srcdir)/emulparams/elf_x86_64.sh \
   $(srcdir)/emulparams/solaris2.sh \
   $(srcdir)/emultempl/solaris2.em \
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+
+eelf_x86_64_hellbender.c: $(srcdir)/emulparams/elf_x86_64_hellbender.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
 ehppa64linux.c: $(srcdir)/emulparams/hppa64linux.sh \

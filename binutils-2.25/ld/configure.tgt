@@ -350,6 +350,13 @@ x86_64-*-nacl*)		targ_emul=elf32_x86_64_nacl
 			targ_extra_libpath=$targ_extra_emuls
 			tdir_elf_i386_nacl=`echo ${targ_alias} | sed -e 's/x86_64/i386/'`
 			;;
+i[3-7]86-*-hellbender*) targ_emul=elf_i386_hellbender
+                        targ_extra_emuls=elf_i386
+                        targ64_extra_emuls="elf_x86_64_hellbender elf_x86_64"
+                        ;;
+x86_64-*-hellbender*)   targ_emul=elf_x86_64_hellbender
+                        targ_extra_emuls="elf_i386_hellbender elf_x86_64 elf_i386"
+			;;
 i860-*-coff)		targ_emul=coff_i860 ;;
 i860-stardent-sysv4* | i860-stardent-elf*)
 			targ_emul=elf32_i860
