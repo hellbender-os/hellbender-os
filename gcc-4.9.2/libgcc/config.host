@@ -314,6 +314,14 @@ i[34567]86-*-mingw* | x86_64-*-mingw*)
 esac
 
 case ${host} in
+i[34567]86-*-hellbender*)
+	extra_parts="$extra_parts crtbegin.o crtend.o"
+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+	;;
+x86_64-*-hellbender*)
+	extra_parts="$extra_parts crtbegin.o crtend.o"
+	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
+	;;
 aarch64*-*-elf)
 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
 	tmake_file="${tmake_file} ${cpu_type}/t-aarch64"
