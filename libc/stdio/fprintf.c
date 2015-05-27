@@ -26,7 +26,7 @@ static size_t print(FILE *file, const char* data, size_t data_length)
   return data_length;
 }
 
-int fprintf(FILE *file, const char* restrict format, ...)
+int fprintf(FILE *file, const char* format, ...)
 {
   va_list parameters;
   va_start(parameters, format);
@@ -35,7 +35,7 @@ int fprintf(FILE *file, const char* restrict format, ...)
   return bytes;
 }
 
-int vfprintf(FILE* file, const char* restrict format, va_list parameters) {
+int vfprintf(FILE* file, const char* format, va_list parameters) {
   int written = 0;
   size_t amount;
   bool rejected_bad_specifier = false;

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int printf(const char* restrict format, ...)
+int printf(const char* format, ...)
 {
   va_list parameters;
   va_start(parameters, format);

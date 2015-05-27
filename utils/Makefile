@@ -1,7 +1,7 @@
 HOST?=i686-binary
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g0
+CFLAGS?=
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -13,7 +13,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS)  -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra
+CFLAGS:=$(CFLAGS)  -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -Werror
 CPPFLAGS:=$(CPPFLAGS) -Iinclude
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -static
@@ -31,10 +31,10 @@ all: init hellish
 .PHONY: all clean install
 
 init: $(INIT_OBJS) $(LIB_DEPS)
-	$(CC) -Wl,-Map,init.map -T $(ARCHDIR)/linker.ld -o bin/$@ $(CFLAGS) $(INIT_OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,init.map -o bin/$@ $(CFLAGS) $(INIT_OBJS) $(LDFLAGS) $(LIBS)
 
 hellish: $(HELLISH_OBJS) $(LIB_DEPS)
-	$(CC) -Wl,-Map,hellish.map -T $(ARCHDIR)/linker.ld -o bin/$@ $(CFLAGS) $(HELLISH_OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) -Wl,-Map,hellish.map -o bin/$@ $(CFLAGS) $(HELLISH_OBJS) $(LDFLAGS) $(LIBS)
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)

@@ -1,7 +1,7 @@
 HOST?=i686-binary
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g0
+CFLAGS?=
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -13,11 +13,11 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra
+CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -Werror
 CPPFLAGS:=$(CPPFLAGS) -Iinclude
 LDFLAGS:=$(LDFLAGS) -nostartfiles -Wl,--strip-debug -Wl,-s
-LIBS:=$(LIBS) -static
-LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libc.a
+LIBS:=$(LIBS) -static -nostdlib -lcore -lgcc
+LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libcore.a
 ARCHDIR:=arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config

@@ -22,8 +22,8 @@ int            dirfd(DIR *);
 DIR           *fdopendir(int);
 DIR           *opendir(const char *);
 struct dirent *readdir(DIR *);
-int            readdir_r(DIR *restrict, struct dirent *restrict,
-                   struct dirent **restrict);
+int            readdir_r(DIR *, struct dirent *,
+                   struct dirent **);
 void           rewinddir(DIR *);
 int            scandir(const char *, struct dirent ***,
                    int (*)(const struct dirent *),

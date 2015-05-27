@@ -1,7 +1,7 @@
 HOST?=$(shell ../default-host.sh)
 HOSTARCH:=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g0
+CFLAGS?=
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -12,7 +12,7 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -fno-builtin
+CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -Werror -fno-builtin
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude
 LIBK_CFLAGS:=$(CFLAGS) -ffreestanding
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel
@@ -119,24 +119,36 @@ OBJS:=\
 $(FREEOBJS) \
 $(HOSTEDOBJS) \
 $(CORE_STUB) \
-$(CORE_SYMS) \
 
 LIBK_OBJS:=$(FREEOBJS:.o=.libk.o)
 
-BINARIES=libc.a libg.a libk.a
+MATH_OBJS:=\
+math/fabs.o \
+
+BINARIES=libc.a libg.a libm.a
 
 all: $(BINARIES)
 
 .PHONY: all clean install install-headers install-libs
 
-libc.a: $(OBJS) $(ARCH_INITOBJS)
+# libcore is EXACTLY like libc, except it doesn't include __IDE__* symbols
+# that are defined in coresrv, which is not yet built..
+# libcore will be used to build coresrv, which will generate CORE_SYMS,
+# and then we can build the final libc.
+libcore.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
+
+libc.a: $(OBJS) $(CORE_SYMS)
+	$(AR) rcs $@ $(OBJS) $(CORE_SYMS)
 
 libg.a:
 	$(AR) rcs $@
 
 libk.a: $(LIBK_OBJS)
 	$(AR) rcs $@ $(LIBK_OBJS)
+
+libm.a: $(MATH_OBJS)
+	$(AR) rcs $@ $(MATH_OBJS)
 
 %.o: %.c
 	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
@@ -163,4 +175,8 @@ install-headers:
 install-libs: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)
 	cp $(BINARIES) $(DESTDIR)$(LIBDIR)
+
+install-libk: libk.a libcore.a $(ARCH_INITOBJS)
+	mkdir -p $(DESTDIR)$(LIBDIR)
+	cp libk.a libcore.a $(DESTDIR)$(LIBDIR)
 	cp $(ARCH_INITOBJS) $(DESTDIR)$(LIBDIR)

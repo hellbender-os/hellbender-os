@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int sprintf(char *str, const char* restrict format, ...)
+int sprintf(char *str, const char* format, ...)
 {
   va_list parameters;
   va_start(parameters, format);

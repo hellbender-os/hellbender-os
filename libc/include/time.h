@@ -72,7 +72,7 @@ Flag indicating time is absolute. For functions taking timer objects, this refer
 */
 
 char      *asctime(const struct tm *);
-char      *asctime_r(const struct tm *restrict, char *restrict);
+char      *asctime_r(const struct tm *, char *);
 clock_t    clock(void);
 int        clock_getcpuclockid(pid_t, clockid_t *);
 int        clock_getres(clockid_t, struct timespec *);
@@ -85,25 +85,25 @@ char      *ctime_r(const time_t *, char *);
 double     difftime(time_t, time_t);
 struct tm *getdate(const char *);
 struct tm *gmtime(const time_t *);
-struct tm *gmtime_r(const time_t *restrict, struct tm *restrict);
+struct tm *gmtime_r(const time_t *, struct tm *);
 struct tm *localtime(const time_t *);
-struct tm *localtime_r(const time_t *restrict, struct tm *restrict);
+struct tm *localtime_r(const time_t *, struct tm *);
 time_t     mktime(struct tm *);
 int        nanosleep(const struct timespec *, struct timespec *);
-size_t     strftime(char *restrict, size_t, const char *restrict,
-           const struct tm *restrict);
-size_t     strftime_l(char *restrict, size_t, const char *restrict,
-               const struct tm *restrict, locale_t);
-char      *strptime(const char *restrict, const char *restrict,
-               struct tm *restrict);
+size_t     strftime(char *, size_t, const char *,
+           const struct tm *);
+size_t     strftime_l(char *, size_t, const char *,
+               const struct tm *, locale_t);
+char      *strptime(const char *, const char *,
+               struct tm *);
 time_t     time(time_t *);
-int        timer_create(clockid_t, struct sigevent *restrict,
-               timer_t *restrict);
+int        timer_create(clockid_t, struct sigevent *,
+               timer_t *);
 int        timer_delete(timer_t);
 int        timer_getoverrun(timer_t);
 int        timer_gettime(timer_t, struct itimerspec *);
-int        timer_settime(timer_t, int, const struct itimerspec *restrict,
-               struct itimerspec *restrict);
+int        timer_settime(timer_t, int, const struct itimerspec *,
+               struct itimerspec *);
 void       tzset(void);
 
 
