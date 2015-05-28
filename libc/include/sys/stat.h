@@ -2,6 +2,7 @@
 #define _SYS_STAT_H
 
 #include <time.h> // nonconforming: for struct timespec
+#include <sys/types.h> // nonconforming: blkcnt_t, blksize_t, dev_t, ino_t, mode_t, nlink_t, uid_t, gid_t, off_t, and time_t
 
 // The Open Group Base Specifications Issue 7
 
@@ -21,18 +22,19 @@ struct stat {
                  //           For other file types, the use of this field is unspecified. 
   struct timespec st_atim; // Last data access timestamp. 
   struct timespec st_mtim; // Last data modification timestamp. 
-  struct timespec st_ctim; // Last file status change timestamp. 
+  struct timespec st_ctim; // Last file status change timestamp.
+
+  // Nonconforming: from issue 6
+  time_t    st_atime; //   Time of last access. 
+  time_t    st_mtime; //   Time of last data modification. 
+  time_t    st_ctime; //   Time of last status change. 
+  
   blksize_t st_blksize; //    A file system-specific preferred I/O block size 
                         //    for this object. In some file system types, this 
                         //    may vary from file to file. 
   blkcnt_t st_blocks; //      Number of blocks allocated for this object. 
 };
-
 // The st_ino and st_dev fields taken together uniquely identify the file within the system.
-
-// blkcnt_t, blksize_t, dev_t, ino_t, mode_t, nlink_t, uid_t, gid_t, off_t, and time_t types as described in <sys/types.h>.
-
-// timespec structure as described in <time.h>. Times shall be given in seconds since the Epoch.
 
 // For compatibility with earlier versions of this standard, the st_atime macro shall be defined with the value st_atim.tv_sec. Similarly, st_ctime and st_mtime shall be defined as macros with the values st_ctim.tv_sec and st_mtim.tv_sec, respectively.
 
@@ -103,7 +105,7 @@ struct stat {
 #define S_ISDIR(m)  ((m & S_IFMT) == S_IFDIR)
 // Test for a directory.
 
-#define S_ISFIFO(m) ((m & S_IFMT) == S_IFFIFO)
+#define S_ISFIFO(m) ((m & S_IFMT) == S_IFIFO)
 // Test for a pipe or FIFO special file.
 
 #define S_ISREG(m)  ((m & S_IFMT) == S_IFREG)

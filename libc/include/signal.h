@@ -2,28 +2,21 @@
 #define _SIGNAL_H_
 
 struct timespec; // forward declaration.
-#include <sys/types.h> // nonconforming: for pid_t, pthread_attr_t
+#include <sys/types.h> // nonconforming: for pid_t, pthread_attr_t, pthread_t, size_t, uid_t.
+#include <time.h> // nonconforming: struct timespec
 
 // The Open Group Base Specifications Issue 7
 
 #include <time.h>
 
-/*
-The <signal.h> header shall define the following macros, which shall expand to constant expressions with distinct values that have a type compatible with the second argument to, and the return value of, the signal() function, and whose values shall compare unequal to the address of any declarable function.
-
-SIG_DFL
-Request for default signal handling.
-SIG_ERR
-Return value from signal() in case of error.
-SIG_HOLD
-[OB XSI] [Option Start] Request that signal be held. [Option End]
-SIG_IGN
-Request that signal be ignored.
-[CX] [Option Start] The <signal.h> header shall define the pthread_t, size_t, and uid_t types as described in <sys/types.h>.
-
-The <signal.h> header shall define the timespec structure as described in <time.h>. [Option End]
-
-*/
+#define SIG_DFL ((void (*)(int))0)
+//Request for default signal handling.
+#define SIG_ERR 2
+//Return value from signal() in case of error.
+#define SIG_HOLD 3
+//[OB XSI] [Option Start] Request that signal be held. [Option End]
+#define SIG_IGN 4
+// Request that signal be ignored.
 
 typedef volatile int sig_atomic_t;
 //Possibly volatile-qualified integer type of an object that can be accessed as an atomic entity, even in the presence of asynchronous interrupts.
@@ -31,9 +24,6 @@ typedef volatile int sig_atomic_t;
 typedef struct {
 } sigset_t;
 // Integer or structure type of an object used to represent sets of signals.
-
-// pid_t As described in <sys/types.h>. 
-// pthread_attr_t type as described in <sys/types.h>.
 
 union sigval {
   int    sival_int; //    Integer signal value. 
@@ -48,16 +38,14 @@ struct sigevent {
   pthread_attr_t *sigev_notify_attributes; //  Notification attributes. 
 };
 
-/*
-The <signal.h> header shall define the following symbolic constants for the values of sigev_notify:
+#define SIGEV_NONE 1
+// No asynchronous notification is delivered when the event of interest occurs.
 
-SIGEV_NONE
-No asynchronous notification is delivered when the event of interest occurs.
-SIGEV_SIGNAL
-A queued signal, with an application-defined value, is generated when the event of interest occurs.
-SIGEV_THREAD
-A notification function is called to perform notification.
-*/
+#define SIGEV_SIGNAL 2
+// A queued signal, with an application-defined value, is generated when the event of interest occurs.
+
+#define SIGEV_THREAD 3
+// A notification function is called to perform notification.
 
 /*
 The <signal.h> header shall declare the SIGRTMIN and SIGRTMAX macros, which shall expand to positive integer expressions with type int, but which need not be constant expressions. These macros specify a range of signal numbers that are reserved for application use and for which the realtime signal behavior specified in this volume of POSIX.1-2008 is supported. The signal numbers in this range do not overlap any of the signals specified in the following table.
@@ -77,182 +65,120 @@ Signal
 Default Action
 
 Description
+*/
+#define SIGABRT 1
+//A
+// Process abort signal.
+
+#define SIGALRM 2
+//T
+// Alarm clock.
+
+#define SIGBUS 3
+//A
+// Access to an undefined portion of a memory object.
+
+#define SIGCHLD 4
+//I
+// Child process terminated, stopped, or continued.
+
+#define SIGCONT 5
+//C
+// Continue executing, if stopped.
+
+#define SIGFPE 6
+//A
+// Erroneous arithmetic operation.
+
+#define SIGHUP 7
+//T
+// Hangup.
+
+#define SIGILL 8
+//A
+// Illegal instruction.
+
+#define SIGINT 9
+//T
+// Terminal interrupt signal.
+
+#define SIGKILL 10
+//T
+// Kill (cannot be caught or ignored).
+
+#define SIGPIPE 11
+//T
+// Write on a pipe with no one to read it.
+
+#define SIGQUIT 12
+//A
+// Terminal quit signal.
+
+#define SIGSEGV 13
+//A
+// Invalid memory reference.
+
+#define SIGSTOP 14
+//S
+// Stop executing (cannot be caught or ignored).
+
+#define SIGTERM 15
+//T
+// Termination signal.
+
+#define SIGTSTP 16
+//S
+// Terminal stop signal.
+
+#define SIGTTIN 17
+//S
+// Background process attempting read.
+
+#define SIGTTOU 18
+//S
+// Background process attempting write.
+
+#define SIGUSR1 20
+//T
+// User-defined signal 1.
+
+#define SIGUSR2 21
+//T
+// User-defined signal 2.
+
+#define SIGPOLL 30
+//T
+// Pollable event. [Option End]
+
+#define SIGPROF 31
+//T
+// Profiling timer expired. [Option End]
+
+#define SIGSYS 32
+//A
+// Bad system call.
+
+#define SIGTRAP 33
+//A
+// Trace/breakpoint trap. [Option End]
+
+#define SIGURG 34
+//I
+// High bandwidth data is available at a socket.
+
+#define SIGVTALRM 35
+//T
+// Virtual timer expired.
 
-SIGABRT
+#define SIGXCPU 36
+//A
+// CPU time limit exceeded.
 
-A
+#define SIGXFSZ 37
+//A
+// File size limit exceeded. [Option End]
 
-Process abort signal.
-
-SIGALRM
-
-T
-
-Alarm clock.
-
-SIGBUS
-
-A
-
-Access to an undefined portion of a memory object.
-
-SIGCHLD
-
-I
-
-Child process terminated, stopped,
-
-[XSI] [Option Start]  
-
- 
-
-or continued. [Option End]
-
-SIGCONT
-
-C
-
-Continue executing, if stopped.
-
-SIGFPE
-
-A
-
-Erroneous arithmetic operation.
-
-SIGHUP
-
-T
-
-Hangup.
-
-SIGILL
-
-A
-
-Illegal instruction.
-
-SIGINT
-
-T
-
-Terminal interrupt signal.
-
-SIGKILL
-
-T
-
-Kill (cannot be caught or ignored).
-
-SIGPIPE
-
-T
-
-Write on a pipe with no one to read it.
-
-SIGQUIT
-
-A
-
-Terminal quit signal.
-
-SIGSEGV
-
-A
-
-Invalid memory reference.
-
-SIGSTOP
-
-S
-
-Stop executing (cannot be caught or ignored).
-
-SIGTERM
-
-T
-
-Termination signal.
-
-SIGTSTP
-
-S
-
-Terminal stop signal.
-
-SIGTTIN
-
-S
-
-Background process attempting read.
-
-SIGTTOU
-
-S
-
-Background process attempting write.
-
-SIGUSR1
-
-T
-
-User-defined signal 1.
-
-SIGUSR2
-
-T
-
-User-defined signal 2.
-
-[OB XSR] [Option Start] SIGPOLL
-
-T
-
-Pollable event. [Option End]
-
-[OB XSI] [Option Start] SIGPROF
-
-T
-
-Profiling timer expired. [Option End]
-
-[XSI] [Option Start] SIGSYS
-
-A
-
-Bad system call.
-
-SIGTRAP
-
-A
-
-Trace/breakpoint trap. [Option End]
-
-SIGURG
-
-I
-
-High bandwidth data is available at a socket.
-
-[XSI] [Option Start] SIGVTALRM
-
-T
-
-Virtual timer expired.
-
-SIGXCPU
-
-A
-
-CPU time limit exceeded.
-
-SIGXFSZ
-
-A
-
-File size limit exceeded. [Option End]
-
-
+/*
 The default actions are as follows:
 
 T
@@ -286,358 +212,197 @@ struct sigaction {
   int      sa_flags; //          Special flags. 
   void   (*sa_sigaction)(int, siginfo_t *, void *); // Pointer to a signal-catching function.
 };
-/*
-[Option End]
-[CX] [Option Start] The storage occupied by sa_handler and sa_sigaction may overlap, and a conforming application shall not use both simultaneously. [Option End]
 
-The <signal.h> header shall define the following macros which shall expand to integer constant expressions that need not be usable in #if preprocessing directives:
+//[CX] [Option Start] The storage occupied by sa_handler and sa_sigaction may overlap, and a conforming application shall not use both simultaneously. [Option End]
 
-SIG_BLOCK
-[CX] [Option Start] The resulting set is the union of the current set and the signal set pointed to by the argument set. [Option End]
-SIG_UNBLOCK
-[CX] [Option Start] The resulting set is the intersection of the current set and the complement of the signal set pointed to by the argument set. [Option End]
-SIG_SETMASK
-[CX] [Option Start] The resulting set is the signal set pointed to by the argument set. [Option End]
-The <signal.h> header shall also define the following symbolic constants:
+#define SIG_BLOCK 1
+// [CX] [Option Start] The resulting set is the union of the current set and the signal set pointed to by the argument set. [Option End]
 
-SA_NOCLDSTOP
-[CX] [Option Start] Do not generate SIGCHLD when children stop [Option End]
-[XSI] [Option Start]  or stopped children continue. [Option End]
-SA_ONSTACK
-[XSI] [Option Start] Causes signal delivery to occur on an alternate stack. [Option End]
-SA_RESETHAND
-[CX] [Option Start] Causes signal dispositions to be set to SIG_DFL on entry to signal handlers. [Option End]
-SA_RESTART
-[CX] [Option Start] Causes certain functions to become restartable. [Option End]
-SA_SIGINFO
-[CX] [Option Start] Causes extra information to be passed to signal handlers at the time of receipt of a signal. [Option End]
-SA_NOCLDWAIT
-[CX] [Option Start] Causes implementations not to create zombie processes on child death. [Option End]
-SA_NODEFER
-[CX] [Option Start] Causes signal not to be automatically blocked on entry to signal handler. [Option End]
-SS_ONSTACK
-[XSI] [Option Start] Process is executing on an alternate signal stack. [Option End]
-SS_DISABLE
-[XSI] [Option Start] Alternate signal stack is disabled. [Option End]
-MINSIGSTKSZ
-[XSI] [Option Start] Minimum stack size for a signal handler. [Option End]
-SIGSTKSZ
-[XSI] [Option Start] Default size in bytes for the alternate signal stack. [Option End]
-[CX] [Option Start] The <signal.h> header shall define the mcontext_t type through typedef. [Option End]
+#define SIG_UNBLOCK 2
+// [CX] [Option Start] The resulting set is the intersection of the current set and the complement of the signal set pointed to by the argument set. [Option End]
 
-[CX] [Option Start] The <signal.h> header shall define the ucontext_t type as a structure that shall include at least the following members:
+#define SIG_SETMASK 3
+// [CX] [Option Start] The resulting set is the signal set pointed to by the argument set. [Option End]
 
-ucontext_t *uc_link     Pointer to the context that is resumed 
-                        when this context returns. 
-sigset_t    uc_sigmask  The set of signals that are blocked when this 
-                        context is active. 
-stack_t     uc_stack    The stack used by this context. 
-mcontext_t  uc_mcontext A machine-specific representation of the saved 
-                        context. 
-*/
+#define SA_NOCLDSTOP 1
+// [CX] [Option Start] Do not generate SIGCHLD when children stop [Option End]
+// [XSI] [Option Start]  or stopped children continue. [Option End]
+
+#define SA_ONSTACK 2
+// [XSI] [Option Start] Causes signal delivery to occur on an alternate stack. [Option End]
+
+#define SA_RESETHAND 3
+// [CX] [Option Start] Causes signal dispositions to be set to SIG_DFL on entry to signal handlers. [Option End]
+
+#define SA_RESTART 4
+// [CX] [Option Start] Causes certain functions to become restartable. [Option End]
+
+#define SA_SIGINFO 5
+// [CX] [Option Start] Causes extra information to be passed to signal handlers at the time of receipt of a signal. [Option End]
+
+#define SA_NOCLDWAIT 6
+// [CX] [Option Start] Causes implementations not to create zombie processes on child death. [Option End]
+
+#define SA_NODEFER 7
+// [CX] [Option Start] Causes signal not to be automatically blocked on entry to signal handler. [Option End]
+
+#define SS_ONSTACK 8
+// [XSI] [Option Start] Process is executing on an alternate signal stack. [Option End]
+
+#define SS_DISABLE 9
+// [XSI] [Option Start] Alternate signal stack is disabled. [Option End]
+
+#define MINSIGSTKSZ 10
+// [XSI] [Option Start] Minimum stack size for a signal handler. [Option End]
+
+#define SIGSTKSZ 11
+// [XSI] [Option Start] Default size in bytes for the alternate signal stack. [Option End]
+
+typedef unsigned mcontext_t;
+
 typedef struct {
   void     *ss_sp; //       Stack base or pointer. 
   size_t    ss_size; //     Stack size. 
   int       ss_flags; //    Flags. 
 } stack_t;
-/*
-[CX] [Option Start] The <signal.h> header shall define the symbolic constants in the Code column of the following table for use as values of si_code that are signal-specific or non-signal-specific reasons why the signal was generated. [Option End]
 
-Signal
+typedef struct _ucontext_t ucontext_t;
+typedef struct _ucontext_t {
+  ucontext_t *uc_link; //     Pointer to the context that is resumed 
+                       //     when this context returns. 
+  sigset_t    uc_sigmask; //  The set of signals that are blocked when this 
+                          //  context is active. 
+  stack_t     uc_stack; //    The stack used by this context. 
+  mcontext_t  uc_mcontext; // A machine-specific representation of the saved 
+                           // context. 
+} ucontext_t;
 
-Code
+#define ILL_ILLOPC 1
+// Illegal opcode.
 
-Reason
+#define ILL_ILLOPN 2
+// Illegal operand.
 
-[CX] [Option Start] SIGILL
+#define ILL_ILLADR 3
+// Illegal addressing mode.
 
-ILL_ILLOPC
+#define ILL_ILLTRP 4
+// Illegal trap.
 
-Illegal opcode.
+#define ILL_PRVOPC 5
+// Privileged opcode.
 
- 
+#define ILL_PRVREG 6
+// Privileged register.
 
-ILL_ILLOPN
+#define ILL_COPROC 7
+// Coprocessor error.
 
-Illegal operand.
+#define ILL_BADSTK 8
+// Internal stack error.
 
- 
+#define FPE_INTDIV 1
+// Integer divide by zero.
 
-ILL_ILLADR
+#define FPE_INTOVF 2
+// Integer overflow.
 
-Illegal addressing mode.
+#define FPE_FLTDIV 3
+// Floating-point divide by zero.
 
- 
+#define FPE_FLTOVF 4
+// Floating-point overflow.
 
-ILL_ILLTRP
+#define FPE_FLTUND 5
+// Floating-point underflow.
 
-Illegal trap.
+#define FPE_FLTRES 6
+// Floating-point inexact result.
 
- 
+#define FPE_FLTINV 7
+// Invalid floating-point operation.
 
-ILL_PRVOPC
+#define FPE_FLTSUB 8
+// Subscript out of range.
 
-Privileged opcode.
+#define SEGV_MAPERR 1
+// Address not mapped to object.
 
- 
+#define SEGV_ACCERR 2
+// Invalid permissions for mapped object.
 
-ILL_PRVREG
+#define BUS_ADRALN 1
+// Invalid address alignment.
 
-Privileged register.
+#define BUS_ADRERR 2
+// Nonexistent physical address.
 
- 
+#define BUS_OBJERR 3
+//Object-specific hardware error. [Option End]
 
-ILL_COPROC
+#define TRAP_BRKPT 1
+// Process breakpoint.
 
-Coprocessor error.
+#define TRAP_TRACE 2
+// Process trace trap. [Option End]
 
- 
+#define CLD_EXITED 1
+// Child has exited.
 
-ILL_BADSTK
+#define CLD_KILLED 2
+// Child has terminated abnormally and did not create a core file.
 
-Internal stack error.
+#define CLD_DUMPED 3
+// Child has terminated abnormally and created a core file.
 
-SIGFPE
+#define CLD_TRAPPED 4
+// Traced child has trapped.
 
-FPE_INTDIV
+#define CLD_STOPPED 5
+// Child has stopped.
 
-Integer divide by zero.
+#define CLD_CONTINUED 6
+// Stopped child has continued. [Option End]
 
- 
+#define POLL_IN 1
+// Data input available.
 
-FPE_INTOVF
+#define POLL_OUT 2
+// Output buffers available.
 
-Integer overflow.
+#define POLL_MSG 3
+// Input message available.
 
- 
+#define POLL_ERR 4
+// I/O error.
 
-FPE_FLTDIV
+#define POLL_PRI 5
+// High priority input available.
 
-Floating-point divide by zero.
+#define POLL_HUP 6
+// Device disconnected. [Option End]
 
- 
+#define SI_USER 1
+// Signal sent by kill().
 
-FPE_FLTOVF
+#define SI_QUEUE 2
+// Signal sent by sigqueue().
 
-Floating-point overflow.
+#define SI_TIMER 3
+// Signal generated by expiration of a timer set by timer_settime().
 
- 
+#define SI_ASYNCIO 4
+// Signal generated by completion of an asynchronous I/O request
 
-FPE_FLTUND
+#define SI_MESGQ 5
+// Signal generated by arrival of a message on an empty message queue [Option End]
 
-Floating-point underflow.
-
- 
-
-FPE_FLTRES
-
-Floating-point inexact result.
-
- 
-
-FPE_FLTINV
-
-Invalid floating-point operation.
-
- 
-
-FPE_FLTSUB
-
-Subscript out of range.
-
-SIGSEGV
-
-SEGV_MAPERR
-
-Address not mapped to object.
-
- 
-
-SEGV_ACCERR
-
-Invalid permissions for mapped object.
-
-SIGBUS
-
-BUS_ADRALN
-
-Invalid address alignment.
-
- 
-
-BUS_ADRERR
-
-Nonexistent physical address.
-
- 
-
-BUS_OBJERR
-
-Object-specific hardware error. [Option End]
-
-[XSI] [Option Start] SIGTRAP
-
-TRAP_BRKPT
-
-Process breakpoint.
-
- 
-
-TRAP_TRACE
-
-Process trace trap. [Option End]
-
-[CX] [Option Start] SIGCHLD
-
-CLD_EXITED
-
-Child has exited.
-
- 
-
-CLD_KILLED
-
-Child has terminated abnormally and did not create a core file.
-
- 
-
-CLD_DUMPED
-
-Child has terminated abnormally and created a core file.
-
- 
-
-CLD_TRAPPED
-
-Traced child has trapped.
-
- 
-
-CLD_STOPPED
-
-Child has stopped.
-
- 
-
-CLD_CONTINUED
-
-Stopped child has continued. [Option End]
-
-[OB XSR] [Option Start] SIGPOLL
-
-POLL_IN
-
-Data input available.
-
- 
-
-POLL_OUT
-
-Output buffers available.
-
- 
-
-POLL_MSG
-
-Input message available.
-
- 
-
-POLL_ERR
-
-I/O error.
-
- 
-
-POLL_PRI
-
-High priority input available.
-
- 
-
-POLL_HUP
-
-Device disconnected. [Option End]
-
-[CX] [Option Start] Any
-
-SI_USER
-
-Signal sent by kill().
-
- 
-
-SI_QUEUE
-
-Signal sent by sigqueue().
-
- 
-
-SI_TIMER
-
-Signal generated by expiration of a timer set by timer_settime().
-
- 
-
-SI_ASYNCIO
-
-Signal generated by completion of an asynchronous I/O request
-
- 
-
-SI_MESGQ
-
-Signal generated by arrival of a message on an empty message queue [Option End]
-
-[CX] [Option Start] Implementations may support additional si_code values not included in this list, may generate values included in this list under circumstances other than those described in this list, and may contain extensions or limitations that prevent some values from being generated. Implementations do not generate a different value from the ones described in this list for circumstances described in this list. [Option End]
-[CX] [Option Start] In addition, the following signal-specific information shall be available:
-
-Signal
-
-Member
-
-Value
-
-SIGILL, SIGFPE
-
-void * si_addr
-
-Address of faulting instruction.
-
-SIGSEGV, SIGBUS
-
-void * si_addr
-
-Address of faulting memory reference.
-
-SIGCHLD
-
-pid_t si_pid
-
-Child process ID.
-
- 
-
-int si_status
-
-Exit value or signal.
-
- 
-
-uid_t si_uid
-
-Real user ID of the process that sent the signal. [Option End]
-
-[OB XSR] [Option Start] SIGPOLL
-
-long si_band
-
-Band event for POLL_IN, POLL_OUT, or POLL_MSG. [Option End]
-
-For some implementations, the value of si_addr may be inaccurate.
-
-The following shall be declared as functions and may also be defined as macros. Function prototypes shall be provided.
-*/
+//SIGILL, SIGFPE => void * si_addr // Address of faulting instruction.
+//SIGSEGV, SIGBUS => void * si_addr // Address of faulting memory reference.
+//SIGCHLD => pid_t si_pid // Child process ID.
+//           int si_status // Exit value or signal.
+//           uid_t si_uid // Real user ID of the process that sent the signal. [Option End]
+//SIGPOLL => long si_band // Band event for POLL_IN, POLL_OUT, or POLL_MSG. [Option End]
 
 int    kill(pid_t, int);
 int    killpg(pid_t, int);
@@ -645,10 +410,10 @@ void   psiginfo(const siginfo_t *, const char *);
 void   psignal(int, const char *);
 int    pthread_kill(pthread_t, int);
 int    pthread_sigmask(int, const sigset_t *,
-           sigset_t *);
+                       sigset_t *);
 int    raise(int);
 int    sigaction(int, const struct sigaction *,
-           struct sigaction *);
+                 struct sigaction *);
 int    sigaddset(sigset_t *, int);
 int    sigaltstack(const stack_t *, stack_t *);
 int    sigdelset(sigset_t *, int);
@@ -667,7 +432,7 @@ int    sigrelse(int);
 void (*sigset(int, void (*)(int)))(int);
 int    sigsuspend(const sigset_t *);
 int    sigtimedwait(const sigset_t *, siginfo_t *,
-           const struct timespec *);
+                    const struct timespec *);
 int    sigwait(const sigset_t *, int *);
 int    sigwaitinfo(const sigset_t *, siginfo_t *);
 

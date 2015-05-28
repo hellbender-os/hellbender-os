@@ -14,9 +14,7 @@
 // locale_t type as described in <locale.h>.
 // pid_t type as described in <sys/types.h>.
 
-/*
-[CX] [Option Start] The tag sigevent shall be declared as naming an incomplete structure type, the contents of which are described in the <signal.h> header. [Option End]
-*/
+struct sigevent;
 
 struct tm {
   int    tm_sec; //   Seconds [0,60]. 

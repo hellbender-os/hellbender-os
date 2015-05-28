@@ -1,56 +1,65 @@
 #ifndef _SYS_WAIT_H
 #define _SYS_WAIT_H
 
+#include <sys/types.h> // nonconforming: id_t and pid_t
+
+// bits forming wait status:
+#define _SYS_WAIT_MASK     0xf00
+#define _SYS_WAIT_EXITED   0x100
+#define _SYS_WAIT_SIGNALED 0x200
+#define _SYS_WAIT_STOPPED  0x400
+#define _SYS_WAIT_CONTD    0x800
+
 // The Open Group Base Specifications Issue 7
 
-/*
-The <sys/wait.h> header shall define the following symbolic constants for use with waitpid():
+#include <signal.h>
 
-WCONTINUED
-[XSI] [Option Start] Report status of continued child process. [Option End]
-WNOHANG
-Do not hang if no status is available; return immediately.
-WUNTRACED
-Report status of stopped child process.
-The <sys/wait.h> header shall define the following macros for analysis of process status values:
+#define WCONTINUED 1
+// [XSI] [Option Start] Report status of continued child process. [Option End]
 
-WEXITSTATUS
-Return exit status.
-WIFCONTINUED
-[XSI] [Option Start] True if child has been continued. [Option End]
-WIFEXITED
-True if child exited normally.
-WIFSIGNALED
-True if child exited due to uncaught signal.
-WIFSTOPPED
-True if child is currently stopped.
-WSTOPSIG
-Return signal number that caused process to stop.
-WTERMSIG
-Return signal number that caused process to terminate.
-The <sys/wait.h> header shall define the following symbolic constants as possible values for the options argument to waitid():
+#define WNOHANG 2
+// Do not hang if no status is available; return immediately.
 
-WEXITED
-Wait for processes that have exited.
-WNOWAIT
-Keep the process whose status is returned in infop in a waitable state.
-WSTOPPED
-Status is returned for any child that has stopped upon receipt of a signal.
-The [XSI] [Option Start]  WCONTINUED [Option End] and WNOHANG constants, described above for waitpid(), can also be used with waitid().
+#define WUNTRACED 4
+// Report status of stopped child process.
 
-The type idtype_t shall be defined as an enumeration type whose possible values shall include at least the following: P_ALL P_PGID P_PID
+#define WIFEXITED(status) ((status & _SYS_WAIT_MASK) == _SYS_WAIT_EXITED)
+// True if child exited normally.
 
-The <sys/wait.h> header shall define the id_t and pid_t types as described in <sys/types.h>.
+#define WEXITSTATUS(status) (status & 0xff)
+// Return exit status.
 
-The <sys/wait.h> header shall define the siginfo_t type as described in <signal.h>.
+#define WIFSIGNALED(status) ((status & _SYS_WAIT_MASK) == _SYS_WAIT_SIGNALED)
+// True if child exited due to uncaught signal.
 
-Inclusion of the <sys/wait.h> header may also make visible all symbols from <signal.h>.
+#define WTERMSIG(status) (status & 0xff)
+// Return signal number that caused process to terminate.
 
-The following shall be declared as functions and may also be defined as macros. Function prototypes shall be provided.
+#define WIFSTOPPED(status) ((status & _SYS_WAIT_MASK) == _SYS_WAIT_STOPPED)
+// True if child is currently stopped.
+
+#define WSTOPSIG(status) (status & 0xff)
+// Return signal number that caused process to stop.
+
+#define WIFCONTINUED(status) ((status & _SYS_WAIT_MASK) == _SYS_WAIT_CONTD)
+// [XSI] [Option Start] True if child has been continued. [Option End]
+
+#define WEXITED 1
+// Wait for processes that have exited.
+
+#define WNOWAIT 2
+// Keep the process whose status is returned in infop in a waitable state.
+
+#define WSTOPPED 3
+// Status is returned for any child that has stopped upon receipt of a signal.
+
+typedef unsigned idtype_t;
+#define P_ALL 1
+#define P_PGID 2
+#define P_PID 3
 
 pid_t  wait(int *);
 int    waitid(idtype_t, id_t, siginfo_t *, int);
 pid_t  waitpid(pid_t, int *, int);
-*/
 
 #endif

@@ -88,6 +88,7 @@ unistd/read.o \
 unistd/write.o \
 unistd/write.o \
 unistd/dup2.o \
+unistd/sleep.o \
 stdio/stdio_init.o \
 stdio/fflush.o \
 stdlib/exit.o \
