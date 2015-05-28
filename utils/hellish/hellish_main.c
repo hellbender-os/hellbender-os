@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <spawn.h>
+#include <sys/wait.h>
 
 #include <hellbender.h>
 #include <coresrv/rtc.h>
@@ -16,6 +18,7 @@ const char builtin_pwd[]  = "pwd";
 const char builtin_cd[]   = "cd";
 const char builtin_ls[]   = "ls";
 const char builtin_cat[]  = "cat";
+const char builtin_run[]  = "run";
 
 #define PATH_SEPARATOR '/'
 char cwd[PATH_MAX] = "";
@@ -46,21 +49,47 @@ char* trim(char* str) {
   return str;
 }
 
-void normalize_cwd() {
+int split_line(char** strs, int max_strs, char* line) {
+  int n = 0;
+  int status = 1; // 1==looking for next string, 2==scannign string
+  for (; *line && n < max_strs; ++line) {
+    switch (status) {
+    case 1:
+      if (!is_whitespace(*line)) {
+        strs[n++] = line;
+        status = 2;
+      }
+      break;
+    case 2:
+      if (is_whitespace(*line)) {
+        *line = 0;
+        status = 1;
+      }
+      break;
+    }
+  }
+  return n;
+}
+
+void normalize_path(char* path) {
   // remove '//', '/./', '/../'
-  char *src = cwd;
-  char *dst = cwd;
+  char *src = path;
+  char *dst = path;
   while (*src) {
     if (strncmp(src, "//", 2) == 0) ++src;
     else if (strncmp(src, "/./", 3) == 0) src += 2;
     else if (strncmp(src, "/../", 4) == 0) {
-      while (dst > cwd && *(dst-1) != PATH_SEPARATOR) --dst;
+      while (dst > path && *(dst-1) != PATH_SEPARATOR) --dst;
       src += 4;
     } else {
       *dst++ = *src++;
     }
   }
   *dst = 0;
+}
+
+void normalize_cwd() {
+  normalize_path(cwd);
 }
 
 void read_command(char *buf, size_t size) {
@@ -107,6 +136,7 @@ void do_help() {
   printf("  cd <dir>    changes working direcory (\"cd\" goes root; \"cd ..\" goes up).\n");
   printf("  ls          lists the contents of current working directory.\n");
   printf("  cat <file>  outputs file to the terminal.\n");
+  printf("  run <cmd>   executes the cmd.\n");
 }
 
 void do_pwd() {
@@ -176,6 +206,33 @@ void do_cat(char* file) {
   }
 }
 
+void do_run(char* run_line) {
+  char* argv[256];
+  int n_str = split_line(argv, 255, run_line);
+  argv[n_str] = 0;
+  if (!n_str) {
+    printf("Please give the command to run.\n");
+    return;
+  }
+  char* cmd = argv[0];
+  // TODO: combine cmd with cwd (unless absolute, like in cd).
+  pid_t pid;
+  char* envp[] = { (char*)0 };
+  if (posix_spawn(&pid, cmd, NULL, NULL, argv, envp) == 0) {
+    int status;
+    while (1) {
+      waitpid(pid, &status, WUNTRACED);
+      if (WIFEXITED(status)) {
+        printf("exited, status=%d\n", WEXITSTATUS(status));
+        break;
+      } else if (WIFSIGNALED(status)) {
+        printf("killed by signal %d\n", WTERMSIG(status));
+        break;
+      }
+    }
+  }
+}
+
 void test_shell() {
   int running = 1;
   printf("Test shell. \"help\" gives all commands.\n");
@@ -193,6 +250,8 @@ void test_shell() {
       do_ls();
     } else if (strncmp(builtin_cat, buffer, strlen(builtin_cat)) == 0) {
       do_cat(buffer + strlen(builtin_cat));
+    } else if (strncmp(builtin_run, buffer, strlen(builtin_run)) == 0) {
+      do_run(buffer + strlen(builtin_run));
     } else if (strlen(buffer)) {
       printf("Bad command '%s'.\n", buffer);
     }

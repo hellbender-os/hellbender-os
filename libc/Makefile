@@ -69,6 +69,7 @@ string/strcpy_s.o \
 string/strrchr.o \
 time/localtime.o \
 time/time.o \
+sys/wait/waitpid.o \
 heap/heap_init.o \
 heap/heap_grow.o \
 heap/heap_free.o \
