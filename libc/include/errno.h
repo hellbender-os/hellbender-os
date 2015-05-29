@@ -3,8 +3,7 @@
 
 // The Open Group Base Specifications Issue 7
 
-// This depends on THREAD_LOCAL_PAGE in "kernel.h", and threadlocal.h struct.
-#define errno (*((int*)0x402000))
+extern int errno;
 
 #define E2BIG 1
 // Argument list too long.
@@ -22,6 +21,7 @@
 // Address family not supported.
 
 #define EAGAIN 6
+// Resource unavailable, try again (may be the same value as [EWOULDBLOCK]).
 
 #define EALREADY 7
 // Connection already in progress.
@@ -119,7 +119,7 @@
 #define ENETDOWN 38
 // Network is down.
 
-#define ENETRESET 30
+#define ENETRESET 39
 // Connection aborted by network.
 
 #define ENETUNREACH 40

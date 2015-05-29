@@ -55,6 +55,7 @@ stdlib/ldiv.o \
 stdlib/div.o \
 stdlib/qsort.o \
 stdlib/bsearch.o \
+stdlib/strtol.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
@@ -67,8 +68,13 @@ string/strcat_s.o \
 string/strcpy.o \
 string/strcpy_s.o \
 string/strrchr.o \
+string/strdup.o \
+string/strerror.o \
+string/strchr.o \
 time/localtime.o \
 time/time.o \
+ctype/tolower.o \
+ctype/isspace.o \
 sys/wait/waitpid.o \
 heap/heap_init.o \
 heap/heap_grow.o \
@@ -76,6 +82,7 @@ heap/heap_free.o \
 heap/heap_malloc.o \
 heap/heap_realloc.o \
 hellbender/libc_init_basic.o \
+hellbender/threadlocal.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
@@ -90,6 +97,7 @@ unistd/write.o \
 unistd/write.o \
 unistd/dup2.o \
 unistd/sleep.o \
+unistd/getopt.o \
 stdio/stdio_init.o \
 stdio/fflush.o \
 stdlib/exit.o \

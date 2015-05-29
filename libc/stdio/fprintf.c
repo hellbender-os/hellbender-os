@@ -3,28 +3,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <hellbender.h>
 
-static size_t print(FILE *file, const char* data, size_t data_length)
-{
 #if defined(__is_hellbender_kernel)
+
+static size_t print(FILE *file, const char* data, size_t data_length) {
   (void)(file);
+  for (size_t i = 0; i < data_length; i++) {
+    putchar((int) ((const unsigned char*) data)[i]);
+  }
+  return data_length;
+}
+
 #else
-  if (file == NULL || file->buffer == NULL) {
-#endif
+
+static size_t print(FILE *file, const char* data, size_t data_length) {
+  if (file == NULL) { // assume libC is not yet set up.
+    syscall_print(data, data_length);
+
+  } else if (file->buffer == NULL && file->fd >= 0) { // unbuffered
+    write(file->fd, data, data_length);
+    
+  } else { // buffered
     for (size_t i = 0; i < data_length; i++) {
-      putchar((int) ((const unsigned char*) data)[i]);
-    }
-#if !defined(__is_hellbender_kernel)
-  } else {
-    for (size_t i = 0; i < data_length; i++) {
-      if (file->buf_bytes == BUFSIZ) fflush(file);
-      file->buffer[(file->buf_bytes)++] = data[i];
+      if (file->buf_bytes == file->buf_size) fflush(file);
+      if (file->buf_bytes < file->buf_size)
+        file->buffer[(file->buf_bytes)++] = data[i];
       if (data[i] == '\n') fflush(file);
     }
   }
-#endif
   return data_length;
 }
+
+#endif
 
 int fprintf(FILE *file, const char* format, ...)
 {

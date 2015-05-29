@@ -10,6 +10,7 @@
 
 typedef struct {
   char *buffer;
+  size_t buf_size;
   unsigned buf_bytes;
   int fd;
   int row; // Read Or Write: 0 == write, 1 == read.
@@ -61,15 +62,11 @@ typedef unsigned fpos_t;
 #define P_tmpdir "tmp"
 //Default directory prefix for tempnam().
 
-extern FILE _stdin;
-extern FILE _stdout;
-extern FILE _stderr;
-
-#define stderr (&_stderr)
+extern FILE* stderr;
 //Standard error output stream.
-#define stdin (&_stdin)
+extern FILE* stdin;
 //Standard input stream.
-#define stdout (&_stdout)
+extern FILE* stdout;
 //Standard output stream.
 
 void     clearerr(FILE *);

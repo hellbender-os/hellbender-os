@@ -50,6 +50,6 @@ syscall_table:
 
 .extern syscall_print
 .int syscall_print
-.int 4
+.int 8
 
 .balign 4096

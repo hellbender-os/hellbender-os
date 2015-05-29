@@ -3,6 +3,7 @@
 
 struct __attribute__((__packed__)) {
   const char* str;
+  size_t n;
 } _syscall_print__size;
 
 struct __attribute__((__packed__)) {

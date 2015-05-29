@@ -4,8 +4,13 @@
 #include <time.h>
 
 struct threadlocal {
-  // errno must be first.
+  // these must be in the same order as in threadlocal.S
   int errno;
+  char *optarg;
+  int opterr, optind, optopt;
+  char *_optchar;
+
+  // these can be in any order:
   pid_t thread_id;
   struct tm tm;
 };

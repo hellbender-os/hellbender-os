@@ -3,9 +3,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-FILE _stdin  = { NULL, 0,  STDIN_FILENO, 0 };
-FILE _stdout = { NULL, 0, STDOUT_FILENO, 0 };
-FILE _stderr = { NULL, 0, STDERR_FILENO, 0 };
+FILE _stdin  =
+  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=1 };
+FILE _stdout =
+  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=0 };
+FILE _stderr =
+  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=0 };
+
+FILE *stdin = NULL;
+FILE *stdout = NULL;
+FILE *stderr = NULL;
 
 void stdio_init() {
   // init FILE* API.
@@ -13,12 +20,18 @@ void stdio_init() {
   _stdout.buffer = (char*)malloc(BUFSIZ);
   _stderr.buffer = (char*)malloc(BUFSIZ);
   // TODO: get the actual tty name from somewhere.
-  int fd0 = open("devfs/tty1", 0);
-  int fd1 = open("devfs/tty1", 0);
-  int fd2 = open("devfs/tty1", 0);
+  _stdin.fd = open("devfs/tty1", 0);
+  _stdout.fd = open("devfs/tty1", 0);
+  _stderr.fd = open("devfs/tty1", 0);
 
-  if (fd0 != _stdin.fd || fd1 != _stdout.fd || fd2 != _stderr.fd) {
+  if (STDIN_FILENO != _stdin.fd
+      || STDOUT_FILENO != _stdout.fd
+      || STDERR_FILENO != _stderr.fd) {
     printf("stdio_init failed!\n");
     abort();
   }
+  
+  stdin = &_stdin;
+  stdout = &_stdout;
+  stderr = &_stderr;
 }

@@ -11,7 +11,7 @@
 
 #define __SYS__
 
-__SYS__ void syscall_print(const char* str);
+__SYS__ void syscall_print(const char* str, size_t n);
 __SYS__ void* syscall_set_program_break(void* set_or_null, intptr_t delta_or_zero);
 __SYS__ void syscall_make_readonly(void* address, unsigned size);
 __SYS__ void syscall_make_executable(void* address, unsigned size);

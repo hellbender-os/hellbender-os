@@ -20,9 +20,10 @@ static struct vfs_initfs_entry* find_parent(const char *path,
                                            struct vfs_initfs_entry *ptr) {
   char *path_end = strrchr2(path, VFS_SEPARATOR_CHAR);
   if (!path_end) return NULL;
-  size_t path_len = path_end - path;
+  size_t path_len = path_end - path + 1;
   for (; ptr; ptr = ptr->flat_next) {
-    if (strncmp(ptr->path, path, path_len) == 0) {
+    if (strncmp(ptr->path, path, path_len) == 0
+        && strlen(ptr->path) == path_len) {
       return ptr;
     }
   }
@@ -114,21 +115,10 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
     return 0;
 
   } else {
-    // find children by name (cpio directories don't have the tailing slash).
-    /*
-    char purename[NAME_MAX+1];
-    strcpy_s(purename, NAME_MAX+1, name);
-    int name_is_dir = 0;
-    if (purename[name_len-1] == VFS_SEPARATOR_CHAR) {
-      name_is_dir = 1;
-      purename[name_len-1] = 0;
-    }
-    */
+    // find children by name
     for (struct vfs_initfs_entry *ptr = internal->this->children; 
          ptr; ptr = ptr->next) {
       if (strcmp(ptr->name, name) == 0) {
-        /*int ptr_is_dir = S_ISDIR(ptr->header.mode) ? 1 : 0;
-          if (name_is_dir == ptr_is_dir) {*/
           internal->this = ptr;
           internal->child = internal->this->children;
           internal->offset = 0;

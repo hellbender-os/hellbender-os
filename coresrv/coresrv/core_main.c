@@ -41,7 +41,7 @@ void core_initialize() {
   vfs_initfs_init(&vfs_initfs,
                   (uint8_t*)CORE_SERVICE->initrd_buffer,
                   (size_t)CORE_SERVICE->initrd_size);
-  if (vfs_mount(NO_IDC, "initfs/", &vfs_initfs.filesys)) {
+  if (vfs_mount(NO_IDC, "initrd/", &vfs_initfs.filesys)) {
     printf("Cannot mount init file system.\n");
     abort();
   }
@@ -62,7 +62,7 @@ int core_main() {
   pid_t init_pid;
   char* argv[] = { "init", "tty=devfs/tty2", (char*)0 };
   char* envp[] = { "PATH=test", "kissa=koira", (char*)0 };
-  posix_spawn(&init_pid, "initfs/init", NULL, NULL, argv, envp);
+  posix_spawn(&init_pid, "initrd/bin/init", NULL, NULL, argv, envp);
 
   exit(1);
 }

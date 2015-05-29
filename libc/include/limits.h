@@ -417,11 +417,11 @@ If the value of an object of type char is treated as a signed integer when used 
 //Minimum value for an object of type int.
 //[CX] [Option Start] Maximum Acceptable Value: -2 147 483 647 [Option End]
 
-#define LLONG_MAX 9223372036854775807
+#define LLONG_MAX 9223372036854775807ll
 //Maximum value for an object of type long long.
 //Minimum Acceptable Value: +9223372036854775807
 
-#define LLONG_MIN -9223372036854775808
+#define LLONG_MIN (-9223372036854775807ll - 1)
 //Minimum value for an object of type long long.
 //Maximum Acceptable Value: -9223372036854775807
 
@@ -429,11 +429,11 @@ If the value of an object of type char is treated as a signed integer when used 
 //Number of bits in an object of type long.
 //Minimum Acceptable Value: 32 [Option End]
 
-#define LONG_MAX 2147483647
+#define LONG_MAX 2147483647l
 //Maximum value for an object of type long.
 //Minimum Acceptable Value: +2 147 483 647
 
-#define LONG_MIN -2147483648
+#define LONG_MIN -2147483648l
 //Minimum value for an object of type long.
 //Maximum Acceptable Value: -2 147 483 647
 
@@ -457,7 +457,7 @@ If the value of an object of type char is treated as a signed integer when used 
 //Minimum value for an object of type short.
 //Maximum Acceptable Value: -32 767
 
-#define SSIZE_MAX 4294967295
+#define SSIZE_MAX 4294967295u
 //Maximum value for an object of type ssize_t.
 //Minimum Acceptable Value: {_POSIX_SSIZE_MAX} [Option End]
 
@@ -465,19 +465,19 @@ If the value of an object of type char is treated as a signed integer when used 
 //Maximum value for an object of type unsigned char.
 //[CX] [Option Start] Value: 255 [Option End]
 
-#define UINT_MAX 4294967295
+#define UINT_MAX 4294967295u
 //Maximum value for an object of type unsigned.
 //[CX] [Option Start] Minimum Acceptable Value: 4 294 967 295 [Option End]
 
-#define ULLONG_MAX 18446744073709551615
+#define ULLONG_MAX 18446744073709551615ull
 //Maximum value for an object of type unsigned long long.
 //Minimum Acceptable Value: 18446744073709551615
 
-#define ULONG_MAX 4294967295
+#define ULONG_MAX 4294967295ul
 //Maximum value for an object of type unsigned long.
 //Minimum Acceptable Value: 4 294 967 295
 
-#define USHRT_MAX 65535
+#define USHRT_MAX 65535u
 //Maximum value for an object of type unsigned short.
 //Minimum Acceptable Value: 65 535
 
