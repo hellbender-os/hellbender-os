@@ -28,6 +28,8 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
+libgen/basename.o \
+libgen/dirname.o \
 stdio/sprintf.o \
 stdio/fprintf.o \
 stdio/printf.o \
@@ -50,6 +52,7 @@ stdlib/div.o \
 stdlib/qsort.o \
 stdlib/bsearch.o \
 stdlib/strtol.o \
+stdlib/atoi.o \
 string/memchr.o \
 string/memcmp.o \
 string/memcpy.o \
@@ -66,6 +69,7 @@ string/strrchr.o \
 string/strdup.o \
 string/strerror.o \
 string/strchr.o \
+string/strcspn.o \
 ctype/tolower.o \
 ctype/isspace.o \
 heap/heap_init.o \
@@ -91,6 +95,7 @@ unistd/dup2.o \
 unistd/sleep.o \
 unistd/getopt.o \
 stdio/stdio_init.o \
+stdio/clearerr.o \
 stdio/getchar.o \
 stdio/fputs.o \
 stdio/fgetc.o \
