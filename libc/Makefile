@@ -50,6 +50,7 @@ stdlib/div.o \
 stdlib/qsort.o \
 stdlib/bsearch.o \
 stdlib/strtol.o \
+string/memchr.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \
