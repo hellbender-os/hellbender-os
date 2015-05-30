@@ -126,7 +126,13 @@ int           wctomb(char *, wchar_t);
 
 // nonconforming:
 
-char* _itoa(int value, char* str, int base);
-char* _utoa(unsigned value, char* str, int base);
+extern const char _ldigits[]; // lowercase digits 0-z.
+extern const char _udigits[]; // uppercase digits 0-Z.
+
+// negative bases use uppercase digits.
+char* _itoa_n(int value, char* str, size_t size, int base); 
+char* _lltoa_n(long long value, char* str, size_t size, int base);
+char* _utoa_n(unsigned value, char* str, size_t size, int base);
+char* _ulltoa_n(unsigned long long value, char* str, size_t size, int base);
 
 #endif

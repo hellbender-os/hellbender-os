@@ -107,7 +107,7 @@ static void update_vga_full(struct dev_tty_buffer *tty) {
     time_t rawtime = time(NULL);
     struct tm* ltime = localtime(&rawtime);
     //TODO: use %02i when printf supports it.
-    sprintf(menu+74, "%i:%i", ltime->tm_hour, ltime->tm_min);
+    sprintf(menu+74, "%02i:%02i", ltime->tm_hour, ltime->tm_min);
     // draw brackets:
     unsigned idx = dev_tty.current_tty;
     menu[3*idx+1] = '[';

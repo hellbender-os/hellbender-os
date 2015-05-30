@@ -2,6 +2,7 @@
 #define _KERNEL_MEM_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include <kernel/multiboot.h>
 #include <kernel/module.h>
 

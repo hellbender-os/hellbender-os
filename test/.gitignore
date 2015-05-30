@@ -1,4 +1,3 @@
 *.o
 *.a
-test_heap
-test_mem
+bin/

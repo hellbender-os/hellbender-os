@@ -50,7 +50,7 @@ void rtc_init() {
                       + (uint64_t)minute * 60
                       + (uint64_t)second);
 
-  printf("RTC date: %u.%u.%u; ", day, month, year);
-  printf("RTC time: %u:%u:%u; ", hour, minute, second);
+  printf("RTC date: %02u.%02u.%u; ", day, month, year);
+  printf("RTC time: %02u:%02u:%02u; ", hour, minute, second);
   printf("Unix time: %u\n", (unsigned)rtc.current_time);
 }

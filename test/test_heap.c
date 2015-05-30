@@ -44,7 +44,7 @@ void check_data(data_t* ptr, data_t *array, int size) {
 
 int main() {
   wilderness_t wild;
-  heap_init_wilderness(&wild, memory, memory + sizeof(memory), 4096);
+  heap_init_wilderness(&wild, memory, 4096);
 
   smallheap_t heap;
   heap_init_small(&heap, &wild);

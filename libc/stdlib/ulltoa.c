@@ -1,6 +1,9 @@
 #include <stdlib.h>
 
-char* _utoa_n(unsigned value, char* str, size_t size, int base) {
+const char _ldigits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+const char _udigits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+char* _ulltoa_n(unsigned long long value, char* str, size_t size, int base) {
   const char* digits = _ldigits;
   if (base < 0) {
     base = -base;

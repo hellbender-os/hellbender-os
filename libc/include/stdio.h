@@ -14,6 +14,7 @@ typedef struct {
   unsigned buf_bytes;
   int fd;
   int row; // Read Or Write: 0 == write, 1 == read.
+  int error;
 } FILE;
 // A structure containing information about a file.
 
@@ -138,5 +139,9 @@ int      vscanf(const char *, va_list);
 int      vsnprintf(char *, size_t, const char *, va_list);
 int      vsprintf(char *, const char *, va_list);
 int      vsscanf(const char *, const char *, va_list);
+
+// nonconforming:
+
+size_t _fprint_n(FILE *file, const char* data, size_t data_length);
 
 #endif

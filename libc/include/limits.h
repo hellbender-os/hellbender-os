@@ -485,10 +485,11 @@ If the value of an object of type char is treated as a signed integer when used 
 //Number of bits in an object of type int.
 //Minimum Acceptable Value: 32 [Option End]
 
+#define NL_ARGMAX 9
+//Maximum value of n in conversion specifications using the "%n$" sequence in calls to the printf() and scanf() families of functions.
+//Minimum Acceptable Value: 9
+
 /*
-{NL_ARGMAX}
-Maximum value of n in conversion specifications using the "%n$" sequence in calls to the printf() and scanf() families of functions.
-Minimum Acceptable Value: 9
 {NL_LANGMAX}
 [XSI] [Option Start]
 Maximum number of bytes in a LANG name.

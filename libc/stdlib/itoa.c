@@ -1,11 +1,11 @@
 #include <stdlib.h>
 
-char* _itoa(int value, char* str, int base) {
-  char *retval = str;
+char* _itoa_n(int value, char* str, size_t size, int base) {
   if (value < 0) {
-    (*str++) = '-';
-    value = -value;
+    str = _utoa_n(-value, str, size, base);
+    (*--str) = '-';
+  } else {
+    str = _utoa_n(value, str, size, base);
   }
-  _utoa(value, str, base);
-  return retval;
+  return str;
 }
