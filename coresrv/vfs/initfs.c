@@ -40,6 +40,7 @@ void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
   initfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_initfs_lseek);
   //initfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_initfs_fsync);
   //initfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_initfs_ftruncate);
+  //devfs->filesys.fstat = MAKE_IDC_PTR(vfs_fstat, vfs_initfs_fstat);
   initfs->filesys.internal = initfs;
   
   initfs->buffer = buffer;

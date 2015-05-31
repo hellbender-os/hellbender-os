@@ -24,6 +24,9 @@ typedef void* semaphore_wait_ptr;
 int __IDC__vfs_close(IDC_PTR, struct vfs_file*);
 typedef void* vfs_close_ptr;
 
+int __IDC__vfs_fstat(IDC_PTR, struct vfs_file*, struct stat*);
+typedef void* vfs_fstat_ptr;
+
 int __IDC__vfs_fsync(IDC_PTR, struct vfs_file*);
 typedef void* vfs_fsync_ptr;
 

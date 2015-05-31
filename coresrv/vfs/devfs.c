@@ -17,6 +17,7 @@ void  vfs_devfs_init(struct vfs_devfs *devfs) {
   devfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_devfs_lseek);
   //devfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_devfs_fsync);
   //devfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_devfs_ftruncate);
+  //devfs->filesys.fstat = MAKE_IDC_PTR(vfs_fstat, vfs_devfs_fstat);
   devfs->filesys.internal = devfs;
 }
 

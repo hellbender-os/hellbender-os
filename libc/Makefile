@@ -105,6 +105,7 @@ stdio/fread.o \
 stdio/fseek.o \
 stdio/ftell.o \
 stdio/fopen.o \
+stdio/freopen.o \
 stdio/fclose.o \
 stdio/setbuf.o \
 stdio/fflush.o \
@@ -117,6 +118,7 @@ stdlib/getenv.o \
 sched/sched_yield.o \
 time/localtime.o \
 time/time.o \
+sys/stat/fstat.o \
 sys/wait/waitpid.o \
 spawn/posix_spawn.o \
 semaphore/sem_init.o \

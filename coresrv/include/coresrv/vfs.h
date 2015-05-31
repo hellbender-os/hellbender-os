@@ -16,6 +16,7 @@ struct vfs_filesys {
   vfs_lseek_ptr lseek;
   vfs_fsync_ptr fsync;
   vfs_ftruncate_ptr ftruncate;
+  vfs_fstat_ptr fstat;
 
   void* internal;
 };
@@ -24,6 +25,8 @@ struct vfs_file {
   struct vfs_filesys filesys;
   void *internal;
 };
+
+struct stat;
 
 extern struct vfs_rootfs vfs_rootfs;
 
@@ -39,5 +42,6 @@ __IDC__ ssize_t vfs_write(IDC_PTR, struct vfs_file*, const void *, size_t);
 __IDC__ off_t vfs_lseek(IDC_PTR, struct vfs_file*, off_t, int);
 __IDC__ int vfs_fsync(IDC_PTR, struct vfs_file*);
 __IDC__ int vfs_ftruncate(IDC_PTR, struct vfs_file*, off_t);
+__IDC__ int vfs_fstat(IDC_PTR, struct vfs_file*, struct stat*);
 
 #endif

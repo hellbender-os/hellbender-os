@@ -47,6 +47,9 @@ coresrv_stub:
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 
+.global __IDC__vfs_fstat
+.set __IDC__vfs_fstat, coresrv_stub
+
 .global __IDC__vfs_fsync
 .set __IDC__vfs_fsync, coresrv_stub
 
