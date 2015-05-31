@@ -174,9 +174,11 @@ domain_t* domain_create_coresrv(kernel_module_t* module,
   //       (unsigned)binary->bottom + text_offset + text_size,
   //       (unsigned)module->text_bottom,
   //       (unsigned)module->bottom + text_size);
+#if CS_BASE > 0
   mmap_map((void*)(CS_BASE + module->text_bottom),
            binary->bottom + text_offset,
            text_size, MMAP_ATTRIB_USER_RO);
+#endif
   mmap_map((void*)module->text_bottom,
            binary->bottom + text_offset,
            text_size, MMAP_ATTRIB_USER_RO);
@@ -201,8 +203,10 @@ void domain_enable(domain_t* domain) {
   if (domain->page_table_ds) {
     mmap_map_table(domain->domain_base, domain->page_table_ds,
                    MMAP_ATTRIB_USER_RW);
+#if CS_BASE > 0
     mmap_map_table(CS_BASE + domain->domain_base, domain->page_table_cs,
                    MMAP_ATTRIB_USER_RO);
+#endif
   }
 }
 
@@ -210,8 +214,10 @@ void domain_disable(domain_t* domain) {
   if (domain->page_table_ds) {
     mmap_map_table(domain->domain_base, domain->page_table_ds,
                    MMAP_ATTRIB_KERNEL_RW);
+#if CS_BASE > 0
     mmap_map_table(CS_BASE + domain->domain_base, domain->page_table_cs,
                    MMAP_ATTRIB_KERNEL_RO);
+#endif
   }
 }
 

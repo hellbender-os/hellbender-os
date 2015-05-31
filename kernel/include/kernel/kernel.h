@@ -54,7 +54,8 @@ extern unsigned long __force_order;
 // virtual address space is split into two segments to simulate 'no-execute'
 // flag in protected mode.
 // we don't need this when we switch to 64-bit long mode.
-#define CS_BASE 0x80000000 
+//#define CS_BASE 0x80000000
+#define CS_BASE 0x0
 
 // recursive IDC calls are limited by the "domain stack".
 #define IDC_CALL_MAX 16

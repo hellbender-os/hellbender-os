@@ -15,7 +15,8 @@ LIBDIR?=$(EXEC_PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -Werror
 CPPFLAGS:=$(CPPFLAGS) -Iinclude
-LDFLAGS:=$(LDFLAGS) -nostartfiles -Wl,--strip-debug -Wl,-s
+LDFLAGS:=$(LDFLAGS) -nostartfiles
+#-Wl,--strip-debug -Wl,-s
 LIBS:=$(LIBS) -static -nostdlib -lcore -lgcc
 LIB_DEPS:=$(DESTDIR)/$(LIBDIR)/libcore.a
 ARCHDIR:=arch/$(HOSTARCH)

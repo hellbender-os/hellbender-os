@@ -5,7 +5,7 @@ int main(void) {
   printf("Init launching shells on terminals TTY2, TTY3\n");
   {
     pid_t pid;
-    char* argv[] = { "hellish", "devfs/tty2", (char*)0 };
+    char* argv[] = { "hellish", "devfs/tty1", (char*)0 };
     char* envp[] = { (char*)0 };
     posix_spawn(&pid, "initrd/bin/hellish", NULL, NULL, argv, envp);
   }

@@ -10,7 +10,7 @@ cp sysroot/boot/hellbender.kernel isodir/boot/hellbender.kernel
 cp sysroot/boot/core.srv isodir/boot/core.srv
 cp utils/bin/init initrd/bin/init
 cp utils/bin/hellish initrd/bin/hellish
-cp /home/hellbender/_install/bin/busybox initrd/bin/busybox
+cp /home/hellbender/build-busybox/_install/bin/busybox initrd/bin/busybox
 
 (cd initrd && { find . -type d -printf "%p/\n"; find . \! -type d ; } | sort | cpio -v -o > ../isodir/boot/init.rd )
 #objcopy --strip-debug isodir/boot/hellbender.kernel

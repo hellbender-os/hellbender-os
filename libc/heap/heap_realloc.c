@@ -11,8 +11,14 @@
 #include "heap_impl.h"
 
 void* heap_realloc_tiny(tinyheap_t* heap, void* ptr, size_t size) {
-  (void)(heap); (void)(ptr); (void)(size);
-  return NULL;
+  (void)(heap);
+  if (size <= TINYHEAP_ALLOC_LIMIT) {
+    return ptr;
+  } else {
+    void *newptr = malloc(size);
+    memcpy(newptr, ptr, TINYHEAP_ALLOC_LIMIT);
+    return newptr;
+  }
 }
 
 void* heap_realloc_small(smallheap_t* heap, void* ptr, size_t size) {

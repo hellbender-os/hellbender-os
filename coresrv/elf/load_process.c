@@ -22,7 +22,7 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
 
   char path[PATH_MAX];
   syscall_current_exec_path(path);
-  printf("elf_load_process: %s\n", path);
+  //printf("elf_load_process: %s\n", path);
 
   int fd = open(path, O_RDONLY);
   if (fd < 0) {
@@ -53,7 +53,7 @@ __IDCIMPL__ void* elf_load_process(IDC_PTR) {
     printf("Wrong kind of an elf: %u.\n", (unsigned)elf_header.e_machine);
     abort();
   }
-  printf("Elf entry point = %x\n", (unsigned)elf_header.e_entry);
+  //printf("Elf entry point = %x\n", (unsigned)elf_header.e_entry);
 
   void *min_addr = syscall_set_program_break(NULL, 0);
   void *max_addr = min_addr;

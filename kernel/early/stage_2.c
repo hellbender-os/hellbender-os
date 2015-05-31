@@ -31,9 +31,11 @@ void early_stage_2(early_data_t *data) {
                         - data->modules[MODULE_KERNEL].bottom);
   size_t text_size = (data->modules[MODULE_KERNEL].text_top
                       - data->modules[MODULE_KERNEL].text_bottom);
+#if CS_BASE > 0
   mmap_stage_2_map((void*)(CS_BASE + data->modules[MODULE_KERNEL].text_bottom),
                    data->modules[MODULE_KERNEL].text_bottom,
                    text_size, MMAP_ATTRIB_KERNEL_RO);
+#endif
   // map the whole kernel into DS section for now, make code read only.
   mmap_stage_2_map((void*)data->modules[MODULE_KERNEL].bottom,
                    data->modules[MODULE_KERNEL].bottom,

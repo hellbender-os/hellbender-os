@@ -33,8 +33,8 @@ unsigned long long strtoX(const char *str, char **endptr, int base,
 
   // decode value:
   unsigned long long val = 0;
-  while (*str++) {
-    char c = tolower(*str);
+  while (*str) {
+    char c = tolower(*str++);
     int d = INT_MAX;
     if (c >= '0' && c <= '9') d = c - '0';
     else if (c >= 'a' && c <= 'z') d = c - 'a' + 10;

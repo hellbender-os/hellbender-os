@@ -76,8 +76,10 @@ void mmap_stage_2_init() {
 
   // map the first two page tables for DS and CS segments.
   page_dir[0] = ((uint32_t)(mmap_page_table_ds)) | MMAP_ATTRIB_KERNEL_RW;
+#if CS_BASE > 0
   page_dir[CS_BASE >> 22] =
     ((uint32_t)(mmap_page_table_cs)) | MMAP_ATTRIB_KERNEL_RW;
+#endif
   
   // recursive page directory is mapped to the last 4MB.
   // note that access requires SEL_ALL_DATA selector.
@@ -150,10 +152,12 @@ void mmap_stage_2_cleanup() {
   mmap_unmap_page(&mmap_page_directory);
   mmap_unmap_page(&mmap_page_table_ds);
   mmap_unmap_page(&mmap_page_table_cs);
+#if CS_BASE > 0
   mmap_unmap_page(CS_BASE + &mmap_page_directory);
   mmap_unmap_page(CS_BASE + &mmap_page_table_ds);
   mmap_unmap_page(CS_BASE + &mmap_page_table_cs);
-
+#endif
+  
   // we just want the virtual memory of tmp_page.
   mem_free_page(mmap_unmap_page(mmap_tmp1_page));
   mem_free_page(mmap_unmap_page(mmap_tmp2_page));
