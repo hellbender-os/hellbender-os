@@ -70,6 +70,8 @@ string/strdup.o \
 string/strerror.o \
 string/strchr.o \
 string/strcspn.o \
+string/strstr.o \
+string/strpbrk.o \
 ctype/tolower.o \
 ctype/isspace.o \
 heap/heap_init.o \
