@@ -4,52 +4,52 @@
 .balign 4096
 syscall_table:
 
-.extern syscall_notify
-.int syscall_notify
-.int 4
-
-.extern syscall_wait_neq
-.int syscall_wait_neq
-.int 8
-
-.extern syscall_wait_eq
-.int syscall_wait_eq
-.int 8
-
-.extern syscall_yield
-.int syscall_yield
-.int 0
-
-.extern syscall_get_environment
-.int syscall_get_environment
-.int 12
-
-.extern syscall_current_exec_path
-.int syscall_current_exec_path
-.int 4
-
-.extern syscall_spawn
-.int syscall_spawn
-.int 12
-
-.extern syscall_exit
-.int syscall_exit
-.int 4
-
-.extern syscall_make_executable
-.int syscall_make_executable
-.int 8
-
-.extern syscall_make_readonly
-.int syscall_make_readonly
+.extern syscall_print
+.int syscall_print
 .int 8
 
 .extern syscall_set_program_break
 .int syscall_set_program_break
 .int 8
 
-.extern syscall_print
-.int syscall_print
+.extern syscall_make_readonly
+.int syscall_make_readonly
 .int 8
+
+.extern syscall_make_executable
+.int syscall_make_executable
+.int 8
+
+.extern syscall_exit
+.int syscall_exit
+.int 4
+
+.extern syscall_spawn
+.int syscall_spawn
+.int 12
+
+.extern syscall_current_exec_path
+.int syscall_current_exec_path
+.int 4
+
+.extern syscall_get_environment
+.int syscall_get_environment
+.int 12
+
+.extern syscall_yield
+.int syscall_yield
+.int 0
+
+.extern syscall_wait_eq
+.int syscall_wait_eq
+.int 8
+
+.extern syscall_wait_neq
+.int syscall_wait_neq
+.int 8
+
+.extern syscall_notify
+.int syscall_notify
+.int 4
 
 .balign 4096

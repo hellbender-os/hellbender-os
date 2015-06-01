@@ -9,6 +9,7 @@
 #include <kernel/mem.h>
 #include <kernel/mmap.h>
 #include <kernel/vmem.h>
+#include <kernel/elf32.h>
 
 domain_t* domain_from_address(void* virtual) {
   uintptr_t addr = (uintptr_t)virtual;
@@ -94,7 +95,7 @@ domain_t* domain_create_application() {
 
   // copy the bootstrap code into the application domain.
   void* tmp = mmap_temp_map(domain->first_page, MMAP_ATTRIB_KERNEL_RW);
-  void* bootstrap_code = (void*)CORE_SERVICE->process_bootstrap;
+  void* bootstrap_code = (void*)kernel.core_service->process_bootstrap;
   memcpy(tmp + APPLICATION_BOOTSTRAP_START,
          bootstrap_code, APPLICATION_BOOTSTRAP_SIZE);
   mmap_temp_unmap(tmp);
@@ -127,11 +128,6 @@ domain_t* domain_create_kernel(kernel_module_t* module) {
 
 domain_t* domain_create_coresrv(kernel_module_t* module,
                                 module_binary_t* binary) {
-  if (!module_check_header(module)) {
-    printf("invalid core server module!\n");
-    abort();
-  }
-
   void* base = (void*)CORE_OFFSET;
   if ((uintptr_t)base != module->bottom) {
     printf("core server module not loaded at expected address.\n");
@@ -142,59 +138,78 @@ domain_t* domain_create_coresrv(kernel_module_t* module,
   // map module to its page table (we have to activate page table for this).
   domain_enable(domain);
 
-  // all data is read/write in DS, all core is read-only in CS & DS.
-  unsigned module_size = module->top - module->bottom;
-  unsigned binary_size = binary->top - binary->bottom;
-  if (module_size % PAGE_SIZE)
-    module_size += PAGE_SIZE - module_size % PAGE_SIZE;
-  if (binary_size % PAGE_SIZE)
-    binary_size += PAGE_SIZE - binary_size % PAGE_SIZE;
-  //printf("BINARY R/W: %x-%x into %x-%x\n",
-  //       (unsigned)binary->bottom,
-  //       (unsigned)binary->bottom + binary_size,
-  //       (unsigned)module->bottom,
-  //       (unsigned)module->bottom + binary_size);
-  mmap_map((void*)module->bottom, binary->bottom,
-           module_size, MMAP_ATTRIB_USER_RW);
-  unsigned alloc_size = module_size - binary_size;
-  if (alloc_size) {
-    //printf("MEMORY R/W: into %x-%x\n",
-    //       (unsigned)module->bottom + binary_size,
-    //       (unsigned)module->bottom + binary_size + alloc_size);
-    mem_alloc_mapped((void*)(module->bottom + binary_size), alloc_size,
-                     MMAP_ATTRIB_USER_RW);
-  }
-  unsigned text_offset =
-    module->text_bottom - module->bottom;
-  unsigned text_size =
-    module->text_top - module->text_bottom;
-  if (text_size % PAGE_SIZE) text_size += PAGE_SIZE - text_size % PAGE_SIZE;
-  //printf("MODULE R/-: %x-%x into %x-%x\n",
-  //       (unsigned)binary->bottom + text_offset,
-  //       (unsigned)binary->bottom + text_offset + text_size,
-  //       (unsigned)module->text_bottom,
-  //       (unsigned)module->bottom + text_size);
-#if CS_BASE > 0
-  mmap_map((void*)(CS_BASE + module->text_bottom),
-           binary->bottom + text_offset,
-           text_size, MMAP_ATTRIB_USER_RO);
-#endif
-  mmap_map((void*)module->text_bottom,
-           binary->bottom + text_offset,
-           text_size, MMAP_ATTRIB_USER_RO);
+  // move the loaded binary into its proper place at CORE_OFFSET.
+  void* text_bottom = (void*)UINTPTR_MAX;
+  void* text_top = 0;
+  void* top = 0;
+  Elf32_Ehdr *elf_header =
+    (Elf32_Ehdr*)mmap_temp_map(binary->bottom, MMAP_ATTRIB_KERNEL_RO);
+  for (unsigned i = 0; i < elf_header->e_phnum; ++i) {
+    Elf32_Phdr *prog_header = (Elf32_Phdr*)
+      ((uintptr_t)elf_header + elf_header->e_phoff
+       + i * elf_header->e_phentsize);
+    if (prog_header->p_type != PT_LOAD) continue;
 
-  // write the domain address into the first page.
-  struct domain_first_page *first_page = (struct domain_first_page*)base;
+    // virtual address range where pages will be moved into:
+    void *vaddr = (void*)prog_header->p_vaddr;
+    int vsize = (int)prog_header->p_memsz;
+    void* vtop = vaddr + vsize;
+    if (vtop > top) top = vtop;
+    if (prog_header->p_flags & PF_X) {
+      if (vaddr < text_bottom) text_bottom = vaddr;
+      if (vtop > text_top) text_top = vtop;
+    }
+
+    // physical address range to move:
+    uintptr_t paddr = binary->bottom + prog_header->p_offset;
+    int psize = (int)prog_header->p_filesz;
+    unsigned attrib = MMAP_ATTRIB_USER_RO;
+    if (prog_header->p_flags & PF_W) attrib = MMAP_ATTRIB_USER_RW;
+    
+    // first move all pages that were in the file.
+    while (psize > 0) {
+      mmap_map_page(vaddr, paddr, attrib);
+#if CS_BASE > 0
+      if (prog_header->p_flags & PF_X) {
+        mmap_map_page(CS_BASE + vaddr, paddr, MMAP_ATTRIB_USER_RO);
+      }
+#endif
+      psize -= PAGE_SIZE;
+      vsize -= PAGE_SIZE;
+      paddr += PAGE_SIZE;
+      vaddr += PAGE_SIZE;
+    }
+    // then allocate pages that were not in the file.
+    while (vsize > 0) {
+      uintptr_t page = mem_alloc_page();
+      mmap_map_page(vaddr, page, MMAP_ATTRIB_USER_RW);
+      memset(vaddr, 0, PAGE_SIZE);
+      vsize -= PAGE_SIZE;
+      vaddr += PAGE_SIZE;
+    }
+  }
+  
+  // quick check to see that core service struture is in place:
+  core_service_t *core_service = (core_service_t*)elf_header->e_entry;
+  if (core_service->this_size != sizeof(core_service_t)) {
+    printf("Illegal core service header.\n");
+    abort();
+  }
+  kernel.core_service = core_service;
+  mmap_temp_unmap(elf_header);
+
+  // write the domain address into the first_page (using the first IDC slot).
+  struct domain_first_page *first_page = (struct domain_first_page*)CORE_OFFSET;
   first_page->domain = domain;
   
   // no need for the page table until some thread accesses it.
   domain_disable(domain);
   
-  domain->text_bottom = (void*)module->text_bottom;
-  domain->text_top = (void*)module->text_top;
-  domain->heap_bottom = ceil_page((void*)module->top);
+  domain->text_bottom = text_bottom;
+  domain->text_top = text_top;
+  domain->heap_bottom = ceil_page(top);
   domain->program_break = domain->heap_bottom;
-  domain->start = (void*)module->start;
+  domain->start = (void*)core_service->module_start;
 
   return domain;
 }

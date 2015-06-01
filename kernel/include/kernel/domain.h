@@ -30,6 +30,8 @@ typedef struct domain {
 struct domain_first_page {
   domain_t *domain;
   // add any "public" domain info.
+  // TODO: service IDC is also the first page, maybe this should be moved
+  // to offset +1000, and all modules to +2000
 };
 
 #define APPLICATION_DOMAIN (((struct domain_first_page*)APPLICATION_OFFSET)->domain)

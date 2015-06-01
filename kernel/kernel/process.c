@@ -24,7 +24,7 @@ process_t *process_create_coresrv(kernel_module_t *module,
                                   module_binary_t* binary) {
   process_t *process = (process_t*)malloc(sizeof(process_t));
   process->domain = domain_create_coresrv(module, binary);
-  process->thread = thread_create(process->domain, (void*)module->start);
+  process->thread = thread_create(process->domain, process->domain->start);
   return process;
 }
 

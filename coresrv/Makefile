@@ -13,7 +13,8 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -Wall -Wextra -Werror
+CFLAGS:=$(CFLAGS) -Wall -Wextra -Werror
+# -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 CPPFLAGS:=$(CPPFLAGS) -Iinclude
 LDFLAGS:=$(LDFLAGS) -nostartfiles
 #-Wl,--strip-debug -Wl,-s
@@ -28,15 +29,12 @@ CPFLAGS:=$(CPPFLAGS) $(ARCH_CPPFLAGS)
 LDFLAGS:=$(LDFLAGS) $(ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(ARCH_LIBS)
 
-HEADER_OBJ:=$(ARCHDIR)/module_header.o
-
 CORE_IDC:=coresrv/coresrv_idc.o
 CORE_IDCH:=include/coresrv/coresrv_idc.h
 CORE_STUB:=coresrv/coresrv_stub.o
 CORE_SYMS:=coresrv/coresrv_syms.o
 
 CORE_OBJS:=\
-$(HEADER_OBJ) \
 $(ARCH_OBJS) \
 $(ARCH_COREOBJS) \
 coresrv/core_main.o \
@@ -78,7 +76,6 @@ $(CORE_OBJS) \
 $(CORE_IDC) \
 $(CORE_STUB) \
 $(CORE_SYMS) \
-$(HEADER_OB) \
 
 OBJ_LINK_LIST:=\
 $(CRTI_OBJ) \

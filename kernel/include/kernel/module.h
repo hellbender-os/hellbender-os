@@ -9,15 +9,15 @@ typedef struct module_binary {
 } module_binary_t;
 
 typedef struct kernel_module {
-  uint32_t magic; // 0x1337c0de;
   uint32_t bottom;
   uint32_t top;
-  uint32_t text_bottom;
+  uint32_t ro_bottom;   // read-only area; inside bottom..top
+  uint32_t ro_top;
+  uint32_t text_bottom; // executable area; inside ro_bottom..ro_top.
   uint32_t text_top;
-  uint32_t start;
-  uint32_t module_info;
-  uint32_t checksum; // cast structure as uint16_t array, excluding the checksum field. checksum == the sum of the array.
-} __attribute__((packed)) kernel_module_t;
+  uint32_t start;       // entry point; inside text_bottom..text_top.
+  void* module_info;    // pointer to core_service structure (or zero).
+} kernel_module_t;
 
 #define CORE_INIT_STAGE_BEGIN 0
 #define CORE_INIT_STAGE_READY_FOR_INTERRUPTS 1
@@ -27,6 +27,7 @@ typedef struct kernel_module {
 // core provides some basic services to get things running.
 typedef struct core_service {
   uint32_t this_size;
+  uint32_t module_start;
   uint32_t init_stage;
   uint32_t timer_isr;
   uint32_t ps2_chan1_isr;
@@ -37,9 +38,6 @@ typedef struct core_service {
   uint32_t process_bootstrap;
 } __attribute__((packed)) core_service_t;
 
-#define CORE_MODULE ((kernel_module_t*)(CORE_OFFSET + IDC_TABLE_SIZE))
-#define CORE_SERVICE ((core_service_t*)CORE_MODULE->module_info)
-
-int module_check_header(kernel_module_t *module);
+int module_parse_elf(module_binary_t *binary, kernel_module_t *module);
 
 #endif

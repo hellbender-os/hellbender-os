@@ -128,33 +128,16 @@ void early_stage_1(uint32_t magic, multiboot_info_t *info) {
     binary.top = (uintptr_t)modules[i].mod_end;
 
     if (strcmp((char*)modules[i].string, "--core") == 0) {
-      // core has IDC table in the beginning.
-      kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom+4096);
-      if (mod_ptr->magic != 0x1337c0de) {
-        printf("No magic in core!\n");
-        abort();
-      }
+      // Service module in an ELF, _start pointing to a special core-structure.
       core_found = 1;
+      kernel_module_t module = {0};
+      module_parse_elf(&binary, &module);
       data.binaries[MODULE_CORE] = binary;
-      data.modules[MODULE_CORE] = *mod_ptr;
+      data.modules[MODULE_CORE] = module;
       printf("Coresrv found at %x - %x; ",
              (unsigned)binary.bottom, (unsigned)binary.top);
       printf("mapped into %x - %x\n",
-             (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
-    }
-    else if (strcmp((char*)modules[i].string, "--test") == 0) {
-      // module header at zero.
-      kernel_module_t *mod_ptr = (kernel_module_t*)(binary.bottom);
-      if (mod_ptr->magic != 0x1337c0de) {
-        printf("No magic in core!\n");
-        abort();
-      }
-      data.binaries[MODULE_TEST] = binary;
-      data.modules[MODULE_TEST] = *mod_ptr;
-      printf("Testapp found at %x - %x; ",
-              (unsigned)binary.bottom, (unsigned)binary.top);
-      printf("mapped into %x - %x\n",
-             (unsigned)mod_ptr->bottom, (unsigned)mod_ptr->top);
+             (unsigned)module.bottom, (unsigned)module.top);
     }
     else if (strcmp((char*)modules[i].string, "--initrd") == 0) {
       initrd_found = 1;

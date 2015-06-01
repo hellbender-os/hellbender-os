@@ -81,10 +81,10 @@ extern unsigned long __force_order;
 typedef struct kernel {
   // modules loaded by GRUB:
   unsigned nof_processes;
-  unsigned core_module;//TODO: remove once domain_push works.
   process_t* processes[MAX_MODULES]; // domain and thread.
 
   void* early_data; // holds multiboot information during initialization.
+  core_service_t *core_service;
   int up_and_running; // 0 until initialization done.
 
   thread_t* current_thread;

@@ -22,6 +22,9 @@ extern void dev_init();
 struct vfs_initfs vfs_initfs;
 volatile int init_stage = 0;
 
+extern uintptr_t _hellbender_module_info;
+#define CORE_SERVICE ((core_service_t*)&_hellbender_module_info)
+
 void core_initialize() {
   //printf("Core pre-init begins!\n");
 
@@ -38,9 +41,10 @@ void core_initialize() {
   dev_tty_init();
 
   printf("Mounting initrd.\n");
+  core_service_t *core_service = CORE_SERVICE;
   vfs_initfs_init(&vfs_initfs,
-                  (uint8_t*)CORE_SERVICE->initrd_buffer,
-                  (size_t)CORE_SERVICE->initrd_size);
+                  (uint8_t*)core_service->initrd_buffer,
+                  (size_t)core_service->initrd_size);
   if (vfs_mount(NO_IDC, "initrd/", &vfs_initfs.filesys)) {
     printf("Cannot mount init file system.\n");
     abort();

@@ -1,15 +1,18 @@
 	.file	"syscall_size.c"
 	.text
 .Ltext0:
-	.cfi_sections	.debug_frame
-	.section	.text.unlikely,"ax",@progbits
-.LCOLDB0:
-	.section	.text.startup,"ax",@progbits
-.LHOTB0:
-	.align 16
-	.section	.text.unlikely
-.Ltext_cold0:
-	.section	.text.startup
+	.comm	_syscall_print__size,8,1
+	.comm	_syscall_set_program_break__size,8,1
+	.comm	_syscall_make_readonly__size,8,1
+	.comm	_syscall_make_executable__size,8,1
+	.comm	_syscall_exit__size,4,1
+	.comm	_syscall_spawn__size,12,1
+	.comm	_syscall_current_exec_path__size,4,1
+	.comm	_syscall_get_environment__size,12,1
+	.comm	_syscall_yield__size,0,1
+	.comm	_syscall_wait_eq__size,8,1
+	.comm	_syscall_wait_neq__size,8,1
+	.comm	_syscall_notify__size,4,1
 	.globl	main
 	.type	main, @function
 main:
@@ -17,30 +20,20 @@ main:
 	.file 1 "syscall/syscall_size.c"
 	.loc 1 61 0
 	.cfi_startproc
-	rep ret
+	pushl	%ebp
+	.cfi_def_cfa_offset 8
+	.cfi_offset 5, -8
+	movl	%esp, %ebp
+	.cfi_def_cfa_register 5
+	.loc 1 61 0
+	popl	%ebp
+	.cfi_restore 5
+	.cfi_def_cfa 4, 4
+	ret
 	.cfi_endproc
 .LFE2:
 	.size	main, .-main
-	.section	.text.unlikely
-.LCOLDE0:
-	.section	.text.startup
-.LHOTE0:
-	.comm	_syscall_notify__size,4,1
-	.comm	_syscall_wait_neq__size,8,1
-	.comm	_syscall_wait_eq__size,8,1
-	.comm	_syscall_yield__size,0,1
-	.comm	_syscall_get_environment__size,12,1
-	.comm	_syscall_current_exec_path__size,4,1
-	.comm	_syscall_spawn__size,12,1
-	.comm	_syscall_exit__size,4,1
-	.comm	_syscall_make_executable__size,8,1
-	.comm	_syscall_make_readonly__size,8,1
-	.comm	_syscall_set_program_break__size,8,1
-	.comm	_syscall_print__size,8,1
-	.text
 .Letext0:
-	.section	.text.unlikely
-.Letext_cold0:
 	.file 2 "/home/hellbender/opt/cross/lib/gcc/i686-hellbender/4.9.2/include/stddef.h"
 	.file 3 "/media/host/hellbender-os/sysroot/usr/include/stdint.h"
 	.section	.debug_info,"",@progbits
@@ -54,8 +47,8 @@ main:
 	.byte	0x1
 	.long	.LASF39
 	.long	.LASF40
-	.long	.Ldebug_ranges0+0
-	.long	0
+	.long	.Ltext0
+	.long	.Letext0-.Ltext0
 	.long	.Ldebug_line0
 	.uleb128 0x2
 	.byte	0x4
@@ -111,12 +104,12 @@ main:
 	.byte	0x3
 	.byte	0x53
 	.long	0x25
+	.uleb128 0x5
+	.byte	0x4
 	.uleb128 0x2
 	.byte	0x4
 	.byte	0x7
 	.long	.LASF12
-	.uleb128 0x5
-	.byte	0x4
 	.uleb128 0x6
 	.byte	0x8
 	.byte	0x1
@@ -153,7 +146,7 @@ main:
 	.long	.LASF14
 	.byte	0x1
 	.byte	0xa
-	.long	0x8f
+	.long	0x88
 	.byte	0
 	.uleb128 0xa
 	.long	.LASF15
@@ -171,7 +164,7 @@ main:
 	.long	.LASF16
 	.byte	0x1
 	.byte	0xf
-	.long	0x8f
+	.long	0x88
 	.byte	0
 	.uleb128 0xa
 	.long	.LASF17
@@ -189,7 +182,7 @@ main:
 	.long	.LASF16
 	.byte	0x1
 	.byte	0x14
-	.long	0x8f
+	.long	0x88
 	.byte	0
 	.uleb128 0xa
 	.long	.LASF17
@@ -459,10 +452,10 @@ main:
 	.uleb128 0xe
 	.uleb128 0x1b
 	.uleb128 0xe
-	.uleb128 0x55
-	.uleb128 0x17
 	.uleb128 0x11
 	.uleb128 0x1
+	.uleb128 0x12
+	.uleb128 0x6
 	.uleb128 0x10
 	.uleb128 0x17
 	.byte	0
@@ -633,14 +626,8 @@ main:
 	.byte	0
 	.value	0
 	.value	0
-	.long	.LFB2
-	.long	.LFE2-.LFB2
-	.long	0
-	.long	0
-	.section	.debug_ranges,"",@progbits
-.Ldebug_ranges0:
-	.long	.LFB2
-	.long	.LFE2
+	.long	.Ltext0
+	.long	.Letext0-.Ltext0
 	.long	0
 	.long	0
 	.section	.debug_line,"",@progbits
@@ -654,8 +641,8 @@ main:
 	.string	"strings"
 .LASF21:
 	.string	"envp"
-.LASF38:
-	.string	"GNU C 4.9.2 -mtune=generic -march=pentiumpro -g -O2 -std=gnu11 -ffreestanding -fbuiltin -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables"
+.LASF31:
+	.string	"_syscall_spawn__size"
 .LASF5:
 	.string	"short int"
 .LASF10:
@@ -668,8 +655,6 @@ main:
 	.string	"_syscall_yield__size"
 .LASF41:
 	.string	"main"
-.LASF31:
-	.string	"_syscall_spawn__size"
 .LASF37:
 	.string	"_syscall_notify__size"
 .LASF25:
@@ -730,4 +715,6 @@ main:
 	.string	"_syscall_wait_eq__size"
 .LASF14:
 	.string	"set_or_null"
+.LASF38:
+	.string	"GNU C 4.9.2 -mtune=generic -march=pentiumpro -g -O0 -std=gnu11 -ffreestanding -fbuiltin"
 	.ident	"GCC: (GNU) 4.9.2"
