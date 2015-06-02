@@ -159,7 +159,7 @@ void do_cd(char *dir) {
     }
   }
   normalize_cwd();
-  int handle = open(cwd, O_RDONLY);
+  int handle = openat(-1, cwd, O_RDONLY); // we use absolute names for now.
   if (handle >= 0) {
     close(handle);
   } else {
@@ -169,7 +169,7 @@ void do_cd(char *dir) {
 }
 
 void do_ls() {
-  int dir = open(cwd, O_RDONLY);
+  int dir = openat(-1, cwd, O_RDONLY); // we use absolute names for now.
   if (dir >= 0) {
     struct dirent dirent;
     while (read(dir, &dirent, sizeof(dirent)) == sizeof(dirent)) {
@@ -193,7 +193,7 @@ void do_cat(char* file) {
     return;
   }
 
-  int fd = open(file_path, O_RDONLY);
+  int fd = openat(-1, file_path, O_RDONLY); // we use absolute names for now.
   if (fd >= 0) {
     char c;
     while (read(fd, &c, sizeof(c)) == sizeof(c)) {
@@ -275,8 +275,8 @@ int main(int argc, char** argv) {
 
   char *tty = argv[1];
   printf("Hellish running on %s.\n", tty);
-  int fd_in = open(tty, 0); // TODO: open flags
-  int fd_out = open(tty, 0); // TODO: open flags
+  int fd_in = openat(-1, tty, 0); // TODO: open flags
+  int fd_out = openat(-1, tty, 0); // TODO: open flags
   if (fd_in < 0) {
     printf("Could not open %s for reading.\n", tty);
     abort();

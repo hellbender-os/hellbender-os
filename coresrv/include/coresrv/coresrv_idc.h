@@ -24,6 +24,9 @@ typedef void* semaphore_wait_ptr;
 int __IDC__vfs_close(IDC_PTR, struct vfs_file*);
 typedef void* vfs_close_ptr;
 
+int __IDC__vfs_create(IDC_PTR, struct vfs_file*, int);
+typedef void* vfs_create_ptr;
+
 int __IDC__vfs_fstat(IDC_PTR, struct vfs_file*, struct stat*);
 typedef void* vfs_fstat_ptr;
 
@@ -36,8 +39,11 @@ typedef void* vfs_ftruncate_ptr;
 int __IDC__vfs_mount(IDC_PTR, const char*, struct vfs_filesys *);
 typedef void* vfs_mount_ptr;
 
-int __IDC__vfs_open(IDC_PTR, struct vfs_file*, const char *, int);
+int __IDC__vfs_open(IDC_PTR, struct vfs_file*, const char*, int);
 typedef void* vfs_open_ptr;
+
+int __IDC__vfs_resolve(IDC_PTR, struct vfs_file*, struct vfs_file*, const char *, int);
+typedef void* vfs_resolve_ptr;
 
 int __IDC__vfs_unmount(IDC_PTR, const char*);
 typedef void* vfs_unmount_ptr;
@@ -92,7 +98,7 @@ extern uintptr_t __IDE__vfs_initfs_lseek;
 extern uintptr_t __IDE__vfs_initfs_open;
 extern uintptr_t __IDE__vfs_initfs_read;
 extern uintptr_t __IDE__vfs_mount;
-extern uintptr_t __IDE__vfs_open;
+extern uintptr_t __IDE__vfs_resolve;
 extern uintptr_t __IDE__vfs_rootfs_close;
 extern uintptr_t __IDE__vfs_rootfs_lseek;
 extern uintptr_t __IDE__vfs_rootfs_open;

@@ -1,22 +1,17 @@
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdarg.h>
 #include <kernel/kernel.h>
 
 #include "fcntl_impl.h"
 
 int open(const char *name, int flags, ...) {
-  // allocate virtual file object.
-  int handle = fcntl_find_handle();
-  if (handle < 0) {
-    printf("Error: out of file handles.\n");
-    return -1;
-  }
-  // ask virtual file system to populate it for the file.
-  struct vfs_file *file = &_fcntl_data.handles[handle];
-  if (CORE_IDC(vfs_open, file, name, flags) == 0) {
-    return handle;
+  if (flags & O_CREAT) {
+    va_list parameters;
+    va_start(parameters, flags);
+    mode_t mode = va_arg(parameters, mode_t);
+    return openat(AT_FDCWD, name, flags, mode);
   } else {
-    printf("Error: failed to open '%s'\n", name);
-    return -1;
+    return openat(AT_FDCWD, name, flags);
   }
 }

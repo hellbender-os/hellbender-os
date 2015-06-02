@@ -20,9 +20,9 @@ void stdio_init() {
   _stdout.buffer = (char*)malloc(BUFSIZ);
   _stderr.buffer = (char*)malloc(BUFSIZ);
   // TODO: get the actual tty name from somewhere.
-  _stdin.fd = open("devfs/tty1", 0);
-  _stdout.fd = open("devfs/tty1", 0);
-  _stderr.fd = open("devfs/tty1", 0);
+  _stdin.fd = openat(-1, "devfs/tty1", 0);
+  _stdout.fd = openat(-1, "devfs/tty1", 0);
+  _stderr.fd = openat(-1, "devfs/tty1", 0);
 
   if (STDIN_FILENO != _stdin.fd
       || STDOUT_FILENO != _stdout.fd

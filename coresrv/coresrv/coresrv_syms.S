@@ -79,8 +79,8 @@
 .global __IDE__vfs_mount
 .set __IDE__vfs_mount, 0x7f8000d0
 
-.global __IDE__vfs_open
-.set __IDE__vfs_open, 0x7f8000d8
+.global __IDE__vfs_resolve
+.set __IDE__vfs_resolve, 0x7f8000d8
 
 .global __IDE__vfs_rootfs_close
 .set __IDE__vfs_rootfs_close, 0x7f8000e0

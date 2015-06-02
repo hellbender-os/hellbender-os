@@ -47,6 +47,9 @@ coresrv_stub:
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 
+.global __IDC__vfs_create
+.set __IDC__vfs_create, coresrv_stub
+
 .global __IDC__vfs_fstat
 .set __IDC__vfs_fstat, coresrv_stub
 
@@ -67,6 +70,9 @@ coresrv_stub:
 
 .global __IDC__vfs_read
 .set __IDC__vfs_read, coresrv_stub
+
+.global __IDC__vfs_resolve
+.set __IDC__vfs_resolve, coresrv_stub
 
 .global __IDC__vfs_unmount
 .set __IDC__vfs_unmount, coresrv_stub

@@ -10,6 +10,7 @@
 
 void  vfs_devfs_init(struct vfs_devfs *devfs) {
   memset(devfs, 0, sizeof(struct vfs_devfs));
+  //devfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_devfs_create);
   devfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_devfs_open);
   devfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_devfs_close);
   devfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_devfs_read);
@@ -46,6 +47,7 @@ __IDCIMPL__ int vfs_devfs_open(IDC_PTR, struct vfs_file* file, const char *name,
     struct vfs_devfs_file *this = (struct vfs_devfs_file*)file->internal;
     this->current = devfs->first;
     this->offset = 0;
+    file->stat.st_mode = S_IFDIR;
     return 0;
 
   } else {
@@ -56,6 +58,7 @@ __IDCIMPL__ int vfs_devfs_open(IDC_PTR, struct vfs_file* file, const char *name,
         // open the device.
         vfs_devfs_close(NO_IDC, file);
         file->filesys = ptr->filesys;
+        file->stat.st_mode = S_IFCHR;
         return IDC(vfs_open, file->filesys.open, file, name, flags);
       }
     }
@@ -67,6 +70,7 @@ __IDCIMPL__ int vfs_devfs_close(IDC_PTR, struct vfs_file* file) {
   memset(&file->filesys, 0, sizeof(file->filesys));
   free(file->internal);
   file->internal = NULL;
+  file->stat.st_mode = 0;
   return 0;
 }
 

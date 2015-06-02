@@ -10,6 +10,7 @@
 
 void  vfs_rootfs_init(struct vfs_rootfs *rootfs) {
   memset(rootfs, 0, sizeof(struct vfs_rootfs));
+  //rootfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_rootfs_create);
   rootfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_rootfs_open);
   rootfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_rootfs_close);
   rootfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_rootfs_read);
@@ -43,6 +44,7 @@ int vfs_rootfs_open_mount(struct vfs_rootfs *rootfs,
     struct vfs_rootfs_file *this = (struct vfs_rootfs_file*)file->internal;
     this->current = rootfs->first;
     this->offset = 0;
+    file->stat.st_mode = S_IFDIR;
     return 0;
 
   } else {
@@ -70,6 +72,7 @@ __IDCIMPL__ int vfs_rootfs_close(IDC_PTR, struct vfs_file* file) {
   memset(&file->filesys, 0, sizeof(file->filesys));
   free(file->internal);
   file->internal = NULL;
+  file->stat.st_mode = 0;
   return 0;
 }
 

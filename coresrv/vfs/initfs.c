@@ -33,6 +33,7 @@ static struct vfs_initfs_entry* find_parent(const char *path,
 
 void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
   memset(initfs, 0, sizeof(struct vfs_initfs));
+  //initfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_initfs_create);
   initfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_initfs_open);
   initfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_initfs_close);
   initfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_initfs_read);
@@ -113,6 +114,7 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
     internal->this = &initfs->root;
     internal->child = internal->this->children;
     internal->offset = 0;
+    file->stat.st_mode = S_IFDIR;
     return 0;
 
   } else {
@@ -120,11 +122,11 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
     for (struct vfs_initfs_entry *ptr = internal->this->children; 
          ptr; ptr = ptr->next) {
       if (strcmp(ptr->name, name) == 0) {
-          internal->this = ptr;
-          internal->child = internal->this->children;
-          internal->offset = 0;
-          return 0;
-          //}
+        internal->this = ptr;
+        internal->child = internal->this->children;
+        internal->offset = 0;
+        file->stat.st_mode = ptr->header.mode;
+        return 0;
       }
     }
   }
@@ -136,6 +138,7 @@ __IDCIMPL__ int vfs_initfs_close(IDC_PTR, struct vfs_file* file) {
   memset(&file->filesys, 0, sizeof(file->filesys));
   free(file->internal);
   file->internal = NULL;
+  file->stat.st_mode = 0;
   return 0;
 }
 

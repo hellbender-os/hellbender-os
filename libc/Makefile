@@ -85,7 +85,10 @@ hellbender/threadlocal.o \
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
 fcntl/fcntl_init.o \
+fcntl/fcntl.o \
 fcntl/open.o \
+fcntl/openat.o \
+fcntl/creat.o \
 unistd/close.o \
 unistd/fsync.o \
 unistd/ftruncate.o \

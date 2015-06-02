@@ -158,9 +158,9 @@ __IDE__vfs_mount:
     int $83
 .balign 8
 
-.global __IDE__vfs_open
-__IDE__vfs_open:
-    calll vfs_open
+.global __IDE__vfs_resolve
+__IDE__vfs_resolve:
+    calll vfs_resolve
     int $83
 .balign 8
 

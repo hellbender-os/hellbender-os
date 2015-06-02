@@ -52,7 +52,7 @@ vga/vga_init.o \
 vga/vga_putc.o \
 vfs/vfs_init.o \
 vfs/vfs_mount.o \
-vfs/vfs_open.o \
+vfs/vfs_resolve.o \
 vfs/rootfs.o \
 vfs/initfs.o \
 vfs/devfs.o \

@@ -21,6 +21,8 @@ int close(int handle) {
     printf("Close not supported.\n");
     abort();
   }
-  return IDC(vfs_close, file->filesys.close, file);
+  int retval = IDC(vfs_close, file->filesys.close, file);
+  fcntl_release_handle(handle);
+  return retval;
 }
 

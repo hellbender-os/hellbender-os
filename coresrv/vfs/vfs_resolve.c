@@ -19,16 +19,25 @@ static const char* get_next_name(const char* path, char *name) {
   }
 }
 
-__IDCIMPL__ int vfs_open(IDC_PTR, struct vfs_file *file, const char *name, int flags) {
-  memset(file, 0, sizeof(struct vfs_file));
-
+__IDCIMPL__ int vfs_resolve(IDC_PTR, struct vfs_file *dir, struct vfs_file *file, const char *name, int flags) {
   // start from the root.
   int in_root = 1;
+  file->oflags = flags;
+  file->isatty = false;
+  file->owner = -1;
   file->filesys = vfs_rootfs.filesys;
+  memset(&file->stat, 0, sizeof(struct stat));
+  file->real_path[0] = 0;
+  
   vfs_rootfs_open_mount(&vfs_rootfs, file, "");
   const char* remname = name;
   char thisname[NAME_MAX+2]; // room for directory separator.
   char fullpath[PATH_MAX] = "";
+
+  if (dir) {
+    if (vfs_resolve(NO_IDC, NULL, file, dir->real_path, flags) != 0) return -1;
+    strcpy(fullpath, dir->real_path);
+  }
 
   while (*remname) {
     remname = get_next_name(remname, thisname); // copies name until separator.

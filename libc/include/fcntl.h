@@ -42,7 +42,7 @@
 #define F_SETOWN 11
 // Set process or process group ID to receive SIGURG signals.
 
-#define FD_CLOEXEC 1
+#define FD_CLOEXEC 0x10000
 // Close the file descriptor upon execution of an exec family function.
 
 #define F_RDLCK 1
@@ -54,77 +54,80 @@
 #define F_WRLCK 3
 // Exclusive or write lock.
 
-#define O_CLOEXEC   0x00001
+#define O_CLOEXEC   0x10000
 // The FD_CLOEXEC flag associated with the new descriptor shall be set to close the file descriptor upon execution of an exec family function.
+// Must be FD_CLOEXEC.
 
-#define O_CREAT     0x00002
+#define O_CREAT     0x00001
 // Create file if it does not exist.
 
-#define O_DIRECTORY 0x00004
+#define O_DIRECTORY 0x00002
 // Fail if not a directory.
 
-#define O_EXCL      0x00008
+#define O_EXCL      0x00004
 // Exclusive use flag.
 
-#define O_NOCTTY    0x00010
+#define O_NOCTTY    0x00008
 // Do not assign controlling terminal.
 
-#define O_NOFOLLOW  0x00020
+#define O_NOFOLLOW  0x00010
 // Do not follow symbolic links.
 
-#define O_TRUNC     0x00040
+#define O_TRUNC     0x00020
 // Truncate flag.
 
-#define O_TTY_INIT  0x00080
+#define O_TTY_INIT  0x00040
 // Set the termios structure terminal parameters to a state that provides conforming behavior; see Parameters that Can be Set.
 // The O_TTY_INIT flag can have the value zero and in this case it need not be bitwise-distinct from the other flags.
 
-#define O_APPEND    0x00100
+#define _O_STATFLAGS 0x00f80
+
+#define O_APPEND    0x00080
 // Set append mode.
 
-#define O_DSYNC     0x00200
+#define O_DSYNC     0x00100
 // [SIO] [Option Start] Write according to synchronized I/O data integrity completion. [Option End]
 
-#define O_NONBLOCK  0x00400
+#define O_NONBLOCK  0x00200
 // Non-blocking mode.
 
-#define O_RSYNC     0x00800
+#define O_RSYNC     0x00400
 // [SIO] [Option Start] Synchronized read I/O operations. [Option End]
 
-#define O_SYNC      0x01000
+#define O_SYNC      0x00800
 // Write according to synchronized I/O file integrity completion.
 
-#define O_ACCMODE   0x02000
+#define O_ACCMODE   0x0f000
 // Mask for file access modes.
 
-#define O_EXEC      0x04000
+#define O_EXEC      0x01000
 // Open for execute only (non-directory files). The result is unspecified if this flag is applied to a directory.
 
-#define O_RDONLY    0x08000
+#define O_RDONLY    0x02000
 // Open for reading only.
 
-#define O_RDWR      0x10000
+#define O_RDWR      0x04000
 // Open for reading and writing.
 
-#define O_SEARCH    0x20000
+#define O_SEARCH    0x01000
 // Open directory for search only. The result is unspecified if this flag is applied to a non-directory file.
 
-#define O_WRONLY    0x40000
+#define O_WRONLY    0x08000
 // Open for writing only.
 
-#define AT_FDCWD 1
+#define AT_FDCWD OPEN_MAX
 // Use the current working directory to determine the target of relative file paths.
 
-#define AT_EACCESS 1
+#define AT_EACCESS 0x1
 // Check access using effective user and group ID.
 
-#define AT_SYMLINK_NOFOLLOW 2
+#define AT_SYMLINK_NOFOLLOW 0x1
 // Do not follow symbolic links.
 
-#define AT_SYMLINK_FOLLOW 3
+#define AT_SYMLINK_FOLLOW 0x1
 // Follow symbolic link.
 
-#define AT_REMOVEDIR 4
+#define AT_REMOVEDIR 0x1
 // Remove directory instead of file.
 
 #define POSIX_FADV_DONTNEED 1
