@@ -1,5 +1,4 @@
 #include <string.h>
-#include <errno.h>
 
 char* strcat(char* destination, const char* source) {
   unsigned i = 0;

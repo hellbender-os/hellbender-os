@@ -12,7 +12,7 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -Wall -Wextra -Werror -fno-builtin
+CFLAGS:=$(CFLAGS) -Wall -Wextra -Werror
 # -s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude
 LIBK_CFLAGS:=$(CFLAGS) -ffreestanding
@@ -54,17 +54,37 @@ stdlib/qsort.o \
 stdlib/bsearch.o \
 stdlib/strtol.o \
 stdlib/atoi.o \
-string/builtins.o \
 string/memmove.o \
+string/memchr.o \
+string/memcmp.o \
+string/memcpy.o \
 string/memccpy.o \
+string/memset.o \
+string/strlen.o \
 string/strnlen.o \
 string/strcoll.o \
 string/strerror.o \
 string/strsignal.o \
 string/strtok.o \
 string/strxfrm.o \
+string/strcmp.o \
+string/strncmp.o \
+string/strcat.o \
 string/strcat_s.o \
+string/strncat.o \
+string/strcpy.o \
 string/strcpy_s.o \
+string/strncpy.o \
+string/strrchr.o \
+string/strdup.o \
+string/strndup.o \
+string/strchr.o \
+string/strcspn.o \
+string/strspn.o \
+string/strstr.o \
+string/strpbrk.o \
+string/stpcpy.o \
+string/stpncpy.o \
 ctype/tolower.o \
 ctype/isspace.o \
 heap/heap_init.o \
