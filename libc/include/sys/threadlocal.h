@@ -8,11 +8,12 @@ struct threadlocal {
   int errno;
   char *optarg;
   int opterr, optind, optopt;
-  char *_optchar;
 
   // these can be in any order:
   pid_t thread_id;
   struct tm tm;
+  char *getopt_optchar;
+  char *strtok_saveptr;
 };
 
 // This depends on THREAD_LOCAL_PAGE in "kernel.h"

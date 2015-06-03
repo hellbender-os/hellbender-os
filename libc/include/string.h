@@ -1,5 +1,5 @@
 #ifndef _STRING_H
-#define _STRING_H 1
+#define _STRING_H
 
 #include <locale.h> // nonconforming: for locale_t
 
@@ -43,12 +43,34 @@ char    *strstr(const char *, const char *);
 char    *strtok(char *, const char *);
 char    *strtok_r(char *, const char *, char **);
 size_t   strxfrm(char *, const char *, size_t);
-size_t   strxfrm_l(char *, const char *,
-             size_t, locale_t);
+size_t   strxfrm_l(char *, const char *, size_t, locale_t);
 
 // noncorforming:
 
 int strcat_s(char* destination, size_t dest_size, const char* source);
 int strcpy_s(char* destination, size_t dest_size, const char* source);
+
+// using GCC builtins:
+#define memchr(s, c, n) __builtin_memchr(s, c, n)
+#define memcmp(ptr1, ptr2, num) __builtin_memcmp(ptr1, ptr2, num)
+#define memcpy(dest, src, num) __builtin_memcpy(dest, src, num)
+#define memset(ptr, value, num) __builtin_memset(ptr, value, num)
+#define stpcpy(dest, src) __builtin_stpcpy(dest, src)
+#define stpncpy(dest, src, num) __builtin_stpncpy(dest, src, num)
+#define strcat(dest, src) __builtin_strcat(dest, src)
+#define strchr(str, ch) __builtin_strchr(str, ch)
+#define strcmp(str1, str2) __builtin_strcmp(str1, str2)
+#define strcpy(dest, src) __builtin_strcpy(dest, src)
+#define strcspn(str1, str2) __builtin_strcspn(str1, str2)
+#define strdup(str) __builtin_strdup(str)
+#define strlen(str) __builtin_strlen(str)
+#define strncat(dest, src, num) __builtin_strncat(dest, src, num)
+#define strncmp(str1, str2, num) __builtin_strncmp(str1, str2, num)
+#define strncpy(dest, src, num) __builtin_strncpy(dest, src, num)
+#define strndup(str, num) __builtin_strndup(str, num)
+#define strpbrk(str1, str2) __builtin_strpbrk(str1, str2)
+#define strrchr(str, ch) __builtin_strrchr(str, ch)
+#define strspn(str1, str2) __builtin_strspn(str1, str2)
+#define strstr(str1, str2) __builtin_strstr(str1, str2)
 
 #endif

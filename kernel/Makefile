@@ -13,7 +13,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra -Werror
+CFLAGS:=$(CFLAGS) -ffreestanding -fno-builtin -Wall -Wextra -Werror
 #-s -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
 LDFLAGS:=$(LDFLAGS)

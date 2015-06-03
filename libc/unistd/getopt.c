@@ -1,7 +1,8 @@
 #include <unistd.h>
 #include <string.h>
+#include <sys/threadlocal.h>
 
-extern char* _optchar;
+#define _optchar (THREADLOCAL->getopt_optchar)
 
 int getopt(int argc, char * const argv[], const char *optstring) {
   optarg = NULL;

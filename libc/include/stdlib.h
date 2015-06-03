@@ -55,9 +55,9 @@ WTERMSIG
 WUNTRACED
 */
 
-void          _Exit(int);
+void          _Exit(int) __attribute__((noreturn));
 long          a64l(const char *);
-void          abort(void);
+void          abort(void) __attribute__((noreturn));
 int           abs(int);
 int           atexit(void (*)(void));
 double        atof(const char *);
@@ -70,7 +70,7 @@ void         *calloc(size_t, size_t);
 div_t         div(int, int);
 double        drand48(void);
 double        erand48(unsigned short [3]);
-void          exit(int);
+void          exit(int) __attribute__((noreturn));
 void          free(void *);
 char         *getenv(const char *);
 int           getsubopt(char **, char *const *, char **);

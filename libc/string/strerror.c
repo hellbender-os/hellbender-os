@@ -3,6 +3,21 @@
 
 #define E(nr, str) case nr: return str;
 
+char *strerror_l(int error, locale_t locale) {
+  (void)(locale); //TODO: support
+  return strerror(error);
+}
+
+int strerror_r(int error, char *buf, size_t size) {
+  char* str = strerror(error);
+  size_t len = strlen(str);
+  if (size < len + 1) {
+    return ERANGE;
+  }
+  memcpy(buf, str, len + 1);
+  return 0;
+}
+
 char *strerror(int error) {
   switch (error) {
     E(E2BIG, "Argument list too long.");
@@ -86,6 +101,8 @@ char *strerror(int error) {
     E(ETXTBSY, "Text file busy.");
     E(EWOULDBLOCK, "Operation would block.");
     E(EXDEV, "Cross-device link.");
-  default: return "Unknown error code.";
+  default:
+    errno = EINVAL;
+    return "Unknown error code.";
   }
 }
