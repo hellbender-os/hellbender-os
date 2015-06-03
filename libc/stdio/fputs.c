@@ -3,7 +3,7 @@
 
 int fputs(const char* string, FILE *file) {
   size_t len = strlen(string);
-  if (len == _fprint_n(file, string, len)) {
-    return fputc('\n', file);
+  if (len == fwrite(string, len, 1, file)) {
+    return 0;
   } else return EOF;
 }

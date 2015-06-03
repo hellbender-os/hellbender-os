@@ -33,10 +33,11 @@ libgen/basename.o \
 libgen/dirname.o \
 stdio/sprintf.o \
 stdio/fprintf.o \
-stdio/printf.o \
 stdio/fputc.o \
+stdio/printf.o \
 stdio/puts.o \
 stdio/putchar.o \
+stdio/fwrite.o \
 stdlib/abort.o \
 stdlib/itoa.o \
 stdlib/lltoa.o \
@@ -96,6 +97,7 @@ heap/heap_malloc.o \
 heap/heap_realloc.o \
 hellbender/libc_init_basic.o \
 hellbender/threadlocal.o \
+hellbender/linkedlist.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
@@ -118,11 +120,16 @@ unistd/getcwd.o \
 unistd/chdir.o \
 unistd/fchdir.o \
 unistd/isatty.o \
+unistd/link.o \
+unistd/unlink.o \
+unistd/rmdir.o \
+unistd/access.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
 stdio/fputs.o \
 stdio/fgetc.o \
+stdio/fgets.o \
 stdio/fread.o \
 stdio/fseek.o \
 stdio/ftell.o \

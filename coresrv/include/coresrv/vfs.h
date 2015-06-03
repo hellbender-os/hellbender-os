@@ -20,6 +20,8 @@ struct vfs_filesys {
   vfs_fsync_ptr fsync;
   vfs_ftruncate_ptr ftruncate;
   vfs_fstat_ptr fstat;
+  vfs_link_ptr link;
+  vfs_unlink_ptr unlink;
 
   void* internal;
 };
@@ -57,5 +59,7 @@ __IDC__ off_t vfs_lseek(IDC_PTR, struct vfs_file*, off_t, int);
 __IDC__ int vfs_fsync(IDC_PTR, struct vfs_file*);
 __IDC__ int vfs_ftruncate(IDC_PTR, struct vfs_file*, off_t);
 __IDC__ int vfs_fstat(IDC_PTR, struct vfs_file*, struct stat*);
+__IDC__ int vfs_link(IDC_PTR, struct vfs_file*, struct vfs_file*);
+__IDC__ int vfs_unlink(IDC_PTR, struct vfs_file*);
 
 #endif

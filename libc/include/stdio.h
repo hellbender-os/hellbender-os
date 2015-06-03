@@ -3,17 +3,22 @@
 
 #include <stdarg.h> // nonconforming: for va_args
 #include <sys/types.h> // nonconforming for off_t, ssize_t
+#include <hellbender/linkedlist.h>
 
 // The Open Group Base Specifications Issue 7
 
 #include <stddef.h>
 
+extern struct _linkedlist _stdio_files;
+
 typedef struct {
+  _LL_ITEM;
   char *buffer;
   size_t buf_size;
   unsigned buf_bytes;
   int fd;
   int row; // Read Or Write: 0 == write, 1 == read.
+  int eof;
   int error;
 } FILE;
 // A structure containing information about a file.
@@ -139,9 +144,5 @@ int      vscanf(const char *, va_list);
 int      vsnprintf(char *, size_t, const char *, va_list);
 int      vsprintf(char *, const char *, va_list);
 int      vsscanf(const char *, const char *, va_list);
-
-// nonconforming:
-
-size_t _fprint_n(FILE *file, const char* data, size_t data_length);
 
 #endif

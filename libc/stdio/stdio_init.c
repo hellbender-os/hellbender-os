@@ -3,6 +3,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+struct _linkedlist _stdio_files;
+
 FILE _stdin  =
   { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=1, .error=0 };
 FILE _stdout =
@@ -16,6 +18,7 @@ FILE *stderr = NULL;
 
 void stdio_init() {
   // init FILE* API.
+  _ll_init(&_stdio_files);
   _stdin.buffer = (char*)malloc(BUFSIZ);
   _stdout.buffer = (char*)malloc(BUFSIZ);
   _stderr.buffer = (char*)malloc(BUFSIZ);
@@ -34,4 +37,7 @@ void stdio_init() {
   stdin = &_stdin;
   stdout = &_stdout;
   stderr = &_stderr;
+  _LL_INSERT(&_stdio_files, stdin);
+  _LL_INSERT(&_stdio_files, stdout);
+  _LL_INSERT(&_stdio_files, stderr);
 }

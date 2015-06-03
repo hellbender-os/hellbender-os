@@ -7,38 +7,6 @@
 #include <unistd.h>
 #include <hellbender.h>
 
-#if defined(__is_hellbender_kernel)
-
-size_t _fprint_n(FILE *file, const char* data, size_t data_length) {
-  (void)(file);
-  for (size_t i = 0; i < data_length; i++) {
-    putchar((int) ((const unsigned char*) data)[i]);
-  }
-  return data_length;
-}
-
-#else
-
-size_t _fprint_n(FILE *file, const char* data, size_t data_length) {
-  if (file == NULL) { // assume libC is not yet set up.
-    syscall_print(data, data_length);
-
-  } else if (file->buffer == NULL && file->fd >= 0) { // unbuffered
-    write(file->fd, data, data_length);
-    
-  } else { // buffered
-    for (size_t i = 0; i < data_length; i++) {
-      if (file->buf_bytes == file->buf_size) fflush(file);
-      if (file->buf_bytes < file->buf_size)
-        file->buffer[(file->buf_bytes)++] = data[i];
-      if (data[i] == '\n') fflush(file);
-    }
-  }
-  return data_length;
-}
-
-#endif
-
 int fprintf(FILE *file, const char* format, ...)
 {
   va_list parameters;
@@ -390,7 +358,7 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
     if (specs[i].start_ptr) { // this will skip those * arguments.
       // print stuff before the next specifier:
       len = specs[i].start_ptr - format;
-      written += _fprint_n(file, format, len);
+      written += fwrite(format, len, 1, file);
       format = specs[i].end_ptr;
 
       // get minwidth and precision, if they came from arguments:
@@ -424,7 +392,7 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
         ptr = pad_sign(&specs[i], ptr);
         ptr = pad_left(&specs[i], ptr, end);
         len = end - ptr;
-        written += _fprint_n(file, ptr, len);
+        written += fwrite(ptr, len, 1, file);
         written += pad_right(file, &specs[i], len);
         break;
       case 'o': base = 8; goto print_u;
@@ -444,7 +412,7 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
         }
         ptr = pad_left(&specs[i], ptr, end);
         len = end - ptr;
-        written += _fprint_n(file, ptr, len);
+        written += fwrite(ptr, len, 1, file);
         written += pad_right(file, &specs[i], len);
         break;
       case 'c':
@@ -454,12 +422,12 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
       case 's':
         // TODO: support ls
         len = strlen(values[specs[i].value_idx].s);
-        _fprint_n(file, values[specs[i].value_idx].s, len);
+        fwrite(values[specs[i].value_idx].s, len, 1, file);
         break;
       default:
         // TODO: fFeEgGaApn
         len = specs[i].end_ptr - specs[i].start_ptr;
-        _fprint_n(file, specs[i].start_ptr, len);
+        fwrite(specs[i].start_ptr, len, 1, file);
       }
     }
   }

@@ -11,6 +11,7 @@ FILE *fopen(const char *name, const char *mode) {
     FILE *file = (FILE*)malloc(sizeof(FILE));
     memset(file, 0, sizeof(FILE));
     file->fd = fd;
+    _LL_INSERT(&_stdio_files, file);
     return file;
   } else {
     return NULL;

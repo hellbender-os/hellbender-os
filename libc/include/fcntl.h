@@ -106,28 +106,28 @@
 #define O_RDONLY    0x02000
 // Open for reading only.
 
-#define O_RDWR      0x04000
+#define O_RDWR      0x06000
 // Open for reading and writing.
 
-#define O_SEARCH    0x01000
+#define O_SEARCH    0x08000
 // Open directory for search only. The result is unspecified if this flag is applied to a non-directory file.
 
-#define O_WRONLY    0x08000
+#define O_WRONLY    0x04000
 // Open for writing only.
 
 #define AT_FDCWD OPEN_MAX
 // Use the current working directory to determine the target of relative file paths.
 
-#define AT_EACCESS 0x1
+#define AT_EACCESS 0x20000
 // Check access using effective user and group ID.
 
-#define AT_SYMLINK_NOFOLLOW 0x1
+#define AT_SYMLINK_NOFOLLOW 1
 // Do not follow symbolic links.
 
-#define AT_SYMLINK_FOLLOW 0x1
+#define AT_SYMLINK_FOLLOW 1
 // Follow symbolic link.
 
-#define AT_REMOVEDIR 0x1
+#define AT_REMOVEDIR 1
 // Remove directory instead of file.
 
 #define POSIX_FADV_DONTNEED 1

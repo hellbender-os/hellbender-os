@@ -269,16 +269,16 @@
 //_POSIX2_SYMLINKS
 // Symbolic links can be created.
 
-#define F_OK 0x1
+#define F_OK 0
 // Test for existence of file.
 
-#define R_OK 0x2
+#define R_OK 0x02000
 // Test for read permission.
 
-#define W_OK 0x4
+#define W_OK 0x04000
 // Test for write permission.
 
-#define X_OK 0x8
+#define X_OK 0x01000
 // Test for execute (search) permission.
 
 //_CS_PATH

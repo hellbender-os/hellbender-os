@@ -220,6 +220,8 @@ void do_run(char* run_line) {
   char* envp[] = { (char*)0 };
   if (posix_spawn(&pid, cmd, NULL, NULL, argv, envp) == 0) {
     int status;
+    //TODO: we want to wait for program to stop.
+    while (1) sched_yield();
     while (1) {
       waitpid(pid, &status, WUNTRACED);
       if (WIFEXITED(status)) {

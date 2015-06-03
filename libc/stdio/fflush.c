@@ -10,7 +10,10 @@ int fflush(FILE *file) {
       file->buf_bytes = 0;
     }
   } else {
-    // TODO: flush all
+    for (file = _LL_FIRST(&_stdio_files, FILE);
+         file; file = _LL_NEXT(file, FILE)) {
+      fflush(file);
+    }
   }
   return 0;
 }

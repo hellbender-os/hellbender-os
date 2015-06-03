@@ -59,6 +59,9 @@ coresrv_stub:
 .global __IDC__vfs_ftruncate
 .set __IDC__vfs_ftruncate, coresrv_stub
 
+.global __IDC__vfs_link
+.set __IDC__vfs_link, coresrv_stub
+
 .global __IDC__vfs_lseek
 .set __IDC__vfs_lseek, coresrv_stub
 
@@ -73,6 +76,9 @@ coresrv_stub:
 
 .global __IDC__vfs_resolve
 .set __IDC__vfs_resolve, coresrv_stub
+
+.global __IDC__vfs_unlink
+.set __IDC__vfs_unlink, coresrv_stub
 
 .global __IDC__vfs_unmount
 .set __IDC__vfs_unmount, coresrv_stub

@@ -36,6 +36,9 @@ typedef void* vfs_fsync_ptr;
 int __IDC__vfs_ftruncate(IDC_PTR, struct vfs_file*, off_t);
 typedef void* vfs_ftruncate_ptr;
 
+int __IDC__vfs_link(IDC_PTR, struct vfs_file*, struct vfs_file*);
+typedef void* vfs_link_ptr;
+
 int __IDC__vfs_mount(IDC_PTR, const char*, struct vfs_filesys *);
 typedef void* vfs_mount_ptr;
 
@@ -44,6 +47,9 @@ typedef void* vfs_open_ptr;
 
 int __IDC__vfs_resolve(IDC_PTR, struct vfs_file*, struct vfs_file*, const char *, int);
 typedef void* vfs_resolve_ptr;
+
+int __IDC__vfs_unlink(IDC_PTR, struct vfs_file*);
+typedef void* vfs_unlink_ptr;
 
 int __IDC__vfs_unmount(IDC_PTR, const char*);
 typedef void* vfs_unmount_ptr;
