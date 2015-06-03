@@ -85,6 +85,8 @@ string/strstr.o \
 string/strpbrk.o \
 string/stpcpy.o \
 string/stpncpy.o \
+strings/strcasecmp.o \
+strings/strncasecmp.o \
 ctype/tolower.o \
 ctype/isspace.o \
 heap/heap_init.o \
