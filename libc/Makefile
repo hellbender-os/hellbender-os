@@ -102,6 +102,7 @@ unistd/getopt.o \
 unistd/getcwd.o \
 unistd/chdir.o \
 unistd/fchdir.o \
+unistd/isatty.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
