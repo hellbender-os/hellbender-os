@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-#include <kernel/kernel.h>
+#include <limits.h>
 
 #include "fcntl_impl.h"
 
@@ -33,13 +33,8 @@ int openat(int dir_fd, const char *name, int flags, ...) {
    * However, Hellbender filesystem root is "".
    * So, we forbid only empty relative names.
    */
-  size_t len = strlen(name);
-  if (len == 0 && dir) {
+  if (strlen(name) == 0 && dir) {
     errno = ENOENT;
-    return -1;
-  }
-  if (strlen(name) > PATH_MAX) {
-    errno = ENAMETOOLONG;
     return -1;
   }
   
@@ -53,6 +48,12 @@ int openat(int dir_fd, const char *name, int flags, ...) {
   // resolve the path:
   struct vfs_file *file = &_fcntl_data.handles[handle];
   if (CORE_IDC(vfs_resolve, dir, file, name, flags) != 0) {
+    goto openat_error;
+  }
+
+  // existing file should have been opened by the resolve.
+  if (!(flags & O_CREAT) && !file->stat.st_mode) {
+    errno = ENOENT;
     goto openat_error;
   }
 
@@ -94,12 +95,6 @@ int openat(int dir_fd, const char *name, int flags, ...) {
       if (IDC(vfs_create, file->filesys.create, file, mode) != 0) {
         goto openat_error;
       }
-    }
-  } else {
-    // existing file should have been opened by the resolve.
-    if (!file->stat.st_mode) {
-      errno = ENOENT;
-      goto openat_error;
     }
   }
   

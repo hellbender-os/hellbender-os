@@ -99,6 +99,9 @@ unistd/write.o \
 unistd/dup2.o \
 unistd/sleep.o \
 unistd/getopt.o \
+unistd/getcwd.o \
+unistd/chdir.o \
+unistd/fchdir.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
