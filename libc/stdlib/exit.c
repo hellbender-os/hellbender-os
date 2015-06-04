@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 extern void _fini();
 

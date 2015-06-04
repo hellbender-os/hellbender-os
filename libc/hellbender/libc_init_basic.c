@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <hellbender.h>
 
 #include <kernel/kernel.h>
 #include <kernel/domain.h>
 
-#include <sys/heap.h>
+#include <hellbender/hellbender.h>
+#include <hellbender/heap.h>
 
 static void init_heap();
 
@@ -53,8 +53,9 @@ static void init_heap() {
   // init the malloc heap.
   heap_init_wilderness(&default_wilderness, bottom, 
                        HEAP_DEFAULT_ALLOCATION_SIZE);
-  heap_init_tiny(&default_tinyheap, &default_wilderness);
-  heap_init_small(&default_smallheap, &default_wilderness);
+  heap_init_large(&default_largeheap, &default_wilderness);
+  heap_init_small(&default_smallheap, &default_largeheap);
+  heap_init_tiny(&default_tinyheap, &default_largeheap);
 }
 
 #if !defined(__is_hellbender_kernel)

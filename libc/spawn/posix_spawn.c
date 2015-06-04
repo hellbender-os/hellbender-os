@@ -1,6 +1,6 @@
 #include <spawn.h>
 
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 int posix_spawn(pid_t *pid, const char *path,
                 const posix_spawn_file_actions_t *file_actions,

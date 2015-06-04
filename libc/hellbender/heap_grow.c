@@ -1,11 +1,11 @@
-#include <sys/heap.h>
+#include <hellbender/heap.h>
+#include <hellbender/hellbender.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#include <hellbender.h>
 #include <kernel/domain.h>
 
 #if defined(__is_hellbender_kernel)

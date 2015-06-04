@@ -29,29 +29,37 @@ static inline void mark_block_free(block_t* block) {
   *(((uint32_t*)block)-1) &= ~BLOCK_RESERVED;
 }
 
-static inline unsigned get_block_size(block_t* block) {
-  return *(((uint32_t*)block)-1) & BLOCK_SIZE_MASK;
+static inline unsigned get_block_tag(block_t* block) {
+  return (*(((uint32_t*)block)-1) & BLOCK_SIZE_MASK);
 }
 
-static inline void set_block_size(block_t* block, uint32_t size) {
-  *(((uint32_t*)block)-1) = size;
-  *((uint32_t*)(block + (size & BLOCK_SIZE_MASK) - 1)) = size;
+static inline unsigned get_data_size(block_t* block) {
+  return get_block_tag(block) * 8 - 8;
 }
 
-static inline unsigned is_valid_block(block_t* block, unsigned size) {
-  unsigned size2 = *((uint32_t*)(block + size - 1)) & BLOCK_SIZE_MASK;
-  return size == size2;
+static inline void set_block_tag(block_t* block, uint32_t tag) {
+  *(((uint32_t*)block)-1) = tag;
+  *((uint32_t*)(block + (tag & BLOCK_SIZE_MASK) - 1)) = tag;
+}
+
+static inline void set_data_size(block_t* block, uint32_t size) {
+  set_block_tag(block, size / 8 + 1);
+}
+
+static inline unsigned is_valid_block(block_t* block, unsigned tag) {
+  unsigned tag2 = *((uint32_t*)(block + tag - 1)) & BLOCK_SIZE_MASK;
+  return tag == tag2;
 }
 
 static inline block_t* preceding_block(block_t *block) {
-  unsigned preceding_size = *((uint32_t*)(block - 1)) & BLOCK_SIZE_MASK;
-  if (preceding_size) return block - preceding_size;
+  unsigned preceding_tag = *((uint32_t*)(block - 1)) & BLOCK_SIZE_MASK;
+  if (preceding_tag) return block - preceding_tag;
   else return NULL;
 }
 
 static inline block_t* following_block(smallheap_t *heap, block_t *block) {
-  unsigned block_size = get_block_size(block);
-  block_t* following = block + block_size;
+  unsigned block_tag = get_block_tag(block);
+  block_t* following = block + block_tag;
   if (following != heap->end_block) {
     return following;
   } else return NULL;

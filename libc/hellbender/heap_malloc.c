@@ -1,7 +1,7 @@
+#include <hellbender/heap.h>
 
 #include <kernel/kernel.h>
 #include <kernel/mem.h>
-#include <sys/heap.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,13 +26,11 @@ void* heap_malloc_tiny(tinyheap_t *heap, size_t size) {
 
   } else {
     if (heap->more_size == 0) {
-      // reserve new block.
-      if (heap->wilderness->bottom == heap->wilderness->top) {
-        heap_grow_wilderness(heap->wilderness);
-      }
-      heap->more = (tinyblock_t*)(((uint8_t*)heap->wilderness->bottom) + 7);
-      heap->more_size = PAGE_SIZE / sizeof(tinyblock_t) - 1;
-      heap->wilderness->bottom += PAGE_SIZE;
+      // reserve new block. TODO: there is no way to release these ATM!
+      size_t alloc_size = HEAP_DEFAULT_ALLOCATION_SIZE;
+      uint8_t* bottom = (uint8_t*)heap_malloc_large(heap->large, alloc_size);
+      heap->more = (tinyblock_t*)(bottom + 7);
+      heap->more_size = alloc_size / sizeof(tinyblock_t) - 1;
     }
     
     // take next block from current array.
@@ -67,7 +65,7 @@ void* heap_malloc_small(smallheap_t *heap, size_t size) {
     return found;
 
   } else if (heap->last_idx == idx) {
-    // the block we use last is jus the right size.
+    // the block we used last is just the right size.
     found = heap->last_block;
     heap->last_idx = 0; // last block no longer available.
     mark_block_used(found);
@@ -76,10 +74,10 @@ void* heap_malloc_small(smallheap_t *heap, size_t size) {
   } else if (heap->last_idx > idx + 1) {
     // last block is bigger than needed; use it anyway for better locality.
     found = heap->last_block;
-    set_block_size(found, idx | BLOCK_RESERVED);
+    set_block_tag(found, idx | BLOCK_RESERVED);
     heap->last_idx -= idx; // split the remaining of the block.
     heap->last_block += idx;
-    set_block_size(heap->last_block, heap->last_idx);
+    set_block_tag(heap->last_block, heap->last_idx);
     return found;
 
   } else { 
@@ -89,39 +87,61 @@ void* heap_malloc_small(smallheap_t *heap, size_t size) {
     //  we try to find the next smallest block
     for (unsigned jdx = idx + 2; jdx < 131; ++jdx) {
       if ((found = heap->free[jdx])) {
-        unsigned last_size = get_block_size(found); // might be bigger than jdx!
+        unsigned last_idx = get_block_tag(found); // might be bigger than jdx!
         heap->free[jdx] = found->next; // remove the found block.
         if (found->next) found->next->prev = NULL;
-        set_block_size(found, idx | BLOCK_RESERVED);
+        set_block_tag(found, idx | BLOCK_RESERVED);
         heap->last_block = found + idx; // split the remaining.
-        heap->last_idx = last_size - idx;
-        set_block_size(heap->last_block, heap->last_idx);
+        heap->last_idx = last_idx - idx;
+        set_block_tag(heap->last_block, heap->last_idx);
         return found;
       }
     }
 
-    // no block found in free lists, take a page from the wilderness.
-    if (heap->wilderness->bottom == heap->wilderness->top) {
-      heap_grow_wilderness(heap->wilderness);
-    }
-    // we skip one because size is at offset -4.
-    found = ((block_t*)(heap->wilderness->bottom)) + 1;
-    // this help preceding_block at the boundary.
-    *((uint32_t*)heap->wilderness->bottom) = 0;
-    heap->wilderness->bottom += PAGE_SIZE;
-    set_block_size(found, idx | BLOCK_RESERVED);
+    // no block found in free lists, allocate some room.
+    size_t alloc_size = HEAP_DEFAULT_ALLOCATION_SIZE;
+    uint8_t *bottom = (uint8_t*)heap_malloc_large(heap->large, alloc_size);
+    // we skip one block because the tag is at offset -4.
+    found = ((block_t*)bottom) + 1;
+    // this helps preceding_block at the boundary.
+    *((uint32_t*)bottom) = 0;
+    set_block_tag(found, idx | BLOCK_RESERVED);
     heap->last_block = found + idx;
-    unsigned new_idx = PAGE_SIZE/8 - 2;
+    unsigned new_idx = alloc_size / 8 - 1;
     if (new_idx < idx) {
       printf("Too small increment\n");
       abort();
     }
     heap->last_idx = new_idx - idx; // split the remaining.
-    set_block_size(heap->last_block, heap->last_idx);
+    set_block_tag(heap->last_block, heap->last_idx);
     heap->end_block = following_block(heap, heap->last_block);
     return found;
   }
-  
-  printf("too large allocation size %u\n", (unsigned)size);
-  abort();
+}
+
+void* heap_malloc_large(largeheap_t *heap, size_t size) {
+  size = (size + 7) & ~7; // ceil to the next 8 aligned block size.
+  unsigned idx = size / 8 + 1; // block size / 8.
+  block_t* found = heap->free; // try to find first block that is large enough.
+  for (; found; found = found->next) {
+    if (get_block_tag(found) >= idx) {
+      mark_block_used(found);
+      return found;
+    }
+  }
+  // allocate new block of memory large enough for the size.
+  // TODO: this whole large heap + wilderness is crap. redesign & rewrite.
+  found = ((block_t*)(heap->wilderness->bottom)) + 1;
+  uint8_t* end = (uint8_t*)found + size + 8;
+  size_t truesize = 0;
+  while (heap->wilderness->bottom < end) {
+    if (heap->wilderness->bottom == heap->wilderness->top) {
+      heap_grow_wilderness(heap->wilderness);
+    }
+    heap->wilderness->bottom += PAGE_SIZE;
+    truesize += PAGE_SIZE;
+  }
+  unsigned tag = truesize / 8 - 1;
+  set_block_tag(found, tag | BLOCK_RESERVED);
+  return found;
 }

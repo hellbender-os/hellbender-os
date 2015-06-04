@@ -15,7 +15,7 @@ size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file) {
 }
 
 #else
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 size_t fwrite(const void *ptr, size_t size, size_t count, FILE *file) {
   size_t data_length = size * count;

@@ -1,6 +1,6 @@
 #include <unistd.h>
 #include <string.h>
-#include <sys/threadlocal.h>
+#include <hellbender/threadlocal.h>
 
 #define _optchar (THREADLOCAL->getopt_optchar)
 

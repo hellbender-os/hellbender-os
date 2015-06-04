@@ -1,7 +1,7 @@
+#include <hellbender/heap.h>
 
 #include <kernel/kernel.h>
 #include <kernel/mem.h>
-#include <sys/heap.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +22,7 @@ void heap_free_tiny(tinyheap_t *heap, void* ptr) {
 
 void heap_free_small(smallheap_t *heap, void* ptr) {
   block_t *block = (block_t*)ptr;
-  unsigned idx = get_block_size(block);
+  unsigned idx = get_block_tag(block);
 #ifndef HEAP_NO_CHECK
   // check that ptr seems like a valid heap block:
   if (!is_valid_block(block, idx)) {
@@ -37,12 +37,12 @@ void heap_free_small(smallheap_t *heap, void* ptr) {
       // combine this block with next.
       heap->fred_idx += idx;
       heap->fred_block = block;
-      set_block_size(heap->fred_block, heap->fred_idx);
+      set_block_tag(heap->fred_block, heap->fred_idx);
       return;
     } else if (following_block(heap, heap->fred_block) == block) {
       // combine preceding block with this.
       heap->fred_idx += idx;
-      set_block_size(heap->fred_block, heap->fred_idx);
+      set_block_tag(heap->fred_block, heap->fred_idx);
       return;
     }
 
@@ -53,14 +53,14 @@ void heap_free_small(smallheap_t *heap, void* ptr) {
     if (preceding) {
       unsigned prec_used = is_block_used(preceding);
       if (!prec_used) {
-        unsigned prec_size = get_block_size(preceding);
+        unsigned prec_size = get_block_tag(preceding);
         if (preceding != heap->last_block) {
           // remove preceding block from the free list.
           remove_from_free(heap, preceding, prec_size);
         }
         merged_block = preceding;
         merged_size += prec_size;
-        set_block_size(merged_block, merged_size);
+        set_block_tag(merged_block, merged_size);
       }
     }
     // try to merge the old block with its right neighbor.
@@ -68,7 +68,7 @@ void heap_free_small(smallheap_t *heap, void* ptr) {
     if (following) {
       unsigned foll_used = is_block_used(following);
       if (!foll_used) {
-        unsigned foll_size = get_block_size(following);
+        unsigned foll_size = get_block_tag(following);
         if (following != heap->last_block) {
           // remove followning block from the free list.
           remove_from_free(heap, following, foll_size);
@@ -76,7 +76,7 @@ void heap_free_small(smallheap_t *heap, void* ptr) {
           heap->last_block = merged_block;
         }
         merged_size += foll_size;
-        set_block_size(merged_block, merged_size);
+        set_block_tag(merged_block, merged_size);
       }
     }
     // add the result to the free list, unless we merged with the last_block.
@@ -88,7 +88,14 @@ void heap_free_small(smallheap_t *heap, void* ptr) {
   }
   
   // block was not combined, so lets make it the new 'previously released'.
-  set_block_size(block, idx); // marks the block free.
+  set_block_tag(block, idx); // marks the block free.
   heap->fred_idx = idx;
   heap->fred_block = block;
+}
+
+void heap_free_large(largeheap_t *heap, void* ptr) {
+  block_t* block = (block_t*)ptr;
+  mark_block_free(block);
+  block->next = heap->free;
+  heap->free = block;
 }

@@ -90,14 +90,14 @@ strings/strcasecmp.o \
 strings/strncasecmp.o \
 ctype/tolower.o \
 ctype/isspace.o \
-heap/heap_init.o \
-heap/heap_grow.o \
-heap/heap_free.o \
-heap/heap_malloc.o \
-heap/heap_realloc.o \
 hellbender/libc_init_basic.o \
 hellbender/threadlocal.o \
 hellbender/linkedlist.o \
+hellbender/heap_init.o \
+hellbender/heap_grow.o \
+hellbender/heap_free.o \
+hellbender/heap_malloc.o \
+hellbender/heap_realloc.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \

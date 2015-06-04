@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
@@ -6,18 +6,18 @@
 
 int fstat(int handle, struct stat *buf) {
   if (handle < 0 || handle >= OPEN_MAX) {
-    printf("Illegal file handle.\n");
-    abort();
+    errno = EBADF;
+    return -1;
   }
   struct vfs_file *file = &_fcntl_data.handles[handle];
-  if (!file->filesys.open) {
-    printf("File handle not open.\n");
-    abort();
+  if (!file->stat.st_mode) {
+    errno = EBADF;
+    return -1;
   }
   if (!file->filesys.fstat) {
-    printf("fstat not supported.\n");
-    abort();
+    *buf = file->stat;
+  } else if (IDC(vfs_fstat, file->filesys.fstat, file, buf) != 0) {
+    return -1;
   }
-  return IDC(vfs_fstat, file->filesys.fstat, file, buf);
-  
+  return 0;
 }

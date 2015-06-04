@@ -1,5 +1,5 @@
 #include <string.h>
-#include <sys/threadlocal.h>
+#include <hellbender/threadlocal.h>
 
 char *strtok(char *str, const char *delim) {
   return strtok_r(str, delim, &THREADLOCAL->strtok_saveptr);

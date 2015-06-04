@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/threadlocal.h>
+#include <hellbender/threadlocal.h>
 
 #include <kernel/kernel.h>
 #include <kernel/domain.h>

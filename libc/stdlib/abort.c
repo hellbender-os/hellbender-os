@@ -13,7 +13,7 @@ void abort(void) {
 }
 
 #else
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 __attribute__((__noreturn__))
 void abort(void) {

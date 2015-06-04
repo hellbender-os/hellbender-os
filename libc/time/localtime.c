@@ -1,7 +1,7 @@
 #include <time.h>
 #include <stdio.h>
-#include <sys/threadlocal.h>
 #include <kernel/kernel.h>
+#include <hellbender/threadlocal.h>
 
 
 struct tm *localtime(const time_t *rawtime) {

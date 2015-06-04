@@ -1,5 +1,5 @@
 #include <sched.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 int sched_yield(void) {
   syscall_yield();

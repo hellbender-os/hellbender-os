@@ -1,8 +1,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/threadlocal.h>
 #include <kernel/syscall.h>
+#include <hellbender/threadlocal.h>
 
 int pthread_mutex_lock(pthread_mutex_t *m) {
   // FIFO: each thread gets a sequence number, only the thread with

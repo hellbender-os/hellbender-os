@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 int fprintf(FILE *file, const char* format, ...)
 {

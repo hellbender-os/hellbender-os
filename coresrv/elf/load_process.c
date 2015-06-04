@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <limits.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 
 #include <coresrv/elf.h>
 #include <kernel/kernel.h>

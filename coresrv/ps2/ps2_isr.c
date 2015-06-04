@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 #include <coresrv/ps2.h>
 #include <coresrv/kbd.h>
 

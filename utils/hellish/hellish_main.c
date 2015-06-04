@@ -8,7 +8,7 @@
 #include <spawn.h>
 #include <sys/wait.h>
 
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 #include <coresrv/rtc.h>
 
 extern char** environ;

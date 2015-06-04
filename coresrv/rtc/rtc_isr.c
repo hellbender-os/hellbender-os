@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <hellbender.h>
+#include <hellbender/hellbender.h>
 #include <coresrv/rtc.h>
 
 void rtc_isr() {

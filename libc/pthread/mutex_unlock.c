@@ -1,8 +1,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/threadlocal.h>
 #include <kernel/syscall.h>
+#include <hellbender/threadlocal.h>
 
 int pthread_mutex_unlock(pthread_mutex_t *m) {
   if (m->owner != THREADLOCAL->thread_id) {
