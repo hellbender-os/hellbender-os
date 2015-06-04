@@ -23,10 +23,10 @@ __IDCIMPL__ int vfs_resolve(IDC_PTR, struct vfs_file *dir, struct vfs_file *file
   // start from the root.
   int in_root = 1;
   file->oflags = flags;
-  file->isatty = false;
   file->owner = -1;
   file->filesys = vfs_rootfs.filesys;
   memset(&file->stat, 0, sizeof(struct stat));
+  file->stat.st_mode = S_IFDIR;
   file->real_path[0] = 0;
   
   vfs_rootfs_open_mount(&vfs_rootfs, file, "");

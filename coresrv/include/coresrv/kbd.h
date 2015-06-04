@@ -34,11 +34,12 @@ typedef struct kbd_event {
   unsigned event_type;
   unsigned key_code;
   unsigned flags;
+  int plain_c; // key interpret without flags.
+  int real_c; // key interpret with flags.
 } kbd_event_t;
 
+#define KBD_MAKE_CODE(key, flag) (((key)&0xffff) | ((flags)&0xff) << 16)
 #define KBD_GETC_KEYCODE(i) (i & 0xffff)
 #define KBD_GETC_FLAGS(i) ((i>>16) & 0xff)
-
-__IDC__ int coresrv_kbd_getc(IDC_PTR);
 
 #endif

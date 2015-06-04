@@ -161,6 +161,8 @@ pthread/cond_wait.o \
 pthread/mutex_init.o \
 pthread/mutex_lock.o \
 pthread/mutex_unlock.o \
+termios/tcgetattr.o \
+termios/tcsetattr.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \

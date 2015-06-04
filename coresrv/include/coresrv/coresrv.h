@@ -13,6 +13,7 @@ struct vfs_initfs;
 typedef struct sem sem_t;
 typedef struct posix_mutex posix_mutex_t;
 struct stat;
+struct termios;
 
 #include <coresrv/coresrv_idc.h>
 

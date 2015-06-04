@@ -33,17 +33,21 @@ static struct vfs_initfs_entry* find_parent(const char *path,
 
 void vfs_initfs_init(struct vfs_initfs* initfs, uint8_t *buffer, size_t size) {
   memset(initfs, 0, sizeof(struct vfs_initfs));
-  //initfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_initfs_create);
-  initfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_initfs_open);
-  initfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_initfs_close);
-  initfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_initfs_read);
-  //initfs->filesys.write = MAKE_IDC_PTR(vfs_write, vfs_initfs_write);
-  initfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_initfs_lseek);
-  //initfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_initfs_fsync);
-  //initfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_initfs_ftruncate);
-  //devfs->filesys.fstat = MAKE_IDC_PTR(vfs_fstat, vfs_initfs_fstat);
-  initfs->filesys.internal = initfs;
-  
+  initfs->filesys = (struct vfs_filesys) {
+    .create    = NULL,
+    .open      = MAKE_IDC_PTR(vfs_open, vfs_initfs_open),
+    .close     = MAKE_IDC_PTR(vfs_close, vfs_initfs_close),
+    .read      = MAKE_IDC_PTR(vfs_read, vfs_initfs_read),
+    .write     = NULL,
+    .lseek     = MAKE_IDC_PTR(vfs_lseek, vfs_initfs_lseek),
+    .fsync     = NULL, // MAKE_IDC_PTR(vfs_fsync, vfs_initfs_fsync),
+    .ftruncate = NULL,
+    .fstat     = NULL, // MAKE_IDC_PTR(vfs_fstat, vfs_initfs_fstat),
+    .link      = NULL,
+    .unlink    = NULL,
+    .termios   = NULL,
+    .internal  = initfs,
+  };
   initfs->buffer = buffer;
   initfs->size = size;
   initfs->flat_first = &initfs->root;

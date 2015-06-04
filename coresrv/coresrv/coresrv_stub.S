@@ -8,9 +8,6 @@ coresrv_stub:
     int $82;
 
 
-.global __IDC__coresrv_kbd_getc
-.set __IDC__coresrv_kbd_getc, coresrv_stub
-
 .global __IDC__coresrv_vga_putc
 .set __IDC__coresrv_vga_putc, coresrv_stub
 
@@ -76,6 +73,9 @@ coresrv_stub:
 
 .global __IDC__vfs_resolve
 .set __IDC__vfs_resolve, coresrv_stub
+
+.global __IDC__vfs_termios
+.set __IDC__vfs_termios, coresrv_stub
 
 .global __IDC__vfs_unlink
 .set __IDC__vfs_unlink, coresrv_stub

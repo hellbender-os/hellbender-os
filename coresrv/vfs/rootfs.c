@@ -10,15 +10,21 @@
 
 void  vfs_rootfs_init(struct vfs_rootfs *rootfs) {
   memset(rootfs, 0, sizeof(struct vfs_rootfs));
-  //rootfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_rootfs_create);
-  rootfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_rootfs_open);
-  rootfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_rootfs_close);
-  rootfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_rootfs_read);
-  //rootfs->filesys.write = MAKE_IDC_PTR(vfs_write, vfs_rootfs_write);
-  rootfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_rootfs_lseek);
-  //rootfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_rootfs_fsync);
-  //rootfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_rootfs_ftruncate);
-  rootfs->filesys.internal = rootfs;
+  rootfs->filesys  = (struct vfs_filesys) {
+    .create    = NULL,
+    .open      = MAKE_IDC_PTR(vfs_open, vfs_rootfs_open),
+    .close     = MAKE_IDC_PTR(vfs_close, vfs_rootfs_close),
+    .read      = MAKE_IDC_PTR(vfs_read, vfs_rootfs_read),
+    .write     = NULL,
+    .lseek     = MAKE_IDC_PTR(vfs_lseek, vfs_rootfs_lseek),
+    .fsync     = NULL,
+    .ftruncate = NULL,
+    .fstat     = NULL, // MAKE_IDC_PTR(vfs_fstat, vfs_initfs_fstat),
+    .link      = NULL,
+    .unlink    = NULL,
+    .termios   = NULL,
+    .internal  = rootfs,
+  };
 }
 
 int vfs_rootfs_add(struct vfs_rootfs *rootfs,

@@ -42,7 +42,6 @@ ps2/ps2_init.o \
 ps2/ps2_isr.o \
 kbd/kbd_init.o \
 kbd/kbd_isr.o \
-kbd/kbd_getc.o \
 rtc/rtc_init.o \
 rtc/rtc_isr.o \
 rtc/rtc_ticks.o \

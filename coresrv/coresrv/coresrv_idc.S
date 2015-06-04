@@ -2,12 +2,6 @@
 .section .idc_table
 .org 8 // first slot is reserved
 
-.global __IDE__coresrv_kbd_getc
-__IDE__coresrv_kbd_getc:
-    calll coresrv_kbd_getc
-    int $83
-.balign 8
-
 .global __IDE__coresrv_vga_putc
 __IDE__coresrv_vga_putc:
     calll coresrv_vga_putc
@@ -41,6 +35,12 @@ __IDE__dev_tty_open:
 .global __IDE__dev_tty_read
 __IDE__dev_tty_read:
     calll dev_tty_read
+    int $83
+.balign 8
+
+.global __IDE__dev_tty_termios
+__IDE__dev_tty_termios:
+    calll dev_tty_termios
     int $83
 .balign 8
 

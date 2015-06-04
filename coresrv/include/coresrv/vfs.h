@@ -22,6 +22,7 @@ struct vfs_filesys {
   vfs_fstat_ptr fstat;
   vfs_link_ptr link;
   vfs_unlink_ptr unlink;
+  vfs_termios_ptr termios;
 
   void* internal;
 };
@@ -29,7 +30,6 @@ struct vfs_filesys {
 struct vfs_file {
   unsigned in_use;
   int oflags;
-  bool isatty;
   id_t owner; // group id or process id; for sockets.
   struct vfs_filesys filesys;
   struct stat stat;
@@ -39,6 +39,7 @@ struct vfs_file {
 };
 
 struct stat;
+struct termios;
 
 extern struct vfs_rootfs vfs_rootfs;
 
@@ -61,5 +62,9 @@ __IDC__ int vfs_ftruncate(IDC_PTR, struct vfs_file*, off_t);
 __IDC__ int vfs_fstat(IDC_PTR, struct vfs_file*, struct stat*);
 __IDC__ int vfs_link(IDC_PTR, struct vfs_file*, struct vfs_file*);
 __IDC__ int vfs_unlink(IDC_PTR, struct vfs_file*);
+__IDC__ int vfs_termios(IDC_PTR, struct vfs_file*, struct termios*, int);
+
+#define VFS_TERMIOS_GET 1
+#define VFS_TERMIOS_SET 2
 
 #endif

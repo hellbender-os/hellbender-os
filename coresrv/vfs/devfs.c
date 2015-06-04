@@ -10,16 +10,21 @@
 
 void  vfs_devfs_init(struct vfs_devfs *devfs) {
   memset(devfs, 0, sizeof(struct vfs_devfs));
-  //devfs->filesys.create = MAKE_IDC_PTR(vfs_create, vfs_devfs_create);
-  devfs->filesys.open = MAKE_IDC_PTR(vfs_open, vfs_devfs_open);
-  devfs->filesys.close = MAKE_IDC_PTR(vfs_close, vfs_devfs_close);
-  devfs->filesys.read = MAKE_IDC_PTR(vfs_read, vfs_devfs_read);
-  //devfs->filesys.write = MAKE_IDC_PTR(vfs_write, vfs_devfs_write);
-  devfs->filesys.lseek = MAKE_IDC_PTR(vfs_lseek, vfs_devfs_lseek);
-  //devfs->filesys.fsync = MAKE_IDC_PTR(vfs_fsync, vfs_devfs_fsync);
-  //devfs->filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, vfs_devfs_ftruncate);
-  //devfs->filesys.fstat = MAKE_IDC_PTR(vfs_fstat, vfs_devfs_fstat);
-  devfs->filesys.internal = devfs;
+  devfs->filesys = (struct vfs_filesys) {
+    .create    = NULL,
+    .open      = MAKE_IDC_PTR(vfs_open, vfs_devfs_open),
+    .close     = MAKE_IDC_PTR(vfs_close, vfs_devfs_close),
+    .read      = MAKE_IDC_PTR(vfs_read, vfs_devfs_read),
+    .write     = NULL,
+    .lseek     = MAKE_IDC_PTR(vfs_lseek, vfs_devfs_lseek),
+    .fsync     = NULL, // MAKE_IDC_PTR(vfs_fsync, vfs_devfs_fsync),
+    .ftruncate = NULL,
+    .fstat     = NULL, // MAKE_IDC_PTR(vfs_fstat, vfs_devfs_fstat),
+    .link      = NULL,
+    .unlink    = NULL,
+    .termios   = NULL,
+    .internal  = devfs,
+  };
 }
 
 int vfs_devfs_add(struct vfs_devfs *devfs,

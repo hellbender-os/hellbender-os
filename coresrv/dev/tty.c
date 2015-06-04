@@ -4,8 +4,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <pthread.h>
-
-#include <sys/keymap.h>
+#include <semaphore.h>
+#include <errno.h>
+#include <termios.h>
 
 #include <kernel/kernel.h>
 #include <kernel/io.h>
@@ -14,16 +15,27 @@
 #include <coresrv/kbd.h>
 #include <coresrv/tty.h>
 #include <coresrv/dev.h>
+#include <coresrv/vfs.h>
 
 #define N_TTYS 3
 #define TTY_HEIGHT 100
 
 #define MEMORY_SIZE (VGA_WIDTH*TTY_HEIGHT)
 #define WINDOW_SIZE (VGA_WIDTH*VGA_HEIGHT)
+#define KBD_MAX_EVENTS 32
+
+struct dev_tty_kbd {
+  kbd_event_t events[KBD_MAX_EVENTS];
+  unsigned first_event;
+  volatile unsigned last_event;
+  sem_t event_sema; // posted for every event, waited for every read.
+};
 
 struct dev_tty_buffer {
   unsigned id;
-  uint16_t buffer[VGA_WIDTH*TTY_HEIGHT];
+  struct termios termios;
+  struct dev_tty_kbd kbd;
+  uint16_t vgabuffer[VGA_WIDTH*TTY_HEIGHT];
   unsigned cursor_index;
   unsigned window_end;
   unsigned screen_end;
@@ -33,8 +45,7 @@ struct dev_tty_buffer {
 struct dev_tty {
   struct dev_tty_buffer ttys[N_TTYS];
   volatile unsigned current_tty;
-  pthread_cond_t cond; // syncs access to current_tty.
-  pthread_mutex_t mutex;
+  int magic_down;
   
   uint16_t vga_shadow[WINDOW_SIZE];
   unsigned vga_cursor_x;
@@ -73,7 +84,7 @@ static void update_vga_part(struct dev_tty_buffer *tty,
   for (; size; --size, ++index) {
     if (index >= screen_begin && index < tty->screen_end) {
       unsigned vga_index = index - screen_begin;
-      uint16_t d = tty->buffer[index % MEMORY_SIZE];
+      uint16_t d = tty->vgabuffer[index % MEMORY_SIZE];
       if (d != dev_tty.vga_shadow[vga_index]) {
         dev_tty.vga_shadow[vga_index] = d;
         vga_buffer[vga_index] = d;
@@ -88,7 +99,7 @@ static void update_vga_full(struct dev_tty_buffer *tty) {
 
   unsigned index = tty->screen_end - WINDOW_SIZE;
   for (unsigned i = 0; i < WINDOW_SIZE; ++i, ++index) {
-    uint16_t d = tty->buffer[index % MEMORY_SIZE];
+    uint16_t d = tty->vgabuffer[index % MEMORY_SIZE];
     if (dev_tty.menu_visible && i < 80) {
       dev_tty.menusave[i] = d;
     } else if (d != dev_tty.vga_shadow[i]) {
@@ -125,29 +136,33 @@ void dev_tty_init() {
   memset(&dev_tty, 0, sizeof(dev_tty));
   for (int i = 0; i < N_TTYS; ++i) {
     dev_tty.ttys[i].id = i;
-    //dev_tty.ttys[i].buffer = (uint16_t)malloc(VGA_WIDTH*TTY_HEIGHT);
+    sem_init(&dev_tty.ttys[i].kbd.event_sema, 1, 0);
+    //dev_tty.ttys[i].vgabuffer = (uint16_t)malloc(VGA_WIDTH*TTY_HEIGHT);
     dev_tty.ttys[i].window_end = VGA_WIDTH*VGA_HEIGHT;
     dev_tty.ttys[i].screen_end = VGA_WIDTH*VGA_HEIGHT;
     dev_tty.ttys[i].color = make_vgaentry(0, make_color(COLOR_LIGHT_GREY,
                                                         COLOR_BLACK));
     uint16_t d = dev_tty.ttys[i].color | ' ';
     for (unsigned j = 0; j < VGA_WIDTH*VGA_HEIGHT; ++j) {
-      dev_tty.ttys[i].buffer[j] = d;
+      dev_tty.ttys[i].vgabuffer[j] = d;
     }
   }
   
-  struct vfs_filesys filesys;
-  memset(&filesys, 0, sizeof(filesys));
-  filesys.open = MAKE_IDC_PTR(vfs_open, dev_tty_open);
-  filesys.close = MAKE_IDC_PTR(vfs_close, dev_tty_close);
-  filesys.read = MAKE_IDC_PTR(vfs_read, dev_tty_read);
-  filesys.write = MAKE_IDC_PTR(vfs_write, dev_tty_write);
-  filesys.lseek = MAKE_IDC_PTR(vfs_lseek, dev_tty_lseek);
-  //filesys.fsync = MAKE_IDC_PTR(vfs_fsync, dev_tty_fsync);
-  //filesys.ftruncate = MAKE_IDC_PTR(vfs_ftruncate, dev_tty_ftruncate);
-
-  pthread_cond_init(&dev_tty.cond, NULL);
-  pthread_mutex_init(&dev_tty.mutex, NULL);
+  struct vfs_filesys filesys = (struct vfs_filesys) {
+    .create    = NULL,
+    .open      = MAKE_IDC_PTR(vfs_open, dev_tty_open),
+    .close     = MAKE_IDC_PTR(vfs_close, dev_tty_close),
+    .read      = MAKE_IDC_PTR(vfs_read, dev_tty_read),
+    .write     = MAKE_IDC_PTR(vfs_write, dev_tty_write),
+    .lseek     = MAKE_IDC_PTR(vfs_lseek, dev_tty_lseek),
+    .fsync     = NULL, // MAKE_IDC_PTR(vfs_fsync, dev_tty_fsync),
+    .ftruncate = NULL,
+    .fstat     = NULL, // MAKE_IDC_PTR(vfs_fstat, dev_tty_fstat),
+    .link      = NULL,
+    .unlink    = NULL,
+    .termios   = MAKE_IDC_PTR(vfs_termios, dev_tty_termios),
+    .internal  = NULL,
+  };
   
   dev_register(NO_IDC, "tty0", &filesys); // current virtual console
   dev_register(NO_IDC, "tty1", &filesys); // 1st virtual console
@@ -155,7 +170,7 @@ void dev_tty_init() {
   dev_register(NO_IDC, "tty3", &filesys); // 3rd virtual console
 };
 
-void dev_tty_switch_to(unsigned tty_id) {
+static void dev_tty_switch_to(unsigned tty_id) {
   // save old console.
   struct dev_tty_buffer* old_tty = &dev_tty.ttys[dev_tty.current_tty];
   unsigned index = old_tty->screen_end - WINDOW_SIZE;
@@ -164,7 +179,7 @@ void dev_tty_switch_to(unsigned tty_id) {
     if (dev_tty.menu_visible && i < 80) {
       d = dev_tty.menusave[i];
     }
-    old_tty->buffer[index % MEMORY_SIZE] = d;
+    old_tty->vgabuffer[index % MEMORY_SIZE] = d;
     dev_tty.vga_shadow[i] = d;
   }
   
@@ -181,12 +196,11 @@ void dev_tty_switch_to(unsigned tty_id) {
   // draw new console.
   if (tty_id != dev_tty.current_tty) {
     dev_tty.current_tty = tty_id;
-    pthread_cond_broadcast(&dev_tty.cond);
     update_vga_full(&dev_tty.ttys[tty_id]);
   }
 }
 
-void dev_tty_show_menu() {
+static void dev_tty_show_menu() {
   dev_tty.menu_visible = 1;
   for (int i = 0; i < 80; ++i) {
     dev_tty.menusave[i] = dev_tty.vga_shadow[i];
@@ -194,9 +208,59 @@ void dev_tty_show_menu() {
   update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
 }
 
-void dev_tty_hide_menu() {
+static void dev_tty_hide_menu() {
   dev_tty.menu_visible = 0;
   update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
+}
+
+
+static int magic_key(struct kbd_event *event) {
+  if (event->flags == (KBD_FLAG_LSHIFT+KBD_FLAG_LCTRL+KBD_FLAG_LALT)) {
+    if (!dev_tty.magic_down) {
+      dev_tty_show_menu();
+      dev_tty.magic_down = 1;
+    }
+    
+    if (event->event_type == KBD_EVENT_KEYDOWN) {
+      int c = event->plain_c;
+      switch (c) {
+      case '1': // switch between virtual terminals.
+      case '2':
+      case '3':
+        {
+          unsigned tty_id = c - '1';
+          dev_tty_switch_to(tty_id);
+        }
+        break;
+      }
+    }
+    return 1;
+
+  } else {
+    if (dev_tty.magic_down) {
+      dev_tty_hide_menu();
+      dev_tty.magic_down = 0;
+    }
+    return 0;
+  }
+}
+
+int dev_tty_post(kbd_event_t *event) {
+  if (magic_key(event)) return 0;
+
+  struct dev_tty_buffer* tty = &dev_tty.ttys[dev_tty.current_tty];
+  struct dev_tty_kbd* kbd = &tty->kbd;
+  
+  unsigned event_idx = (kbd->last_event + 1) % KBD_MAX_EVENTS;
+  if (event_idx != kbd->first_event) {
+    kbd->events[kbd->last_event] = *event;
+    BARRIER;
+    kbd->last_event = event_idx;
+    sem_post(&kbd->event_sema);
+    return 0;
+  } else {
+    return -1;
+  }
 }
 
 __IDCIMPL__ int dev_tty_open(IDC_PTR, struct vfs_file* file, const char *name, int flags) {
@@ -220,22 +284,19 @@ __IDCIMPL__ int dev_tty_close(IDC_PTR, struct vfs_file* file) {
 __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, size_t size) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
   if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
+  struct dev_tty_kbd* kbd = &tty->kbd;
   uint8_t* cbuffer = (uint8_t*)buffer;
 
-  // block until we are the active console
-  pthread_mutex_lock(&dev_tty.mutex);
-  while (dev_tty.current_tty != tty->id) {
-    pthread_cond_wait(&dev_tty.cond, &dev_tty.mutex);
-  }
-  pthread_mutex_unlock(&dev_tty.mutex);
-
+  // block until we have events:
   size_t bytes = 0;
-  if (dev_tty.current_tty == tty->id) {
-    while (bytes < size) {
-      int kc = CORE_IDC(coresrv_kbd_getc);
-      if (kc < 0) break;
-      int c = keymap_code2char(keymap,
-                               KBD_GETC_KEYCODE(kc), KBD_GETC_FLAGS(kc));
+  while (bytes < size) {
+    sem_wait(&kbd->event_sema);
+    unsigned event_idx = kbd->first_event;
+    kbd_event_t event = kbd->events[event_idx];
+    BARRIER;
+    kbd->first_event = (event_idx + 1) % KBD_MAX_EVENTS;
+    if (event.event_type & KBD_EVENT_KEYDOWN) {
+      int c = event.real_c;
       if (c > 0) cbuffer[bytes++] = (uint8_t)c;
     }
   }
@@ -245,7 +306,7 @@ __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, 
 __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* data, size_t size) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
   if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
-  uint16_t* buffer = tty->buffer;
+  uint16_t* buffer = tty->vgabuffer;
   uint8_t* cdata = (uint8_t*)data;
 
   // Virtual buffer extends from 0 to infinity.
@@ -327,8 +388,8 @@ __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* da
 
 __IDCIMPL__ off_t dev_tty_lseek(IDC_PTR, struct vfs_file* file, off_t offset, int where) {
   (void)(offset);//TODO implement
-  struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
-  if (tty == NULL) return (off_t)(-1);
+   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
+  if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
   
   switch (where) {
   case SEEK_SET:
@@ -343,3 +404,21 @@ __IDCIMPL__ off_t dev_tty_lseek(IDC_PTR, struct vfs_file* file, off_t offset, in
   return (off_t)(-1);
 }
 
+__IDCIMPL__ int dev_tty_termios(IDC_PTR, struct vfs_file* file, struct termios* termios, int cmd) {
+  struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
+  if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
+
+  switch (cmd) {
+  case VFS_TERMIOS_GET:
+    memcpy(termios, &tty->termios, sizeof(struct termios));
+    return 0;
+
+  case VFS_TERMIOS_SET:
+    memcpy(&tty->termios, termios, sizeof(struct termios));
+    return 0;
+
+  default:
+    errno = EINVAL;
+    return -1;
+  }
+}

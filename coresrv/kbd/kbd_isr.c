@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <sys/keymap.h>
 #include <hellbender.h>
 #include <kernel/io.h>
 #include <coresrv/kbd.h>
@@ -7,39 +6,6 @@
 #include <coresrv/tty.h>
 
 #include "kbd_impl.h"
-
-static int magic_down = 0;
-
-static int magic_key(unsigned event_type, unsigned key, unsigned flags) {
-  if (flags == (KBD_FLAG_LSHIFT+KBD_FLAG_LCTRL+KBD_FLAG_LALT)) {
-    if (!magic_down) {
-      dev_tty_show_menu();
-      magic_down = 1;
-    }
-    
-    if (event_type == KBD_EVENT_KEYDOWN) {
-      int c = keymap_code2char(keymap, key, 0);
-      switch (c) {
-      case '1': // switch between virtual terminals.
-      case '2':
-      case '3':
-        {
-          unsigned tty_id = c - '1';
-          dev_tty_switch_to(tty_id);
-        }
-        break;
-      }
-    }
-    return 1;
-
-  } else {
-    if (magic_down) {
-      dev_tty_hide_menu();
-      magic_down = 0;
-    }
-    return 0;
-  }
-}
 
 void kbd_isr() {
   unsigned key = inb(0x60);
@@ -87,18 +53,13 @@ void kbd_isr() {
     if (kbd.keydown[KBD_KEY_LALT]) flags |= KBD_FLAG_LALT;
     if (kbd.keydown[KBD_KEY_RALT]) flags |= KBD_FLAG_RALT;
 
-    if (magic_key(event_type, key, flags)) break;
-
-    unsigned event_idx = (kbd.last_event + 1) % KBD_MAX_EVENTS;
-    if (event_idx != kbd.first_event) {
-      kbd_event_t *event = &kbd.events[kbd.last_event];
-      event->event_type = event_type;
-      event->key_code = key;
-      event->flags = flags;
-      BARRIER;
-      kbd.last_event = event_idx;
-      sem_post(&kbd.event_sema);
-    } else {
+    kbd_event_t event;
+    event.event_type = event_type;
+    event.key_code = key;
+    event.flags = flags;
+    event.plain_c = keymap_code2char(kbd.keymap, key, 0);
+    event.real_c = keymap_code2char(kbd.keymap, key, flags);
+    if (!dev_tty_post(&event)) {
       rtc_beep(NO_IDC, 800, 4);
     }
   }

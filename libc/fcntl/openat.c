@@ -69,7 +69,7 @@ int openat(int dir_fd, const char *name, int flags, ...) {
     errno = ENOTDIR;
     goto openat_error;
   }
-  if (flags & O_WRONLY || flags & O_RDWR) {
+  if (flags & O_WRONLY) {
     if (S_ISDIR(file->stat.st_mode)) {
       errno = EISDIR;
       goto openat_error;
@@ -99,15 +99,15 @@ int openat(int dir_fd, const char *name, int flags, ...) {
   }
   
   // File is now open, or we have failed.
-  if (flags & O_TTY_INIT && file->isatty) {
+  if (flags & O_TTY_INIT && file->filesys.termios) {
     // TODO: initializer struct termios.
     // See: http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap11.html#tag_11_02
   }
-  if (!(flags & O_NOCTTY) && file->isatty) {
+  if (!(flags & O_NOCTTY) && file->filesys.termios) {
     // TODO: set as controlling TTY if this is a session leader and tty is free.
     // See: http://pubs.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap11.html#tag_11_01_03
   }
-  if ((flags & O_RDWR || flags & O_WRONLY) && flags & O_TRUNC) {
+  if (flags & O_WRONLY && flags & O_TRUNC) {
     if (!file->filesys.ftruncate) {
       errno = EROFS;
       goto openat_error;

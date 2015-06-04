@@ -4,7 +4,7 @@
 
 #include "kbd_impl.h"
 
-__IDCIMPL__ int coresrv_kbd_getc(IDC_PTR) {
+__IDC IMPL__ int coresrv_kbd_getc(IDC_PTR) {
   while (1) {
     sem_wait(&kbd.event_sema);
     unsigned event_idx = kbd.first_event;
