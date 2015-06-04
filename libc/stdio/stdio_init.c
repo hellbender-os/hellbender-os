@@ -5,12 +5,12 @@
 
 struct _linkedlist _stdio_files;
 
-FILE _stdin  =
-  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=1, .error=0 };
-FILE _stdout =
-  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=0, .error=0 };
-FILE _stderr =
-  { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0, .fd=-1, .row=0, .error=0 };
+FILE _stdin  = { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0,
+                 .buf_offset=0, .fd=-1, .row=1, .error=0 };
+FILE _stdout = { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0,
+                 .buf_offset=0, .fd=-1, .row=0, .error=0 };
+FILE _stderr = { .buffer=NULL, .buf_size=BUFSIZ, .buf_bytes=0,
+                 .buf_offset=0, .fd=-1, .row=0, .error=0 };
 
 FILE *stdin = NULL;
 FILE *stdout = NULL;

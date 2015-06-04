@@ -109,6 +109,7 @@ fcntl/creat.o \
 unistd/close.o \
 unistd/fsync.o \
 unistd/ftruncate.o \
+unistd/truncate.o \
 unistd/lseek.o \
 unistd/read.o \
 unistd/write.o \
@@ -141,6 +142,9 @@ stdio/fflush.o \
 stdio/fwrite.o \
 stdio/fileno.o \
 stdio/ferror.o \
+stdio/scanf.o \
+stdio/sscanf.o \
+stdio/fscanf.o \
 stdlib/exit.o \
 stdlib/system.o \
 stdlib/getenv.o \
@@ -163,6 +167,7 @@ pthread/mutex_lock.o \
 pthread/mutex_unlock.o \
 termios/tcgetattr.o \
 termios/tcsetattr.o \
+poll/poll.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \

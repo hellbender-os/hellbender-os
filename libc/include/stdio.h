@@ -16,6 +16,7 @@ typedef struct {
   char *buffer;
   size_t buf_size;
   unsigned buf_bytes;
+  unsigned buf_offset;
   int fd;
   int row; // Read Or Write: 0 == write, 1 == read.
   int eof;
