@@ -1,7 +1,7 @@
 
 #include <kernel/kernel.h>
 #include <kernel/mem.h>
-#include <sys/heap.h>
+#include <hellbender/heap.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +11,7 @@
 #include "heap_impl.h"
 
 void heap_debug_small(smallheap_t *heap) {
+  /*
   // sanity checking:
   //  for each block in chain:
   //   if block if reserved,
@@ -59,4 +60,5 @@ void heap_debug_small(smallheap_t *heap) {
     }
     b = following_block(heap, b);
   }
+  */
 }

@@ -153,6 +153,7 @@ time/localtime.o \
 time/time.o \
 sys/stat/fstat.o \
 sys/wait/waitpid.o \
+sys/ioctl.o \
 spawn/posix_spawn.o \
 semaphore/sem_init.o \
 semaphore/sem_open.o \
@@ -168,6 +169,7 @@ pthread/mutex_unlock.o \
 termios/tcgetattr.o \
 termios/tcsetattr.o \
 poll/poll.o \
+signal/signal.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \

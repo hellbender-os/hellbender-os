@@ -1,4 +1,4 @@
-#include <sys/heap.h>
+#include <hellbender/heap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,9 +45,10 @@ void check_data(data_t* ptr, data_t *array, int size) {
 int main() {
   wilderness_t wild;
   heap_init_wilderness(&wild, memory, 4096);
-
+  largeheap_t large;
+  heap_init_large(&large, &wild);
   smallheap_t heap;
-  heap_init_small(&heap, &wild);
+  heap_init_small(&heap, &large);
   unsigned max_alloc = 0;
   unsigned total_alloc = 0;
 

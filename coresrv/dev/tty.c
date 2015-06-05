@@ -235,6 +235,23 @@ static int decode_control_seq(struct dev_tty_buffer* tty, char byte, unsigned *c
         switch_to_main_buffer(tty);
         *cursor = get_tty_cursor(tty);
 
+      } else if (byte == 'A') {
+        int rows = atoi(tty->esc_sequence+2);
+        if (!rows) rows = 1;
+        *cursor -= rows * VGA_WIDTH;
+      } else if (byte == 'B') {
+        int rows = atoi(tty->esc_sequence+2);
+        if (!rows) rows = 1;
+        *cursor += rows * VGA_WIDTH;
+      } else if (byte == 'C') {
+        int cols = atoi(tty->esc_sequence+2);
+        if (!cols) cols = 1;
+        *cursor += cols;
+      } else if (byte == 'D') {
+        int cols = atoi(tty->esc_sequence+2);
+        if (!cols) cols = 1;
+        *cursor -= cols;
+        
       } else if (byte == 'H') {
         int y = atoi(tty->esc_sequence+2);
         int x = atoi(strchr(tty->esc_sequence, ';') + 1);
@@ -464,6 +481,9 @@ __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* da
       if (cursor_index > 0) {
         buffer[--cursor_index] = color | ' ';
       }
+      break;
+    case '\r': // carriage return.
+      cursor_index -= cursor_index % VGA_WIDTH;
       break;
     case '\n': // new line.
       eol = VGA_WIDTH - cursor_index % VGA_WIDTH;

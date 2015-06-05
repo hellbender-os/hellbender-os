@@ -7,6 +7,8 @@
 #define STRINGIZE2(x) #x
 #define LINE_STRING STRINGIZE(__LINE__)
 
+struct _linkedlist _stdio_files;
+
 void do_assert(int test, const char* txt) {
   if (!test) {
     write(fileno(stderr), txt, strlen(txt)+1);
@@ -91,6 +93,11 @@ int main() {
   // test wierd combos
   sprintf(tmp, "%2.u;%-1.5u;%-2.0u;%.0u", 123, 123, 0, 0);
   ASSERT(strcmp(tmp, "123;00123;  ;") == 0);
+
+  // test some strings
+  int minw = 10;
+  sprintf(tmp, ";%*s;", minw, "");
+  ASSERT(strcmp(tmp, ";          ;") == 0);
 
   write(fileno(stdout), "OK\n", 3);
   fsync(fileno(stdout));

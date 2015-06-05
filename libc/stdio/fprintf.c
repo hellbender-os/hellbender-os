@@ -139,16 +139,24 @@ static int parse_specifiers(struct spec *specs,
           spec_ptr = strchr(spec_str, c);
           if (spec_ptr) spec.specifier = c;
           else return -1;
-          if (spec.minwidth_asterisk && !spec.minwidth_idx)
+          if (spec.minwidth_asterisk && !spec.minwidth_idx) {
             spec.minwidth_idx = next_idx++;
-          if (spec.precision_asterisk && !spec.precision_idx)
+          }
+          if (spec.minwidth_idx) {
+            spec_order[spec.minwidth_idx] = ++n_spec;
+            specs[n_spec] = mock_spec;
+          }
+          if (spec.precision_asterisk && !spec.precision_idx) {
             spec.precision_idx = next_idx++;
+          }
+          if (spec.precision_idx) {
+            spec_order[spec.precision_idx] = ++n_spec;
+            specs[n_spec] = mock_spec;
+          }
           if (!spec.value_idx) spec.value_idx = next_idx++;
           spec.end_ptr = format;
           spec_order[spec.value_idx] = ++n_spec;
           specs[n_spec] = spec;
-          if (spec.minwidth_idx) specs[spec.minwidth_idx] = mock_spec;
-          if (spec.precision_idx) specs[spec.minwidth_idx] = mock_spec;
           break;
         }
       }
@@ -318,6 +326,16 @@ static inline size_t pad_right(FILE *file, struct spec* spec, size_t len) {
   return n;
 }
 
+static inline size_t pads_left(FILE *file, struct spec* spec, size_t len) {
+  if (spec->left_justified) return 0;
+  int n = 0;
+  for (int i = (int)len; i < spec->minwidth_value; ++i) {
+    fputc(' ', file);
+    ++n;
+  }
+  return n;
+}
+
 static inline char* do_alt_form(int base, char* ptr) {
   if (base == 8) {
     if (*ptr != '0') *(--ptr) = '0';
@@ -332,8 +350,6 @@ static inline char* do_alt_form(int base, char* ptr) {
   }
   return ptr;
 }
-
-static const char precent = '%';
 
 #define TMP_SIZE 128
 int vfprintf(FILE* file, const char* format, va_list parameters) {
@@ -376,6 +392,7 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
         break;
       case '%':
         fputc('%', file);
+        ++written;
         break;
       case 'd':
       case 'i':
@@ -422,12 +439,14 @@ int vfprintf(FILE* file, const char* format, va_list parameters) {
       case 's':
         // TODO: support ls
         len = strlen(values[specs[i].value_idx].s);
-        fwrite(values[specs[i].value_idx].s, len, 1, file);
+        written += pads_left(file, &specs[i], len);
+        written += fwrite(values[specs[i].value_idx].s, len, 1, file);
+        written += pad_right(file, &specs[i], len);
         break;
       default:
         // TODO: fFeEgGaApn
         len = specs[i].end_ptr - specs[i].start_ptr;
-        fwrite(specs[i].start_ptr, len, 1, file);
+        written += fwrite(specs[i].start_ptr, len, 1, file);
       }
     }
   }

@@ -45,6 +45,12 @@ int openat(int dir_fd, const char *name, int flags, ...) {
     goto openat_error;
   }
 
+  // TODO: this is the hackiest way to make /dev/tty point to controlling TTY.
+  if (strcmp(name, "/dev/tty") == 0) {
+    _fcntl_data.handles[handle] = _fcntl_data.handles[STDIN_FILENO];
+    return handle;
+  }
+
   // resolve the path:
   struct vfs_file *file = &_fcntl_data.handles[handle];
   if (CORE_IDC(vfs_resolve, dir, file, name, flags) != 0) {

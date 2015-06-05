@@ -29,21 +29,23 @@ test_printf \
 
 TEST_HEAP_OBJS:=\
 test_heap.o \
-../libc/heap/heap_init.host.o \
-../libc/heap/heap_grow.host.o \
-../libc/heap/heap_free.host.o \
-../libc/heap/heap_malloc.host.o \
-../libc/heap/heap_realloc.host.o \
-../libc/heap/heap_debug.host.o \
+../libc/hellbender/heap_init.host.o \
+../libc/hellbender/heap_grow.host.o \
+../libc/hellbender/heap_free.host.o \
+../libc/hellbender/heap_malloc.host.o \
+../libc/hellbender/heap_realloc.host.o \
+../libc/hellbender/heap_debug.host.o \
 
 TEST_PRINTF_OBJS:=\
 test_printf.o \
 ../libc/stdio/fprintf.host.o \
 ../libc/stdio/sprintf.host.o \
 ../libc/stdio/fputc.host.o \
+../libc/stdio/fwrite.host.o \
 ../libc/stdio/fflush.host.o \
 ../libc/stdlib/lltoa.host.o \
 ../libc/stdlib/ulltoa.host.o \
+../libc/hellbender/linkedlist.host.o \
 
 OBJS:=\
 $(TEST_HEAP_OBJS) \

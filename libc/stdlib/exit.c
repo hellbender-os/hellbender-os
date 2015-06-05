@@ -33,3 +33,14 @@ void exit(int status) {
   _fini();
   syscall_exit(status);
 }
+
+void _exit(int status) {
+  _fini();
+  syscall_exit(status);
+}
+
+void _Exit(int status) {
+  _fini();
+  syscall_exit(status);
+}
+
