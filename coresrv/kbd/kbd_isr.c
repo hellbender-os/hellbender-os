@@ -59,8 +59,8 @@ void kbd_isr() {
     event.flags = flags;
     event.plain_c = keymap_code2char(kbd.keymap, key, 0);
     event.real_c = keymap_code2char(kbd.keymap, key, flags);
-    if (!dev_tty_post(&event)) {
-      rtc_beep(NO_IDC, 800, 4);
+    if (dev_tty_post(&event)) {
+      rtc_beep(NO_IDC, 800, 10);
     }
   }
   syscall_iret();

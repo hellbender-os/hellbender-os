@@ -16,6 +16,7 @@
 #include <coresrv/tty.h>
 #include <coresrv/dev.h>
 #include <coresrv/vfs.h>
+#include <coresrv/rtc.h>
 
 #define N_TTYS 3
 #define TTY_HEIGHT 100
@@ -23,6 +24,7 @@
 #define MEMORY_SIZE (VGA_WIDTH*TTY_HEIGHT)
 #define WINDOW_SIZE (VGA_WIDTH*VGA_HEIGHT)
 #define KBD_MAX_EVENTS 32
+#define ESC_SEQ_MAX 15
 
 struct dev_tty_kbd {
   kbd_event_t events[KBD_MAX_EVENTS];
@@ -35,11 +37,14 @@ struct dev_tty_buffer {
   unsigned id;
   struct termios termios;
   struct dev_tty_kbd kbd;
-  uint16_t vgabuffer[VGA_WIDTH*TTY_HEIGHT];
-  unsigned cursor_index;
-  unsigned window_end;
-  unsigned screen_end;
+  unsigned which_buffer; // 0 == main; 1 == alt.
+  uint16_t main_buffer[VGA_WIDTH*VGA_HEIGHT];
+  unsigned main_cursor;// offset of the cursor from top-left of the window.
+  uint16_t alt_buffer[VGA_WIDTH*VGA_HEIGHT];
+  unsigned alt_cursor;
   uint16_t color;
+  char esc_sequence[ESC_SEQ_MAX+1];
+  unsigned n_esc_bytes;
 };
 
 struct dev_tty {
@@ -53,21 +58,50 @@ struct dev_tty {
   unsigned cursor_visible;
   unsigned vga_copied;
   unsigned menu_visible;
-  uint16_t menusave[VGA_WIDTH];
+  uint16_t menu[VGA_WIDTH];
 } dev_tty;
 
 extern uint16_t vga_buffer[];
 
+static uint16_t* get_tty_row(struct dev_tty_buffer* tty, unsigned row) {
+  switch (tty->which_buffer) {
+  case 0:
+    return tty->main_buffer + row * VGA_WIDTH;
+  case 1:
+    return tty->alt_buffer + row * VGA_WIDTH;
+  default: return NULL;
+  }
+}
+
+static unsigned get_tty_cursor(struct dev_tty_buffer* tty) {
+  switch (tty->which_buffer) {
+  case 0:
+    return tty->main_cursor;
+  case 1:
+    return tty->alt_cursor;
+  default: return 0xffff;
+  }
+}
+
+static void set_tty_cursor(struct dev_tty_buffer* tty, unsigned cursor) {
+  switch (tty->which_buffer) {
+  case 0:
+    tty->main_cursor = cursor;
+    break;
+  case 1:
+    tty->alt_cursor = cursor;
+    break;
+  }
+}
+
 static void update_vga_cursor(struct dev_tty_buffer *tty) {
   if (tty->id != dev_tty.current_tty) return;
 
-  unsigned screen_begin = tty->screen_end - WINDOW_SIZE;
-  unsigned position = tty->cursor_index - screen_begin;
-  if (tty->cursor_index < screen_begin || position >= WINDOW_SIZE) {
+  unsigned position = get_tty_cursor(tty);
+  if (position >= WINDOW_SIZE) {
     // Hide cursor
     position = 0xffff;
   }
-
   // cursor LOW port to vga INDEX register
   outb(0x3D4, 0x0F);
   outb(0x3D5, (unsigned char)(position&0xFF));
@@ -80,15 +114,15 @@ static void update_vga_part(struct dev_tty_buffer *tty,
                             unsigned index, size_t size) {
   if (tty->id != dev_tty.current_tty) return;
 
-  unsigned screen_begin = tty->screen_end - WINDOW_SIZE;
+  uint16_t* buffer = get_tty_row(tty, 0);
   for (; size; --size, ++index) {
-    if (index >= screen_begin && index < tty->screen_end) {
-      unsigned vga_index = index - screen_begin;
-      uint16_t d = tty->vgabuffer[index % MEMORY_SIZE];
-      if (d != dev_tty.vga_shadow[vga_index]) {
-        dev_tty.vga_shadow[vga_index] = d;
-        vga_buffer[vga_index] = d;
-      }
+    uint16_t d = buffer[index];
+    if (dev_tty.menu_visible && index < 80) {
+      d = dev_tty.menu[index];
+    }
+    if (d != dev_tty.vga_shadow[index]) {
+      dev_tty.vga_shadow[index] = d;
+      vga_buffer[index] = d;
     }
   }
   update_vga_cursor(tty);
@@ -97,54 +131,144 @@ static void update_vga_part(struct dev_tty_buffer *tty,
 static void update_vga_full(struct dev_tty_buffer *tty) {
   if (tty->id != dev_tty.current_tty) return;
 
-  unsigned index = tty->screen_end - WINDOW_SIZE;
-  for (unsigned i = 0; i < WINDOW_SIZE; ++i, ++index) {
-    uint16_t d = tty->vgabuffer[index % MEMORY_SIZE];
-    if (dev_tty.menu_visible && i < 80) {
-      dev_tty.menusave[i] = d;
-    } else if (d != dev_tty.vga_shadow[i]) {
-      dev_tty.vga_shadow[i] = d;
-      vga_buffer[i] = d;
+  uint16_t* buffer = get_tty_row(tty, 0);
+  for (unsigned index = 0; index < WINDOW_SIZE; ++index) {
+    uint16_t d = buffer[index];
+    if (dev_tty.menu_visible && index < 80) {
+      d = dev_tty.menu[index];
+    }
+    if (d != dev_tty.vga_shadow[index]) {
+      dev_tty.vga_shadow[index] = d;
+      vga_buffer[index] = d;
     }
   }
   update_vga_cursor(tty);
+}
 
-  if (dev_tty.menu_visible) {
-    uint16_t color = make_vgaentry(0, make_color(COLOR_WHITE,
-                                                 COLOR_BLUE));
-    char menu[81] = ("  1  2  3                               "
-                     "         16M/133M  L:1.3/0.7/0.5  xx:xx ");
-    // draw current time:
-    time_t rawtime = time(NULL);
-    struct tm* ltime = localtime(&rawtime);
-    //TODO: use %02i when printf supports it.
-    sprintf(menu+74, "%02i:%02i", ltime->tm_hour, ltime->tm_min);
-    // draw brackets:
-    unsigned idx = dev_tty.current_tty;
-    menu[3*idx+1] = '[';
-    menu[3*idx+3] = ']';
-    // paint the menu:
-    for (int i = 0; i < 80; ++i) {
-      uint16_t d = color | menu[i];
-      dev_tty.vga_shadow[i] = d;
-      vga_buffer[i] = d;
+
+static void switch_to_alt_buffer(struct dev_tty_buffer* tty) {
+  tty->which_buffer = 1;
+  uint16_t d = tty->color | ' ';
+  for (unsigned j = 0; j < VGA_WIDTH*VGA_HEIGHT; ++j) {
+    tty->alt_buffer[j] = d;
+  }
+  update_vga_full(tty);
+}
+
+static void switch_to_main_buffer(struct dev_tty_buffer* tty) {
+  tty->which_buffer = 0;
+  update_vga_full(tty);
+}
+
+static void erase_in_display(struct dev_tty_buffer* tty, unsigned cursor, int mode) {
+  uint16_t* buffer = get_tty_row(tty, 0);
+  uint16_t d = tty->color | ' ';
+  switch (mode) {
+  case 1:
+    for (unsigned j = 0; j < cursor; ++j) {
+      buffer[j] = d;
     }
+    break;
+  case 2:
+    for (unsigned j = 0; j < WINDOW_SIZE; ++j) {
+      buffer[j] = d;
+    }
+    break;
+  default:
+    for (unsigned j = cursor; j < WINDOW_SIZE; ++j) {
+      buffer[j] = d;
+    }
+    break;
+  }
+  update_vga_full(tty);
+}
+
+static void erase_in_line(struct dev_tty_buffer* tty, unsigned cursor, int mode) {
+  uint16_t* buffer = get_tty_row(tty, cursor / VGA_WIDTH);
+  unsigned x = cursor % VGA_WIDTH;
+  uint16_t d = tty->color | ' ';
+  switch (mode) {
+  case 1:
+    for (unsigned j = 0; j < x; ++j) {
+      buffer[j] = d;
+    }
+    break;
+  case 2:
+    for (unsigned j = 0; j < VGA_WIDTH; ++j) {
+      buffer[j] = d;
+    }
+    break;
+  default:
+    for (unsigned j = x; j < VGA_WIDTH; ++j) {
+      buffer[j] = d;
+    }
+    break;
+  }
+  update_vga_full(tty);
+}
+
+static int decode_control_seq(struct dev_tty_buffer* tty, char byte, unsigned *cursor) {
+  if (tty->n_esc_bytes == 0) {
+    switch (byte) {
+    case 7:
+      rtc_beep(NO_IDC, 600, 10);
+      return 1;
+    case 27:
+      tty->esc_sequence[tty->n_esc_bytes++] = byte;
+      return 1;
+    default:
+      return 0;
+    }
+  } else {
+    if (tty->n_esc_bytes < ESC_SEQ_MAX) {
+      tty->esc_sequence[tty->n_esc_bytes++] = byte;
+    }
+    if (byte >= 64 && byte != '[') {
+      tty->esc_sequence[tty->n_esc_bytes] = 0;
+      // detect code:
+      if (false) { // just so that every case below are the same.
+      } else if (strcmp(tty->esc_sequence, "\033[?1049h") == 0) {
+        switch_to_alt_buffer(tty);
+        *cursor = get_tty_cursor(tty);
+
+      } else if (strcmp(tty->esc_sequence, "\033[?1049l") == 0) {
+        switch_to_main_buffer(tty);
+        *cursor = get_tty_cursor(tty);
+
+      } else if (byte == 'H') {
+        int y = atoi(tty->esc_sequence+2);
+        int x = atoi(strchr(tty->esc_sequence, ';') + 1);
+        *cursor = (y - 1) * VGA_WIDTH + x - 1;
+      } else if (byte == 'J') {
+        int mode = atoi(tty->esc_sequence+2);
+        erase_in_display(tty, *cursor, mode);
+      } else if (byte == 'K') {
+        int mode = atoi(tty->esc_sequence+2);
+        erase_in_line(tty, *cursor, mode);
+      } else {
+        // [7m => inversible (colors)
+        // [0m => default (colors)
+        BREAK;
+      }
+      
+      tty->n_esc_bytes = 0;
+    }
+    return 1;
   }
 }
+
 
 void dev_tty_init() {
   memset(&dev_tty, 0, sizeof(dev_tty));
   for (int i = 0; i < N_TTYS; ++i) {
     dev_tty.ttys[i].id = i;
     sem_init(&dev_tty.ttys[i].kbd.event_sema, 1, 0);
-    //dev_tty.ttys[i].vgabuffer = (uint16_t)malloc(VGA_WIDTH*TTY_HEIGHT);
-    dev_tty.ttys[i].window_end = VGA_WIDTH*VGA_HEIGHT;
-    dev_tty.ttys[i].screen_end = VGA_WIDTH*VGA_HEIGHT;
     dev_tty.ttys[i].color = make_vgaentry(0, make_color(COLOR_LIGHT_GREY,
                                                         COLOR_BLACK));
     uint16_t d = dev_tty.ttys[i].color | ' ';
     for (unsigned j = 0; j < VGA_WIDTH*VGA_HEIGHT; ++j) {
-      dev_tty.ttys[i].vgabuffer[j] = d;
+      dev_tty.ttys[i].main_buffer[j] = d;
+      dev_tty.ttys[i].alt_buffer[j] = d;
     }
   }
   
@@ -170,17 +294,14 @@ void dev_tty_init() {
   dev_register(NO_IDC, "tty3", &filesys); // 3rd virtual console
 };
 
-static void dev_tty_switch_to(unsigned tty_id) {
+static void dev_tty_save() {
   // save old console.
-  struct dev_tty_buffer* old_tty = &dev_tty.ttys[dev_tty.current_tty];
-  unsigned index = old_tty->screen_end - WINDOW_SIZE;
-  for (unsigned i = 0; i < WINDOW_SIZE; ++i, ++index) {
-    uint16_t d = vga_buffer[i];
-    if (dev_tty.menu_visible && i < 80) {
-      d = dev_tty.menusave[i];
-    }
-    old_tty->vgabuffer[index % MEMORY_SIZE] = d;
-    dev_tty.vga_shadow[i] = d;
+  struct dev_tty_buffer* tty = &dev_tty.ttys[dev_tty.current_tty];
+  uint16_t* buffer = get_tty_row(tty, 0);
+  for (unsigned index = 0; index < WINDOW_SIZE; ++index) {
+    uint16_t d = vga_buffer[index];
+    buffer[index] = d;
+    dev_tty.vga_shadow[index] = d;
   }
   
   // save current cursor position.
@@ -188,23 +309,33 @@ static void dev_tty_switch_to(unsigned tty_id) {
   unsigned position = inb(0x3D5);
   outb(0x3D4, 0x0E);
   position += inb(0x3D5) << 8;
-  if (position != 0xffff) {
-    old_tty->cursor_index = old_tty->screen_end - WINDOW_SIZE + position;
-  }
-  dev_tty.vga_copied = 1;
+  tty->main_cursor = position;
 
-  // draw new console.
-  if (tty_id != dev_tty.current_tty) {
-    dev_tty.current_tty = tty_id;
-    update_vga_full(&dev_tty.ttys[tty_id]);
-  }
+  dev_tty.vga_copied = 1;
 }
 
 static void dev_tty_show_menu() {
-  dev_tty.menu_visible = 1;
+  // draw menu string:
+  uint16_t color = make_vgaentry(0, make_color(COLOR_WHITE,
+                                               COLOR_BLUE));
+  char menu[81] = ("  1  2  3                               "
+                   "         16M/133M  L:1.3/0.7/0.5  xx:xx ");
+  // draw current time:
+  time_t rawtime = time(NULL);
+  struct tm* ltime = localtime(&rawtime);
+  sprintf(menu+74, "%02i:%02i", ltime->tm_hour, ltime->tm_min);
+  // draw brackets:
+  unsigned idx = dev_tty.current_tty;
+  menu[3*idx+1] = '[';
+  menu[3*idx+3] = ']';
+  // setup the menu buffer:
   for (int i = 0; i < 80; ++i) {
-    dev_tty.menusave[i] = dev_tty.vga_shadow[i];
+    uint16_t d = color | menu[i];
+    dev_tty.menu[i] = d;
   }
+
+  // paint the menu:
+  dev_tty.menu_visible = 1;
   update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
 }
 
@@ -213,6 +344,15 @@ static void dev_tty_hide_menu() {
   update_vga_full(&dev_tty.ttys[dev_tty.current_tty]);
 }
 
+static void dev_tty_switch_to(unsigned tty_id) {
+  // draw new console.
+  if (tty_id != dev_tty.current_tty) {
+    dev_tty.current_tty = tty_id;
+    // make sure menu is updated:
+    if (dev_tty.menu_visible) dev_tty_show_menu();
+    else update_vga_full(&dev_tty.ttys[tty_id]);
+  }
+}
 
 static int magic_key(struct kbd_event *event) {
   if (event->flags == (KBD_FLAG_LSHIFT+KBD_FLAG_LCTRL+KBD_FLAG_LALT)) {
@@ -271,7 +411,7 @@ __IDCIMPL__ int dev_tty_open(IDC_PTR, struct vfs_file* file, const char *name, i
     unsigned idx = (unsigned)(name[3] - '1');
     file->internal = &dev_tty.ttys[idx];
   }
-  if (!dev_tty.vga_copied) dev_tty_switch_to(0);
+  if (!dev_tty.vga_copied) dev_tty_save();
   return 0;
 }
 
@@ -306,83 +446,53 @@ __IDCIMPL__ ssize_t dev_tty_read(IDC_PTR, struct vfs_file* file, void * buffer, 
 __IDCIMPL__ ssize_t dev_tty_write(IDC_PTR, struct vfs_file* file, const void* data, size_t size) {
   struct dev_tty_buffer* tty = (struct dev_tty_buffer*)file->internal;
   if (tty == NULL) tty = &dev_tty.ttys[dev_tty.current_tty];
-  uint16_t* buffer = tty->vgabuffer;
   uint8_t* cdata = (uint8_t*)data;
 
-  // Virtual buffer extends from 0 to infinity.
-  // Real buffer extends from buffer_begin to buffer_end.
-  // buffer_end = buffer_begin + VGA_WIDTH*TTY_HEIGHT.
-
-  // Next character is written to cursor_index.
-  // Active area extends from window_begin to window_end.
-  // window_end = window_begin+VGA_WIDTH*VGA_HEIGHT.
-  // cursor_index >= window_begin && cursor_index < window_end.
-  // window_end = buffer_end.
-
-  // If cursor goes past window_end, window_end += VGA_WIDTH.
-  // The revealed line is cleared.
-  
-  // Index to pointer = buffer_base + index % MEMORY_SIZE.
-
-  unsigned cursor_index = tty->cursor_index;
-  unsigned window_begin = tty->window_end - WINDOW_SIZE;
-  unsigned window_end = tty->window_end;
+  unsigned cursor_index = get_tty_cursor(tty);
   unsigned min_cursor = cursor_index;
   unsigned max_cursor = cursor_index;
   uint16_t color = tty->color;
   unsigned eol;
-  unsigned clear_line = 0;
+  unsigned full = 0;
   for (size_t i = 0; i < size; ++i) {
     uint8_t byte = cdata[i];
+    if (decode_control_seq(tty, (char)byte, &cursor_index)) continue;
+    uint16_t* buffer = get_tty_row(tty, 0);
+       
     switch (byte) {
     case '\b': // backspace.
-      if (cursor_index > window_begin) {
-        --cursor_index;
-        buffer[cursor_index % MEMORY_SIZE] = color | ' ';
+      if (cursor_index > 0) {
+        buffer[--cursor_index] = color | ' ';
       }
       break;
     case '\n': // new line.
       eol = VGA_WIDTH - cursor_index % VGA_WIDTH;
-      if (clear_line) {
-        for (unsigned j = 0; j < eol; ++j) {
-          buffer[(cursor_index + j) % MEMORY_SIZE] = color | ' ';
-        }
-      }
       cursor_index += eol;
       break;
     default: // printable chars.
-      buffer[cursor_index % MEMORY_SIZE] = color | (uint16_t)byte;
-      ++cursor_index;
+      buffer[cursor_index++] = color | (uint16_t)byte;
       break;
-    }
-
-    if (cursor_index >= window_end) {
-      window_end += VGA_WIDTH;
-      window_begin = window_end - WINDOW_SIZE;
-      clear_line = 1;
     }
 
     if (cursor_index < min_cursor) min_cursor = cursor_index;
     if (cursor_index > max_cursor) max_cursor = cursor_index;
-  }
-
-  if (clear_line) {
-    eol = VGA_WIDTH - cursor_index % VGA_WIDTH;
-    for (unsigned j = 0; j < eol; ++j) {
-      buffer[(cursor_index + j) % MEMORY_SIZE] = color | ' ';
+    if (cursor_index == WINDOW_SIZE) {
+      cursor_index -= VGA_WIDTH;
+      full = 1;
+      memmove(buffer, buffer + VGA_WIDTH, (WINDOW_SIZE - VGA_WIDTH) * 2);
+      uint16_t *ptr = get_tty_row(tty, VGA_HEIGHT-1);
+      for (unsigned j = 0; j < VGA_WIDTH; ++j) {
+        ptr[j] = color | ' ';
+      }
     }
   }
 
-  tty->cursor_index = cursor_index;
-  tty->screen_end = window_end;
-
-  if (tty->window_end != window_end) {
-    tty->window_end = window_end;
+  set_tty_cursor(tty, cursor_index);
+  if (full) {
     update_vga_full(tty);
   } else {
     update_vga_part(tty, min_cursor, max_cursor - min_cursor);
   }
-
   return size;
 }
 

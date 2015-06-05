@@ -130,6 +130,9 @@ __IDCIMPL__ int vfs_initfs_open(IDC_PTR, struct vfs_file* file, const char *name
         internal->child = internal->this->children;
         internal->offset = 0;
         file->stat.st_mode = ptr->header.mode;
+        file->stat.st_size = ((off_t)ptr->header.filesize_lo
+                              + (((off_t)ptr->header.filesize_hi)<<16));
+
         return 0;
       }
     }

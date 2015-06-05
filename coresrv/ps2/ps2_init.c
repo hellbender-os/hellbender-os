@@ -142,6 +142,7 @@ void ps2_init() {
   if (chan1_ok) {
     send_data(0xF5);
     int disable = get_result();
+    if (disable == 0xAA) disable = get_result();
     if (disable != 0xFA) {
       chan1_ok = 0;
       //printf("chan1 disable failed: %x\n", disable);
