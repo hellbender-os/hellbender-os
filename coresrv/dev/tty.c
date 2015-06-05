@@ -254,7 +254,10 @@ static int decode_control_seq(struct dev_tty_buffer* tty, char byte, unsigned *c
         
       } else if (byte == 'H') {
         int y = atoi(tty->esc_sequence+2);
-        int x = atoi(strchr(tty->esc_sequence, ';') + 1);
+        char *tmp = strchr(tty->esc_sequence, ';');
+        int x = tmp ? atoi(tmp + 1) : 0;
+        if (!y) y = 1;
+        if (!x) x = 1;
         *cursor = (y - 1) * VGA_WIDTH + x - 1;
       } else if (byte == 'J') {
         int mode = atoi(tty->esc_sequence+2);
