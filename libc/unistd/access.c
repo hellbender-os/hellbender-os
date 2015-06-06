@@ -14,7 +14,7 @@ int access(const char *path, int amode) {
 }
 
 int faccessat(int fd, const char *path, int amode, int flag) {
-  if (strlen(path) == 0) {
+  if (strlen(path) == 0 && fd != -1) {
     errno = ENOENT;
     return -1;
   }
@@ -34,5 +34,6 @@ int faccessat(int fd, const char *path, int amode, int flag) {
     errno = ENOENT;
     return -1;
   }
+  if (file.filesys.close) IDC(vfs_close, file.filesys.close, &file);
   return 0;
 }

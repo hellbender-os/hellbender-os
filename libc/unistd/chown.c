@@ -71,5 +71,7 @@ int fchownat(int fd, const char *path, uid_t user, gid_t group, int flags) {
     errno = ENOENT;
     return -1;
   }
-  return dochown(&file, user, group);
+  int retval = dochown(&file, user, group);
+  if (file.filesys.close) IDC(vfs_close, file.filesys.close, &file);
+  return retval;
 }

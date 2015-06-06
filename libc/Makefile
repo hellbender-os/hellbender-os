@@ -112,6 +112,7 @@ unistd/ftruncate.o \
 unistd/truncate.o \
 unistd/lseek.o \
 unistd/read.o \
+unistd/readlink.o \
 unistd/write.o \
 unistd/write.o \
 unistd/dup2.o \

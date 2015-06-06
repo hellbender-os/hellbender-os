@@ -28,10 +28,14 @@ int truncate(const char *path, off_t length) {
   }
   if (!file.filesys.ftruncate) {
     errno = EROFS;
-    return -1;
+    goto error;
   }
   if (IDC(vfs_ftruncate, file.filesys.ftruncate, &file, length) != 0) {
-    return -1;
+    goto error;
   }
   return 0;
+
+ error:
+  if (file.filesys.close) IDC(vfs_close, file.filesys.close, &file);
+  return -1;
 }

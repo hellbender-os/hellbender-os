@@ -33,24 +33,28 @@ int unlinkat(int fd, const char *path, int flag) {
   if (flag == AT_REMOVEDIR) {
     if (!S_ISDIR(file.stat.st_mode)) {
       errno = ENOTDIR;
-      return -1;
+      goto error;
     }
 
   } else if (flag == 0) {
     if (S_ISDIR(file.stat.st_mode)) {
       errno = EPERM;
-      return -1;
+      goto error;
     }
   } else {
     errno = EINVAL;
-    return -1;
+    goto error;
   }
   if (!file.filesys.unlink) {
     errno = EROFS;
-    return -1;
+    goto error;
   }
   if (IDC(vfs_unlink, file.filesys.unlink, &file) != 0) {
-    return -1;
+    goto error;
   }
   return 0;
+
+ error:
+  if (file.filesys.close) IDC(vfs_close, file.filesys.close, &file);
+  return -1;
 }

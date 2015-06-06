@@ -41,28 +41,35 @@ int linkat(int fd1, const char *path1, int fd2,
   if (CORE_IDC(vfs_resolve, dir1, &file1, path1, O_RDONLY | oflag) != 0) {
     return -1;
   }
-  if (!file1.stat.st_mode) {
-    errno = ENOENT;
-    return -1;
-  }
   struct vfs_file file2;
   if (CORE_IDC(vfs_resolve, dir2, &file2, path2, O_WRONLY | O_NOFOLLOW) != 0) {
     return -1;
   }
-  if (file1.stat.st_dev != file2.stat.st_dev) {
-    errno = EXDEV;
-    return -1;
+  if (!file1.stat.st_mode) {
+    errno = ENOENT;
+    goto link_error;
   }
   if (file2.stat.st_mode) {
     errno = EEXIST;
-    return -1;
+    goto link_error;
+  }
+  if (file1.stat.st_dev != file2.stat.st_dev) {
+    errno = EXDEV;
+    goto link_error;
   }
   if (!file2.filesys.link) {
     errno = EROFS;
-    return -1;
+    goto link_error;
   }
   if (IDC(vfs_link, file2.filesys.link, &file2, &file1) != 0) {
-    return -1;
+    goto link_error;
   }
+  if (file1.filesys.close) IDC(vfs_close, file1.filesys.close, &file1);
+  if (file2.filesys.close) IDC(vfs_close, file2.filesys.close, &file2);
   return 0;
+
+ link_error:
+  if (file1.filesys.close) IDC(vfs_close, file1.filesys.close, &file1);
+  if (file2.filesys.close) IDC(vfs_close, file2.filesys.close, &file2);
+  return -1;
 }
