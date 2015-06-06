@@ -41,6 +41,9 @@ coresrv_stub:
 .global __IDC__semaphore_wait
 .set __IDC__semaphore_wait, coresrv_stub
 
+.global __IDC__vfs_chown
+.set __IDC__vfs_chown, coresrv_stub
+
 .global __IDC__vfs_close
 .set __IDC__vfs_close, coresrv_stub
 

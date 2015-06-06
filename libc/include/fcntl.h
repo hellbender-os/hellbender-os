@@ -121,7 +121,7 @@
 #define AT_EACCESS 0x20000
 // Check access using effective user and group ID.
 
-#define AT_SYMLINK_NOFOLLOW 1
+#define AT_SYMLINK_NOFOLLOW 0x10
 // Do not follow symbolic links.
 
 #define AT_SYMLINK_FOLLOW 1

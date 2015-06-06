@@ -18,6 +18,9 @@ typedef void* semaphore_post_ptr;
 int __IDC__semaphore_wait(IDC_PTR, sem_t* sem);
 typedef void* semaphore_wait_ptr;
 
+int __IDC__vfs_chown(IDC_PTR, struct vfs_file*, uid_t, gid_t);
+typedef void* vfs_chown_ptr;
+
 int __IDC__vfs_close(IDC_PTR, struct vfs_file*);
 typedef void* vfs_close_ptr;
 

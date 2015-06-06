@@ -125,6 +125,7 @@ unistd/link.o \
 unistd/unlink.o \
 unistd/rmdir.o \
 unistd/access.o \
+unistd/chown.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
