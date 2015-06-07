@@ -155,6 +155,7 @@ stdlib/getenv.o \
 sched/sched_yield.o \
 time/localtime.o \
 time/time.o \
+time/utimes.o \
 sys/stat/fstat.o \
 sys/stat/chmod.o \
 sys/stat/futimens.o \
