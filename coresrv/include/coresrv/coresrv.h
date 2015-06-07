@@ -14,6 +14,7 @@ typedef struct sem sem_t;
 typedef struct posix_mutex posix_mutex_t;
 struct stat;
 struct termios;
+struct timespec;
 
 #include <coresrv/coresrv_idc.h>
 

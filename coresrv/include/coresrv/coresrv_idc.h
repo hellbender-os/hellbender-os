@@ -60,6 +60,9 @@ typedef void* vfs_unlink_ptr;
 int __IDC__vfs_unmount(IDC_PTR, const char*);
 typedef void* vfs_unmount_ptr;
 
+int __IDC__vfs_utimes(IDC_PTR, struct vfs_file*, const struct timespec*);
+typedef void* vfs_utimes_ptr;
+
 off_t __IDC__vfs_lseek(IDC_PTR, struct vfs_file*, off_t, int);
 typedef void* vfs_lseek_ptr;
 

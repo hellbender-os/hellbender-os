@@ -25,6 +25,7 @@ struct vfs_filesys {
   vfs_termios_ptr termios;
   vfs_chown_ptr chown;
   vfs_chmod_ptr chmod;
+  vfs_utimes_ptr utimes;
 
   void* internal;
 };
@@ -67,6 +68,7 @@ __IDC__ int vfs_unlink(IDC_PTR, struct vfs_file*);
 __IDC__ int vfs_termios(IDC_PTR, struct vfs_file*, struct termios*, int);
 __IDC__ int vfs_chown(IDC_PTR, struct vfs_file*, uid_t, gid_t);
 __IDC__ int vfs_chmod(IDC_PTR, struct vfs_file*, mode_t);
+__IDC__ int vfs_utimes(IDC_PTR, struct vfs_file*, const struct timespec*);
 
 #define VFS_TERMIOS_GET 1
 #define VFS_TERMIOS_SET 2

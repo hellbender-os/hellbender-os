@@ -89,5 +89,8 @@ coresrv_stub:
 .global __IDC__vfs_unmount
 .set __IDC__vfs_unmount, coresrv_stub
 
+.global __IDC__vfs_utimes
+.set __IDC__vfs_utimes, coresrv_stub
+
 .global __IDC__vfs_write
 .set __IDC__vfs_write, coresrv_stub
