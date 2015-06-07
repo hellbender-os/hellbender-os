@@ -127,6 +127,7 @@ unistd/unlink.o \
 unistd/rmdir.o \
 unistd/access.o \
 unistd/chown.o \
+unistd/symlink.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
