@@ -156,6 +156,7 @@ sched/sched_yield.o \
 time/localtime.o \
 time/time.o \
 sys/stat/fstat.o \
+sys/stat/chmod.o \
 sys/wait/waitpid.o \
 sys/ioctl.o \
 spawn/posix_spawn.o \
