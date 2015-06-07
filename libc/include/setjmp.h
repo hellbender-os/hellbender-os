@@ -13,12 +13,26 @@ int    _setjmp(jmp_buf);
 int    setjmp(jmp_buf);
 int    sigsetjmp(sigjmp_buf, int);
 
-// Using GCC builtins:
-#define _longjmp __builtin_longjmp
-#define longjmp __builtin_longjmp
-#define siglongjmp __builtin_siglongjmp
-#define _setjmp __builtin_setjmp
-#define setjmp __builtin_setjmp
-#define sigsetjmp __builtin_sigsetjmp
+// Hack around GCC builtins limitation for the second argument:
+void _hellbender_setjmpval(int);
+int _hellbender_getjmpval();
+
+#define _longjmp(_E, _V) \
+  { _hellbender_setjmpval(_V); __builtin__longjmp(_E, 1); }
+
+#define longjmp(_E, _V) \
+  { _hellbender_setjmpval(_V); __builtin_longjmp(_E, 1); }
+  
+#define siglongjmp(_E, _V) \
+  { _hellbender_setjmpval(_V); __builtin_siglongjmp(_E, 1); }
+
+#define _setjmp(_E) \
+  (__builtin__setjmp(_E) ? _hellbender_getjmpval() : 0)
+
+#define setjmp(_E) \
+  (__builtin_setjmp(_E) ? _hellbender_getjmpval() : 0)
+
+#define sigsetjmp(_E, _M) \
+  (__builtin_sigsethmp(_E, _M) ? _hellbender_getjmpval() : 0)
 
 #endif

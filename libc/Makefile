@@ -178,6 +178,7 @@ keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \
 hellbender/libc_init_advanced.o \
+hellbender/setjmp.o \
 ../kernel/syscall/syscall_stub.o \
 
 CORE_STUB:=../coresrv/coresrv/coresrv_stub.o

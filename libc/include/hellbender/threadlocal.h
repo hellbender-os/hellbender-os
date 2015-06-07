@@ -14,6 +14,7 @@ struct threadlocal {
   struct tm tm;
   char *getopt_optchar;
   char *strtok_saveptr;
+  volatile int jmpval;
 };
 
 // This depends on THREAD_LOCAL_PAGE in "kernel.h"
