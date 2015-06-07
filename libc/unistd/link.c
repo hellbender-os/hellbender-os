@@ -42,7 +42,7 @@ int linkat(int fd1, const char *path1, int fd2,
     return -1;
   }
   struct vfs_file file2;
-  if (CORE_IDC(vfs_resolve, dir2, &file2, path2, O_WRONLY | O_NOFOLLOW) != 0) {
+  if (CORE_IDC(vfs_resolve, dir2, &file2, path2, O_CREAT | O_EXCL | O_WRONLY) != 0) {
     return -1;
   }
   if (!file1.stat.st_mode) {

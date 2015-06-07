@@ -18,7 +18,7 @@ int dup2(int old_fd, int new_fd) {
     return -1;
   }
   struct vfs_file *old_file = &_fcntl_data.handles[old_fd];
-  if (!old_file->filesys.open) {
+  if (!old_file->stat.st_mode) {
     errno = EBADF;
     return -1;
   }
