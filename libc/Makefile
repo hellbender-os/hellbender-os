@@ -128,6 +128,7 @@ unistd/rmdir.o \
 unistd/access.o \
 unistd/chown.o \
 unistd/symlink.o \
+unistd/ttyname.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
