@@ -17,4 +17,10 @@ const char  *inet_ntop(int, const void *, char *,
                        socklen_t);
 int          inet_pton(int, const char *, void *);
 
+// htonl et at.
+#define htons(x) __builtin_bswap16(x)
+#define ntohs(x) __builtin_bswap16(x)
+#define htonl(x) __builtin_bswap32(x)
+#define ntohl(x) __builtin_bswap32(x)
+   
 #endif
