@@ -93,6 +93,7 @@ int openat(int dir_fd, const char *name, int flags, ...) {
       va_list parameters;
       va_start(parameters, flags);
       mode_t mode = va_arg(parameters, mode_t);
+      mode &= _fcntl_data.umask;
       va_end(parameters);
       if (!file->filesys.create) {
         errno = EROFS;

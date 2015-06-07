@@ -35,6 +35,7 @@ int mkdirat(int fd, const char *path, mode_t mode) {
     errno = EROFS;
     goto error;
   }
+  mode &= _fcntl_data.umask;
   if (IDC(vfs_create, file.filesys.create, &file, mode|S_IFDIR) != 0) {
     goto error;
   }

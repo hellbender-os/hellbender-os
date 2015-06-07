@@ -3,6 +3,7 @@
 
 struct fcntl_data {
   struct vfs_file handles[OPEN_MAX + 1]; // last one for AT_FDCWD
+  mode_t umask;
 };
 
 extern struct fcntl_data _fcntl_data;

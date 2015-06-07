@@ -3,6 +3,7 @@
 #include <errno.h>
 
 int mknod(const char *path, mode_t mode, dev_t dev) {
+  (void)(dev);
   if (S_ISDIR(mode)) {
     return mkdir(path, mode);
   } else if (S_ISFIFO(mode)) {
@@ -16,6 +17,7 @@ int mknod(const char *path, mode_t mode, dev_t dev) {
 }
 
 int mknodat(int fd, const char *path, mode_t mode, dev_t dev) {
+  (void)(dev);
   if (S_ISDIR(mode)) {
     return mkdirat(fd, path, mode);
   } else if (S_ISFIFO(mode)) {

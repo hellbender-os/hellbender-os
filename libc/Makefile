@@ -158,8 +158,10 @@ time/time.o \
 sys/stat/fstat.o \
 sys/stat/chmod.o \
 sys/stat/futimens.o \
+sys/stat/mknod.o \
 sys/stat/mkdir.o \
 sys/stat/mkfifo.o \
+sys/stat/umask.o \
 sys/wait/waitpid.o \
 sys/ioctl.o \
 spawn/posix_spawn.o \
