@@ -1,4 +1,5 @@
 #include <hellbender/linkedlist.h>
+#include <stdlib.h>
 
 void _ll_init(struct _linkedlist *list) {
   list->head.prev = NULL;
@@ -34,4 +35,13 @@ void* _ll_next(struct _llitem *item, int offset) {
 
 void* _ll_first(struct _linkedlist *list, int offset) {
   return _ll_next(&list->head, offset);
+}
+
+void _ll_free_all(struct _linkedlist *list, int offset) {
+  void* cur = _ll_first(list, offset);
+  while (cur) {
+    void* next = _ll_next(cur, offset);
+    free(cur);
+    cur = next;
+  }
 }

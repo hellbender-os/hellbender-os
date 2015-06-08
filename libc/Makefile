@@ -152,6 +152,7 @@ stdio/fscanf.o \
 stdlib/exit.o \
 stdlib/system.o \
 stdlib/getenv.o \
+stdlib/realpath.o \
 sched/sched_yield.o \
 time/localtime.o \
 time/time.o \
@@ -181,6 +182,14 @@ termios/tcgetattr.o \
 termios/tcsetattr.o \
 poll/poll.o \
 signal/signal.o \
+dirent/opendir.o \
+dirent/closedir.o \
+dirent/readdir.o \
+dirent/telldir.o \
+dirent/seekdir.o \
+dirent/rewinddir.o \
+dirent/scandir.o \
+dirent/dirfd.o \
 keymap/create.o \
 keymap/code2char.o \
 keymap/keymap_fi.o \

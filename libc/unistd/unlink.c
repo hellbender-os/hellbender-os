@@ -52,6 +52,7 @@ int unlinkat(int fd, const char *path, int flag) {
   if (IDC(vfs_unlink, file.filesys.unlink, &file) != 0) {
     goto error;
   }
+  if (file.filesys.close) IDC(vfs_close, file.filesys.close, &file);
   return 0;
 
  error:
