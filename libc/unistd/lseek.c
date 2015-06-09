@@ -9,7 +9,7 @@
 #include "../fcntl/fcntl_impl.h"
 
 off_t lseek(int handle, off_t off, int where) {
-  if (where != SEEK_SET || where != SEEK_CUR || where != SEEK_END) {
+  if (where != SEEK_SET && where != SEEK_CUR && where != SEEK_END) {
     errno = EINVAL;
     return -1;
   }
