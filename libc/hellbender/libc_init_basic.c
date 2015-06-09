@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <kernel/kernel.h>
 #include <kernel/domain.h>
@@ -7,13 +8,14 @@
 #include <hellbender/hellbender.h>
 #include <hellbender/heap.h>
 
-static void init_heap();
+static void* init_heap();
 
 #if !defined(__is_hellbender_kernel)
 
 int _argc;
 char** _argv;
-char** environ;
+extern char** environ;
+extern char* _environ_static_top;
 
 static void init_args(int argc, int envc, char* ptr);
 
@@ -34,15 +36,18 @@ void _hellbender_libc_init_basic() {
 #endif
   
   // malloc, free, realloc.
-  init_heap();
+  void* bottom = init_heap();
 
 #if !defined(__is_hellbender_kernel)
   // _argc, _argv, environ
+  _environ_static_top = (char*) bottom;
   init_args(argc, envc, ptr);
+#else
+  (void)(bottom);
 #endif
 }
 
-static void init_heap() {
+static void* init_heap() {
   // get the heap address space.
 #if defined(__is_hellbender_kernel)
   void* bottom = (void*)domain_set_break(&kernel_domain, NULL, 0);
@@ -56,6 +61,8 @@ static void init_heap() {
   heap_init_large(&default_largeheap, &default_wilderness);
   heap_init_small(&default_smallheap, &default_largeheap);
   heap_init_tiny(&default_tinyheap, &default_largeheap);
+
+  return bottom;
 }
 
 #if !defined(__is_hellbender_kernel)
@@ -72,7 +79,7 @@ static void init_args(int argc, int envc, char* ptr) {
   _argv[argc] = 0;
   
   for (int i = 0; i < envc + 1; ++i) {
-    environ[i] = ptr;
+    environ[i] = strdup(ptr); // using a copy so that setenv can reallocate.
     while (*ptr++);
   }
   environ[envc] = 0;

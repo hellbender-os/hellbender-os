@@ -95,7 +95,7 @@ long          nrand48(unsigned short [3]);
 int           posix_memalign(void **, size_t, size_t);
 int           posix_openpt(int);
 char         *ptsname(int);
-int           putenv(char *);
+//this is insane function: int           putenv(char *);
 void          qsort(void *, size_t, size_t, int (*)(const void *,
                   const void *));
 int           rand(void);

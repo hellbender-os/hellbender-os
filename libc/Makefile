@@ -151,7 +151,7 @@ stdio/sscanf.o \
 stdio/fscanf.o \
 stdlib/exit.o \
 stdlib/system.o \
-stdlib/getenv.o \
+stdlib/env.o \
 stdlib/realpath.o \
 stdlib/rand.o \
 stdlib/rand48.o \
