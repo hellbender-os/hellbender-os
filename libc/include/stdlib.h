@@ -14,7 +14,7 @@
 #define EXIT_SUCCESS 0
 //Successful termination for exit(); evaluates to 0.
 
-//{RAND_MAX}
+#define RAND_MAX 2147483647
 //Maximum value returned by rand(); at least 32767.
 
 #define MB_CUR_MAX 4

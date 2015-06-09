@@ -15,4 +15,7 @@ void _hellbender_libc_init_advanced() {
 
   // fopen, fclose, fprintf, etc.
   stdio_init();
+
+  // RNGs
+  srand(1);
 }

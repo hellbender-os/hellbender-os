@@ -153,6 +153,8 @@ stdlib/exit.o \
 stdlib/system.o \
 stdlib/getenv.o \
 stdlib/realpath.o \
+stdlib/rand.o \
+stdlib/rand48.o \
 sched/sched_yield.o \
 time/localtime.o \
 time/time.o \
