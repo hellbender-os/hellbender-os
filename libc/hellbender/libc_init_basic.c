@@ -15,6 +15,7 @@ static void* init_heap();
 int _argc;
 char** _argv;
 extern char** environ;
+extern char** _environ_top;
 extern char* _environ_static_top;
 
 static void init_args(int argc, int envc, char* ptr);
@@ -70,6 +71,7 @@ static void init_args(int argc, int envc, char* ptr) {
   _argc = argc;
   _argv = (char**)calloc(argc + 1, sizeof(char*));
   environ = (char**)calloc(envc + 1, sizeof(char*));
+  _environ_top = environ + envc;
 
   // ptr contains all strings, separated by nulls.
   for (int i = 0; i < argc; ++i) {

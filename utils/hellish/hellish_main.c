@@ -217,7 +217,8 @@ void do_run(char* run_line) {
   char* cmd = argv[0];
   // TODO: combine cmd with cwd (unless absolute, like in cd).
   pid_t pid;
-  char* envp[] = { (char*)0 };
+  setenv("running", cmd, 1);
+  char** envp = environ;
   if (posix_spawn(&pid, cmd, NULL, NULL, argv, envp) == 0) {
     int status;
     //TODO: we want to wait for program to stop.

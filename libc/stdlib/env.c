@@ -3,6 +3,7 @@
 #include <errno.h>
 
 char **environ;
+char **_environ_top; // just past the allocated environ array.
 char *_environ_static_top; // values below this cannot be reallocated.
 
 static int _getenv(const char* name, size_t len) {
@@ -18,8 +19,8 @@ static int _getenv(const char* name, size_t len) {
 
 static int _appenv(char *string) {
   int i = 0;
-  for (; environ[i]; ++i) {
-    if (strlen(environ[i]) == 0) {
+  for (; environ + i < _environ_top; ++i) {
+    if (!environ[i] || strlen(environ[i]) == 0) {
       environ[i] = string;
       return 0;
     }
@@ -32,9 +33,10 @@ static int _appenv(char *string) {
     return -1;
   }
   for (int j = i; j < k; ++j) {
-    newenv[j] = "";
+    newenv[j] = 0;
   }
   environ = newenv;
+  _environ_top = environ + k;
   environ[i] = string;
   return 0;
 }
