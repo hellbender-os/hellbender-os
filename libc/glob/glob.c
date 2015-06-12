@@ -188,7 +188,9 @@ int glob(const char *pattern, int flags,
   // reallocate enough pathv space.
   int n_null = 0;
   int idx = 0;
-  if (flags & GLOB_DOOFFS) n_null = pglob->gl_offs;
+  if (flags & GLOB_DOOFFS) {
+    n_null = pglob->gl_offs;
+  } else pglob->gl_offs = 0;
   if (flags & GLOB_APPEND) {
     idx = n_null + pglob->gl_pathc;
     n_null = 0;
@@ -199,7 +201,12 @@ int glob(const char *pattern, int flags,
   }
   int n_total = idx + gs.n_paths;
   if (n_total) {
-    pglob->gl_pathv = (char**)malloc(n_total * sizeof(char*));
+    if (flags & GLOB_APPEND) {
+      pglob->gl_pathv =
+        (char**)realloc(pglob->gl_pathv, n_total * sizeof(char*));
+    } else {
+      pglob->gl_pathv = (char**)malloc(n_total * sizeof(char*));
+    }
   }
 
   // merge results.
