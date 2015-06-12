@@ -11,25 +11,25 @@ typedef struct {
   size_t   gl_offs;  //  Slots to reserve at the beginning of gl_pathv. 
 } glob_t;
 
-#define GLOB_APPEND 0x01
+#define GLOB_APPEND   0x010
 // Append generated pathnames to those previously obtained.
 
-#define GLOB_DOOFFS 0x02
+#define GLOB_DOOFFS   0x020
 // Specify how many null pointers to add to the beginning of gl_pathv.
 
-#define GLOB_ERR 0x04
+#define GLOB_ERR      0x040
 // Cause glob() to return on error.
 
-#define GLOB_MARK 0x08
+#define GLOB_MARK     0x080
 // Each pathname that is a directory that matches pattern has a <slash> appended.
 
-#define GLOB_NOCHECK 0x10
+#define GLOB_NOCHECK  0x100
 // If pattern does not match any pathname, then return a list consisting of only pattern.
 
-#define GLOB_NOESCAPE 0x20
+#define GLOB_NOESCAPE 0x004
 // Disable backslash escaping.
 
-#define GLOB_NOSORT 0x40
+#define GLOB_NOSORT   0x200
 // Do not sort the pathnames returned.
 
 #define GLOB_ABORTED 1

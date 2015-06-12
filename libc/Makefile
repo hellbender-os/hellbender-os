@@ -160,6 +160,7 @@ time/localtime.o \
 time/time.o \
 time/utimes.o \
 fnmatch/fnmatch.o \
+glob/glob.o \
 sys/stat/fstat.o \
 sys/stat/chmod.o \
 sys/stat/futimens.o \
