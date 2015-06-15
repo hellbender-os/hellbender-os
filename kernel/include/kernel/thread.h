@@ -2,6 +2,7 @@
 #define _KERNEL_THREAD_H
 
 #include <stdint.h>
+#include <signal.h>
 #include <sys/types.h>
 
 #include <kernel/kernel.h>
@@ -50,7 +51,7 @@ typedef struct thread {
   char* exec_path; // path to the binary that is beign executed.
   void* start_address; // start address for new threads.
   unsigned pic_line; // one based PIC line number; for PIC interrupt handlers.
-
+  
   struct thread *this; // logical address of this structure in kernel memory.
   uintptr_t page_table; // physical address to the thread page table.
   

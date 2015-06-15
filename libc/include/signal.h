@@ -24,8 +24,7 @@ struct timespec; // forward declaration.
 typedef volatile int sig_atomic_t;
 //Possibly volatile-qualified integer type of an object that can be accessed as an atomic entity, even in the presence of asynchronous interrupts.
 
-typedef struct {
-} sigset_t;
+typedef unsigned sigset_t;
 // Integer or structure type of an object used to represent sets of signals.
 
 union sigval {
@@ -149,35 +148,35 @@ Description
 //T
 // User-defined signal 2.
 
-#define SIGPOLL 30
+#define SIGPOLL 22
 //T
 // Pollable event. [Option End]
 
-#define SIGPROF 31
+#define SIGPROF 23
 //T
 // Profiling timer expired. [Option End]
 
-#define SIGSYS 32
+#define SIGSYS 24
 //A
 // Bad system call.
 
-#define SIGTRAP 33
+#define SIGTRAP 25
 //A
 // Trace/breakpoint trap. [Option End]
 
-#define SIGURG 34
+#define SIGURG 26
 //I
 // High bandwidth data is available at a socket.
 
-#define SIGVTALRM 35
+#define SIGVTALRM 27
 //T
 // Virtual timer expired.
 
-#define SIGXCPU 36
+#define SIGXCPU 28
 //A
 // CPU time limit exceeded.
 
-#define SIGXFSZ 37
+#define SIGXFSZ 29
 //A
 // File size limit exceeded. [Option End]
 

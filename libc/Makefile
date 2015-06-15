@@ -98,6 +98,7 @@ hellbender/heap_grow.o \
 hellbender/heap_free.o \
 hellbender/heap_malloc.o \
 hellbender/heap_realloc.o \
+hellbender/signal_processor.o \
 
 HOSTEDOBJS:=\
 $(ARCH_HOSTEDOBJS) \
