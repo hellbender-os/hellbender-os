@@ -9,7 +9,7 @@ void _signal_processor(int signum,
                        struct sigaction* action) {
   // set signal mask while processing the signal.
   uint32_t old_mask = THREADLOCAL->signal_mask;
-  THREADLOCAL->signal_mask &= ~(uint32_t)action->sa_mask;
+  THREADLOCAL->signal_mask &= (uint32_t)action->sa_mask;
   if ((action->sa_flags & SA_NODEFER) == 0) {
     THREADLOCAL->signal_mask &= ~(uint32_t)(1 << (signum - 1));
   }

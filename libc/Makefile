@@ -188,6 +188,10 @@ termios/tcgetattr.o \
 termios/tcsetattr.o \
 poll/poll.o \
 signal/signal.o \
+signal/sigaction.o \
+signal/sigsuspend.o \
+signal/sigset.o \
+signal/sigprocmask.o \
 dirent/opendir.o \
 dirent/closedir.o \
 dirent/readdir.o \
