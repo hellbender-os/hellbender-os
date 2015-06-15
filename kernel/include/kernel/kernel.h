@@ -25,13 +25,17 @@ extern unsigned long __force_order;
 #define KERNEL_OFFSET (KERNEL_BASE + 0x100000)
 #define KERNEL_HEAP_TOP    (KERNEL_BASE+TABLE_SIZE)
 
-// current thread page table is mapped into this address.
-#define THREAD_OFFSET 0x400000
-#define THREAD_TSS_STACK_TOP (THREAD_OFFSET + 2*PAGE_SIZE)
-#define THREAD_LOCAL_PAGE (THREAD_OFFSET + 2*PAGE_SIZE)
-#define THREAD_HEAP_BOTTOM (THREAD_OFFSET+16*PAGE_SIZE)
-#define THREAD_HEAP_TOP    (THREAD_OFFSET+TABLE_SIZE-256*PAGE_SIZE)
-#define THREAD_STACK_TOP (THREAD_OFFSET+TABLE_SIZE-PAGE_SIZE)
+// these are defined in thread_symbols.S
+extern void* _thread_base; // current thread page table is mapped here.
+extern void* _thread_kdata;
+extern void* _thread_kstack;
+extern void* _thread_kstack_top;
+extern void* _thread_uinfo;
+extern void* _thread_udata;
+extern void* _thread_heap;
+extern void* _thread_heap_top;
+extern void* _thread_stack;
+extern void* _thread_stack_top;
 
 // all applications are mapped into this address, in their own address spaces.
 #define APPLICATION_OFFSET 0x800000

@@ -1,5 +1,6 @@
         .section .text
         .extern thread_calc_time
+        .extern _thread_kdata
 
         .altmacro
         .macro define_wrapper IDX
@@ -46,7 +47,7 @@ isr_wrapper_\IDX\():
         push %fs
         push %gs
         mov %esp, %eax        // remember the thread kernel stack pointer.
-        mov %eax, (0x400000)  // current thread structure is there.
+        mov %eax, (_thread_kdata)  // current thread structure is there.
         //cmp $0x401fbc, %eax
         //jz 1f
         //xchg %bx,%bx
@@ -109,7 +110,7 @@ isr_wrapper_80:
         push %fs
         push %gs
         mov %esp, %ebp        // remember the thread kernel stack pointer.
-        mov %ebp, (0x400000)  // current thread structure is there.
+        mov %ebp, (_thread_kdata)  // current thread structure is there.
         //cmp $0x401fbc, %ebp
         //jz 1f
         //xchg %bx,%bx

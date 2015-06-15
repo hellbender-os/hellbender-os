@@ -55,6 +55,7 @@ void domain_update_text(domain_t *domain, void* address, size_t size) {
 static domain_t* domain_create(void* base, size_t size) {
   domain_t *domain = malloc(sizeof(domain_t));
   memset(domain, 0, sizeof(domain_t));
+  domain->process_id = (pid_t)domain;
 
   // allocate page tables.x
   domain->page_table_ds = mem_alloc_page_cleared();

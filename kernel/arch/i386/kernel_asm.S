@@ -2,6 +2,7 @@
         .global kernel_enter_ring0
         .global kernel_enter_ring3
         .global kernel_restore_context
+        .extern _thread_kdata
         
 kernel_enter_ring0: // use when current thread state == NEW; for kernel threads.
         pop %eax // return address not needed
@@ -43,7 +44,7 @@ kernel_enter_ring3: // use when current thread state == NEW: for user threads.
 
 kernel_restore_context: // use when current thread state == OLD.
         //xchg %bx,%bx
-        mov (0x400000), %eax  // current thread structure is there.
+        mov (_thread_kdata), %eax  // current thread structure is there.
         mov %eax, %esp        // restore the thread kernel stack pointer.
 
         // restore the context.

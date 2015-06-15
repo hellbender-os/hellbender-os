@@ -59,7 +59,7 @@ void gdt_stage_2_init() {
   // TSS stack is always mapped at a fixed address.
   // it is used just to store the context data.
   kernel_tss.ss0  = SEL_KERNEL_DATA;
-  kernel_tss.esp0 = THREAD_TSS_STACK_TOP;
+  kernel_tss.esp0 = (uintptr_t)_thread_kstack_top;
   gdt[SEL_TSS/8] = (gdt_entry_t) {
     .base = (uintptr_t)&kernel_tss,
     .limit = sizeof(kernel_tss),

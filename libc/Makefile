@@ -29,6 +29,7 @@ LIBK_CPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS:=\
 $(ARCH_FREEOBJS) \
+../kernel/arch/i386/thread_symbols.o \
 libgen/basename.o \
 libgen/dirname.o \
 stdio/sprintf.o \
@@ -130,6 +131,10 @@ unistd/access.o \
 unistd/chown.o \
 unistd/symlink.o \
 unistd/ttyname.o \
+unistd/getpid.o \
+unistd/getuid.o \
+unistd/getgid.o \
+unistd/getgroups.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \

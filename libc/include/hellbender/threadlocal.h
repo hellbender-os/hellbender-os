@@ -24,7 +24,7 @@ struct threadlocal {
   uint32_t signal_mask;    // mask of signals that are not to be processed.
 };
 
-// This depends on THREAD_LOCAL_PAGE in "kernel.h"
-#define THREADLOCAL ((struct threadlocal*)0x402000)
+extern void* _thread_udata; // defined in kernel.
+#define THREADLOCAL ((struct threadlocal*)_thread_udata)
 
 #endif

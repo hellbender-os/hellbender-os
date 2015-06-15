@@ -8,6 +8,7 @@
 typedef struct domain {
   void* domain_base; // beginning of the virtual address space.
   size_t domain_size; // virtual address space size; multiples of TABLE_SIZE.
+  pid_t process_id;
 
   // TODO: support domains larger than TABLE_SIZE.
   // TODO: support domains with holes in their virtual memory.

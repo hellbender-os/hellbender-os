@@ -26,10 +26,12 @@ typedef struct wait_state {
 
 
 // each thread has a page table.
-// the page table is mapped to THREAD_OFFSET when the thread is running.
-// this structure is mapped as the first page of the page table.
-// kernel thread is mapped as the second page of the page table.
-// thread stack is mapped at the top of the page table.
+// the page table is mapped at _thread_base when the thread is running.
+// this structure is mapped at _thread_kdata.
+// kernel stack is mapped at _thread_kstack .. _thread_kstack_top.
+// info structure is mapped at _thread_uinfo.
+// local data is mapped at _thread_udata.
+// thread stack is mapped at _thread_ustack .. _thread_ustack_top.
 //
 // this structure is also mapped into kernel memory at thread_id*PAGE_SIZE.
 //
@@ -69,6 +71,17 @@ typedef struct thread {
   
 } thread_t;
 
+// read-only information about the thread, available for the usermode code.
+typedef struct thread_info {
+  pid_t thread_id; // unique identifier of this thread.
+  pid_t process_id; // process this thread belongs to.
+  pid_t parent_id; // process that created this process.
+  uid_t uid; // real user id.
+  gid_t gid; // real group id.
+  uid_t euid; // effective user id.
+  gid_t egid; // effective group id.
+} thread_info_t;
+
 typedef struct thread_state {
   uint32_t gs;
   uint32_t fs;
@@ -85,7 +98,9 @@ typedef struct thread_state {
   uint32_t eax;
 } __attribute__((packed)) thread_state_t;
 
-#define CURRENT_THREAD ((thread_t*)THREAD_OFFSET)
+#define CURRENT_THREAD ((thread_t*)_thread_kdata)
+
+#define THREAD_INFO ((thread_info_t*)_thread_uinfo)
 
 void thread_initialize();
 thread_t* thread_create(domain_t *home_domain, void *start_address);
