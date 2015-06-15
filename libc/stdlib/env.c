@@ -111,3 +111,43 @@ int unsetenv(const char *name) {
   }
   return 0;
 }
+
+int putenv(char *string) {
+  char *eq_ptr = strchr(string, '=');
+  if (!eq_ptr) {
+    errno = EINVAL;
+    return -1;
+  }
+  size_t name_len = eq_ptr - string;
+  size_t full_len = strlen(string) + 1;
+  if (name_len == 0) {
+    errno = EINVAL;
+    return -1;
+  }
+  int idx = _getenv(string, name_len);
+
+  if (idx == -1) { // create new env entry
+    char *ptr = strdup(string);
+    if (!ptr) {
+      errno = ENOMEM;
+      return -1;
+    }
+    return _appenv(ptr);
+
+  } else { // replace old entry
+    char *ptr = environ[idx];
+    if (ptr < _environ_static_top) {
+      // cannot realloc entries mapped by the kernel.
+      ptr = (char*)malloc(full_len);
+    } else {
+      ptr = (char*)realloc(environ[idx], full_len);
+    }
+    if (!ptr) {
+      errno = ENOMEM;
+      return -1;
+    }
+    memcpy(ptr, string, full_len);
+    environ[idx] = ptr;
+  }
+  return 0;
+}
