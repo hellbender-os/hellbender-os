@@ -48,6 +48,9 @@ typedef void* vfs_mount_ptr;
 int __IDC__vfs_open(IDC_PTR, struct vfs_file*, const char*, int);
 typedef void* vfs_open_ptr;
 
+int __IDC__vfs_pipe(IDC_PTR, struct vfs_file*, struct vfs_file*);
+typedef void* vfs_pipe_ptr;
+
 int __IDC__vfs_resolve(IDC_PTR, struct vfs_file*, struct vfs_file*, const char *, int);
 typedef void* vfs_resolve_ptr;
 
@@ -113,6 +116,10 @@ extern uintptr_t __IDE__vfs_initfs_lseek;
 extern uintptr_t __IDE__vfs_initfs_open;
 extern uintptr_t __IDE__vfs_initfs_read;
 extern uintptr_t __IDE__vfs_mount;
+extern uintptr_t __IDE__vfs_pipe;
+extern uintptr_t __IDE__vfs_pipefs_close;
+extern uintptr_t __IDE__vfs_pipefs_read;
+extern uintptr_t __IDE__vfs_pipefs_write;
 extern uintptr_t __IDE__vfs_resolve;
 extern uintptr_t __IDE__vfs_rootfs_close;
 extern uintptr_t __IDE__vfs_rootfs_lseek;

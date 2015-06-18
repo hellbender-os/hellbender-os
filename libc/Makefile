@@ -135,6 +135,7 @@ unistd/getpid.o \
 unistd/getuid.o \
 unistd/getgid.o \
 unistd/getgroups.o \
+unistd/pipe.o \
 stdio/stdio_init.o \
 stdio/clearerr.o \
 stdio/getchar.o \
@@ -176,6 +177,8 @@ sys/stat/mkdir.o \
 sys/stat/mkfifo.o \
 sys/stat/umask.o \
 sys/wait/waitpid.o \
+sys/time/gettimeofday.o \
+sys/resource/rlimit.o \
 sys/ioctl.o \
 spawn/posix_spawn.o \
 semaphore/sem_init.o \

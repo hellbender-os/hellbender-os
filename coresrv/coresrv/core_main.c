@@ -10,6 +10,7 @@
 #include <coresrv/vfs.h>
 #include <coresrv/devfs.h>
 #include <coresrv/initfs.h>
+#include <coresrv/pipefs.h>
 #include <coresrv/tty.h>
 
 extern void ps2_init();
@@ -36,6 +37,7 @@ void core_initialize() {
   vga_init();
   vfs_init();
   dev_init();
+  vfs_pipefs_init();
 
   printf("Setting up virtual consoles.\n");
   dev_tty_init();

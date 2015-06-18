@@ -79,17 +79,29 @@
 .global __IDE__vfs_mount
 .set __IDE__vfs_mount, 0x7f8000d0
 
+.global __IDE__vfs_pipe
+.set __IDE__vfs_pipe, 0x7f8000d8
+
+.global __IDE__vfs_pipefs_close
+.set __IDE__vfs_pipefs_close, 0x7f8000e0
+
+.global __IDE__vfs_pipefs_read
+.set __IDE__vfs_pipefs_read, 0x7f8000e8
+
+.global __IDE__vfs_pipefs_write
+.set __IDE__vfs_pipefs_write, 0x7f8000f0
+
 .global __IDE__vfs_resolve
-.set __IDE__vfs_resolve, 0x7f8000d8
+.set __IDE__vfs_resolve, 0x7f8000f8
 
 .global __IDE__vfs_rootfs_close
-.set __IDE__vfs_rootfs_close, 0x7f8000e0
+.set __IDE__vfs_rootfs_close, 0x7f800100
 
 .global __IDE__vfs_rootfs_lseek
-.set __IDE__vfs_rootfs_lseek, 0x7f8000e8
+.set __IDE__vfs_rootfs_lseek, 0x7f800108
 
 .global __IDE__vfs_rootfs_open
-.set __IDE__vfs_rootfs_open, 0x7f8000f0
+.set __IDE__vfs_rootfs_open, 0x7f800110
 
 .global __IDE__vfs_rootfs_read
-.set __IDE__vfs_rootfs_read, 0x7f8000f8
+.set __IDE__vfs_rootfs_read, 0x7f800118

@@ -158,6 +158,30 @@ __IDE__vfs_mount:
     int $83
 .balign 8
 
+.global __IDE__vfs_pipe
+__IDE__vfs_pipe:
+    calll vfs_pipe
+    int $83
+.balign 8
+
+.global __IDE__vfs_pipefs_close
+__IDE__vfs_pipefs_close:
+    calll vfs_pipefs_close
+    int $83
+.balign 8
+
+.global __IDE__vfs_pipefs_read
+__IDE__vfs_pipefs_read:
+    calll vfs_pipefs_read
+    int $83
+.balign 8
+
+.global __IDE__vfs_pipefs_write
+__IDE__vfs_pipefs_write:
+    calll vfs_pipefs_write
+    int $83
+.balign 8
+
 .global __IDE__vfs_resolve
 __IDE__vfs_resolve:
     calll vfs_resolve

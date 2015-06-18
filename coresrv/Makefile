@@ -55,6 +55,7 @@ vfs/vfs_resolve.o \
 vfs/rootfs.o \
 vfs/initfs.o \
 vfs/devfs.o \
+vfs/pipefs.o \
 dev/dev_init.o \
 dev/dev_register.o \
 dev/dev_unregister.o \

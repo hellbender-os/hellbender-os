@@ -150,10 +150,12 @@ Minimum Acceptable Value: {_POSIX_MAX_INPUT}
 //Maximum number of bytes the implementation will store as a pathname in a user-supplied buffer of unspecified size, including the terminating null character. Minimum number the implementation will accept as the maximum number of bytes in a pathname.
 //Minimum Acceptable Value: {_POSIX_PATH_MAX}
 //Minimum Acceptable Value: {_XOPEN_PATH_MAX}
+
+#define PIPE_BUF 512
+//Maximum number of bytes that is guaranteed to be atomic when writing to a pipe.
+//Minimum Acceptable Value: {_POSIX_PIPE_BUF}
+
 /*
-{PIPE_BUF}
-Maximum number of bytes that is guaranteed to be atomic when writing to a pipe.
-Minimum Acceptable Value: {_POSIX_PIPE_BUF}
 {POSIX_ALLOC_SIZE_MIN}
 [ADV] [Option Start]
 Minimum number of bytes of storage actually allocated for any portion of a file.
@@ -280,10 +282,12 @@ Value: 8
 #define _POSIX_PATH_MAX 256
 //Minimum number the implementation will accept as the maximum number of bytes in a pathname.
 //Value: 256
+
+#define _POSIX_PIPE_BUF 512
+//Maximum number of bytes that is guaranteed to be atomic when writing to a pipe.
+//Value: 512
+
 /*
-{_POSIX_PIPE_BUF}
-Maximum number of bytes that is guaranteed to be atomic when writing to a pipe.
-Value: 512
 {_POSIX_RE_DUP_MAX}
 The number of repeated occurrences of a BRE permitted by the regexec() and regcomp() functions when using the interval notation {\(m,n\}; see BREs Matching Multiple Characters.
 Value: 255

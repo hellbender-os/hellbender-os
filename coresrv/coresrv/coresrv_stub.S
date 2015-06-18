@@ -74,6 +74,9 @@ coresrv_stub:
 .global __IDC__vfs_open
 .set __IDC__vfs_open, coresrv_stub
 
+.global __IDC__vfs_pipe
+.set __IDC__vfs_pipe, coresrv_stub
+
 .global __IDC__vfs_read
 .set __IDC__vfs_read, coresrv_stub
 
