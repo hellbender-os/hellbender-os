@@ -14,9 +14,9 @@ typedef struct spinlock {
 
 #define SPINLOCK_INIT {{0}}
 
-#define SPIN_GUARD(guard, sp) spinlock_raw_t* guard __attribute__ ((__cleanup__(spin_guard_unlock))) = spin_guard_lock(&sp.u.lock);
+#define SPIN_GUARD(sp) spinlock_raw_t* guard ## __COUNTER__ __attribute__ ((__cleanup__(spin_guard_unlock))) = spin_guard_lock(&sp.u.lock);
 
-#define SPIN_GUARD_RAW(guard, lock) spinlock_raw_t* guard __attribute__ ((__cleanup__(spin_guard_unlock))) = spin_guard_lock(&lock);
+#define SPIN_GUARD_RAW(lock) spinlock_raw_t* guard ## __COUNTER__ __attribute__ ((__cleanup__(spin_guard_unlock))) = spin_guard_lock(&lock);
 
 INLINE void spin_lock_raw(spinlock_raw_t* lock) {
   asm("    jmp 2f          \n"

@@ -45,7 +45,7 @@ void* heap_alloc(unsigned bytes) {
   } else {
     // must allocate from wilderness.
     unsigned block_size = CACHE_LINE * (idx + 1);
-    SPIN_GUARD_RAW(guard, heap_wilderness.u.s.lock);
+    SPIN_GUARD_RAW(heap_wilderness.u.s.lock);
     if (heap_wilderness.u.s.size < block_size) {
       // more room needed, old unused wilderness is added as a free block.
       if (heap_wilderness.u.s.size) {

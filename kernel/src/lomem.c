@@ -127,7 +127,7 @@ void lomem_init() {
 
 uintptr_t lomem_alloc_4k() {
   { // try to find a split table.
-    SPIN_GUARD_RAW(guard, lomem.split_lock);
+    SPIN_GUARD_RAW(lomem.split_lock);
     struct split_table* split = LIST_FIRST(&lomem.split_tables, struct split_table);
     if (split) {
       struct free_page* page = LIST_FIRST(&split->free_pages, struct free_page);
@@ -144,7 +144,7 @@ uintptr_t lomem_alloc_4k() {
 
 uintptr_t lomem_alloc_2M() {
   // find a free table.
-  SPIN_GUARD_RAW(guard, lomem.free_lock);
+  SPIN_GUARD_RAW(lomem.free_lock);
   struct free_table* free = LIST_FIRST(&lomem.free_tables, struct free_table);
   if (free) {
     LIST_REMOVE(free);
@@ -161,7 +161,7 @@ uintptr_t lomem_alloc_pages(unsigned count) {
   // to allocate N pages, we always split a free table.
   struct free_table* free = 0;
   {
-    SPIN_GUARD_RAW(guard, lomem.free_lock);
+    SPIN_GUARD_RAW(lomem.free_lock);
     free = LIST_FIRST(&lomem.free_tables, struct free_table);
     if (free) {
       LIST_REMOVE(free);
@@ -181,7 +181,7 @@ uintptr_t lomem_alloc_pages(unsigned count) {
       ++split->n_free;
     }
     if (split->n_free) {
-      SPIN_GUARD_RAW(guard, lomem.split_lock);
+      SPIN_GUARD_RAW(lomem.split_lock);
       LIST_INSERT(&lomem.split_tables, split);
     }
     return kernel_v2p(base);
@@ -193,7 +193,7 @@ uintptr_t lomem_alloc_pages(unsigned count) {
 
 void lomem_free_2M(uintptr_t page) {
   struct free_table* free = FREE_TABLE_HEADER(kernel_p2v(page));
-  SPIN_GUARD_RAW(guard, lomem.free_lock);
+  SPIN_GUARD_RAW(lomem.free_lock);
   LIST_INSERT(&lomem.free_tables, free);
 }
 
@@ -203,7 +203,7 @@ void lomem_free_pages(uintptr_t page, unsigned count) {
   void* table = TABLE_ADDRESS(ptr);
   struct split_table* split = SPLIT_TABLE_HEADER(table);
   {
-    SPIN_GUARD_RAW(guard, lomem.split_lock);
+    SPIN_GUARD_RAW(lomem.split_lock);
     if (split->n_free == 0) {
       LIST_INSERT(&lomem.split_tables, split);
     }
@@ -220,7 +220,7 @@ void lomem_free_pages(uintptr_t page, unsigned count) {
   }
 
   if (free) {
-    SPIN_GUARD_RAW(guard, lomem.free_lock);
+    SPIN_GUARD_RAW(lomem.free_lock);
     LIST_INSERT(&lomem.free_tables, free);
   }
 }

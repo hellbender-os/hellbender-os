@@ -26,7 +26,7 @@ typedef struct free_directory {
 
 typedef struct himem {
   // global locking for now. TODO: range specific locks, CPU specific dirs.
-  spinlock_t lock;
+  spinlock_raw_t lock;
 
   // list of the free page ranges:
   struct range {
@@ -101,7 +101,7 @@ void himem_init() {
 }
 
 uintptr_t himem_alloc_page() {
-  SPIN_GUARD(guard, himem.lock);
+  SPIN_GUARD_RAW(himem.lock);
 
   // if current directories are empty, try to get a page from ranges:
   if (himem.first->header.free == 0 && himem.second->header.free == 0
@@ -143,7 +143,7 @@ uintptr_t himem_alloc_page() {
 }
 
 void himem_free_page(uintptr_t page) {
-  SPIN_GUARD(guard, himem.lock);
+  SPIN_GUARD_RAW(himem.lock);
 
   // TODO: use a magic token to check that the page is not mapped!
   if (page < HIGH_MEMORY_LIMIT) {
