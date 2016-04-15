@@ -76,7 +76,7 @@ boot_32_himem:
     ljmp $8, $(boot_32_jump - KERNEL_OFFSET)
 
 boot_32_jump:
-.code64    
+.code64
     # Set up stack for kernel initialization code.
     movabs $(cpu_stack + CPU_STACK_SIZE - 8), %rsp
 

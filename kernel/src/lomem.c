@@ -1,5 +1,6 @@
 #include "lomem.h"
 #include "kernel.h"
+#include "multiboot.h"
 #include "config.h"
 #include "list.h"
 #include "spin.h"
@@ -34,12 +35,12 @@ struct lomem {
 static struct lomem lomem;
 
 // 0 for existing, <0 unavailable
-static int lomem_check_page_exists(struct MultibootData* data, uintptr_t page, uintptr_t size) {
+static int lomem_check_page_exists(uintptr_t page, uintptr_t size) {
   uintptr_t page_top = page + size;
 
   // check if the memory page exists:
-  for (unsigned i = 0; i < data->n_mem_maps; ++i) {
-    memory_map_t *map = data->mem_maps + i;
+  for (unsigned i = 0; i < multiboot_data.n_mem_maps; ++i) {
+    memory_map_t *map = multiboot_data.mem_maps + i;
     uintptr_t mem_bottom = ((uintptr_t)map->base_addr_low) 
       + (((uintptr_t)map->base_addr_high)<<32);
     uintptr_t mem_size = ((uint64_t)map->length_low) 
@@ -51,25 +52,25 @@ static int lomem_check_page_exists(struct MultibootData* data, uintptr_t page, u
 }
 
 // 0 for free, >0 for allocated
-static int lomem_check_page_free(struct MultibootData* data, uintptr_t page) {
+static int lomem_check_page_free(uintptr_t page) {
   // special handling of the first page (due to bios usage).
   if (page == 0) return -1;
   // special handling of the last page of the first table (due to kernel load address hack).
   if (page == (TABLE_SIZE - PAGE_SIZE)) return 0;
 
-  int state = lomem_check_page_exists(data, page, PAGE_SIZE);
+  int state = lomem_check_page_exists(page, PAGE_SIZE);
   uintptr_t page_top = page + PAGE_SIZE;
 
   // check if page is used by a module:
-  for (unsigned k = 0; k < data->n_modules; ++k) {
-    module_t *m = data->modules + k;
+  for (unsigned k = 0; k < multiboot_data.n_modules; ++k) {
+    module_t *m = multiboot_data.modules + k;
     uintptr_t mod_bottom = page_round_down(m->mod_start);
     uintptr_t mod_top = page_round_up(m->mod_end);
     if (page >= mod_bottom && page_top <= mod_top) state = 1;
   }
   // check if page is used by the kernel:
-  for (unsigned k = 0; k < data->n_headers; ++k) {
-    Elf32_Shdr *h = data->headers + k;
+  for (unsigned k = 0; k < multiboot_data.n_headers; ++k) {
+    Elf32_Shdr *h = multiboot_data.headers + k;
     uintptr_t mod_bottom = page_round_down(h->sh_addr);
     uintptr_t mod_top = page_round_up(h->sh_addr + h->sh_size);
     if (page >= mod_bottom && page_top <= mod_top) state = 1;
@@ -77,19 +78,19 @@ static int lomem_check_page_free(struct MultibootData* data, uintptr_t page) {
   return state;
 }
 
-void lomem_init(struct MultibootData* data) {
+void lomem_init() {
   list_init(&lomem.free_tables);
   list_init(&lomem.split_tables);
 
   // check the status of every table:
-  for (uintptr_t table_base = data->memory_bottom; 
-       table_base < data->memory_top; 
+  for (uintptr_t table_base = multiboot_data.memory_bottom; 
+       table_base < multiboot_data.memory_top; 
        table_base += TABLE_SIZE) {
     uintptr_t table_top = table_base + TABLE_SIZE;
 
     // check if the whole table is trivially free.
-    if (table_base > data->allocated_top && 
-        lomem_check_page_exists(data, table_base, TABLE_SIZE) == 0) {
+    if (table_base > multiboot_data.allocated_top && 
+        lomem_check_page_exists(table_base, TABLE_SIZE) == 0) {
         // completely free table.
         struct free_table* free = FREE_TABLE_HEADER(kernel_p2v(table_base));
         LIST_INSERT(&lomem.free_tables, free);
@@ -98,11 +99,11 @@ void lomem_init(struct MultibootData* data) {
 
     // last table page must be free because that is used as table header.
     uintptr_t last_page = table_top - PAGE_SIZE;
-    if (lomem_check_page_free(data, last_page) == 0) {
+    if (lomem_check_page_free(last_page) == 0) {
       // check free pages in the table.
       unsigned n_free = 0;
       for (uintptr_t page = table_base; page < table_top; page += PAGE_SIZE) {
-        if (lomem_check_page_free(data, page) == 0) ++n_free;
+        if (lomem_check_page_free(page) == 0) ++n_free;
       }
       if (n_free == (TABLE_SIZE / PAGE_SIZE)) {
         // completely free table.
@@ -114,7 +115,7 @@ void lomem_init(struct MultibootData* data) {
         split->n_free = n_free - 1;
         list_init(&split->free_pages);
         for (uintptr_t page = table_base; page < last_page; page += PAGE_SIZE) {
-          if (lomem_check_page_free(data, page) == 0) {
+          if (lomem_check_page_free(page) == 0) {
             LIST_INSERT(&split->free_pages, (struct free_page*)kernel_p2v(page));
           }
         }

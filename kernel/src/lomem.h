@@ -1,11 +1,13 @@
 #ifndef __HELLBENDER_KERNEL_LOMEM_H__
 #define __HELLBENDER_KERNEL_LOMEM_H__
 
-#include "kernel.h"
+#include <stdint.h>
 
 /* Low memory (<= HIGH_MEMORY_LIMIT) is assumed to be identity mapped
  * by boot_32 code. Thus it is safe to initialize the low memory
- * manager after entering boot_64. Low memory is good for PCI DMA stuff.
+ * manager in the beginning of boot_64.
+ * Low memory is used by kernel heap.
+ * Low memory is also good for PCI DMA stuff.
  *
  * Low memory is split into page tables (2MB worth of memory).
  * Each table can be either free, allocated, or split.
@@ -20,7 +22,7 @@
  * require a free table, even when allocating less than 2MB.
  */
 
-void lomem_init(struct MultibootData* data);
+void lomem_init();
 
 uintptr_t lomem_alloc_4k();
 uintptr_t lomem_alloc_2M();

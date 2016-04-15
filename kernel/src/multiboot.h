@@ -19,6 +19,11 @@
 #ifndef _KERKEN_MULTIBOOT_H
 #define _KERKEN_MULTIBOOT_H
 
+#ifndef ASM
+#include "elf32.h"
+#include <stdint.h>
+#endif
+
 /* The magic number for the Multiboot header. */
 #define MULTIBOOT_HEADER_MAGIC          0x1BADB002
      
@@ -117,6 +122,36 @@ typedef struct memory_map
   uint32_t length_high;
   uint32_t type;
 } memory_map_t;
+
+/* Structure to copy all multiboot stuff into (because otherwise we cannot
+ * use any memory due to the possibility of overwriting multiboot data).
+ */
+#define MAX_MEMORY_MAPS 16
+#define MAX_MODULES     16
+#define MAX_HEADERS     16
+struct multiboot_data {
+  memory_map_t mem_maps[MAX_MEMORY_MAPS];
+  unsigned n_mem_maps;
+
+  module_t modules[MAX_MODULES];
+  unsigned n_modules;
+    
+  Elf32_Shdr headers[MAX_HEADERS];
+  unsigned n_headers;
+
+  uintptr_t memory_bottom;
+  uintptr_t memory_top;
+  uintptr_t allocated_top; // anything above this is free.
+};
+
+extern struct multiboot_data multiboot_data;
+
+#define MULTIBOOT_TOO_MANY_MEMORY_MAPS -1
+#define MULTIBOOT_TOO_MANY_MODULES     -2
+#define MULTIBOOT_TOO_MANY_ELF_HEADERS -3
+
+// return 0 on success; <0 on error.
+int multiboot_copy(multiboot_info_t *info);
      
 #endif /* ! ASM */
 

@@ -1,5 +1,6 @@
 #include "himem.h"
 #include "kernel.h"
+#include "multiboot.h"
 #include "page.h"
 #include "spin.h"
 #include "lomem.h"
@@ -50,7 +51,7 @@ himem_t himem;
  * Reserves all memory areas above 1GB.
  * Maps all memory to kernel virtual memory.
  */
-void himem_init(struct MultibootData* data) {
+void himem_init() {
   himem.first = (free_directory_t*)kernel_p2v(lomem_alloc_4k());
   himem.second = (free_directory_t*)kernel_p2v(lomem_alloc_4k());
   himem.first->header.next = &himem.second->header;
@@ -59,8 +60,8 @@ void himem_init(struct MultibootData* data) {
   himem.second->header.free = 0;
 
   // process memory map information provided by GRUB:
-  for (unsigned i = 0; i < data->n_mem_maps; ++i) {
-    memory_map_t *map = data->mem_maps + i;
+  for (unsigned i = 0; i < multiboot_data.n_mem_maps; ++i) {
+    memory_map_t *map = multiboot_data.mem_maps + i;
     uintptr_t base = ((uintptr_t)map->base_addr_low) 
       + (((uintptr_t)map->base_addr_high)<<32);
     uintptr_t size = ((uint64_t)map->length_low) 

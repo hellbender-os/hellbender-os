@@ -21,16 +21,19 @@ LDFLAGS:=$(LDFLAGS) -ffreestanding -nostdlib -z max-page-size=0x1000 -Wl,--build
 LIBS:=$(LIBS) -static -nostdlib -lgcc -lk
 
 OBJS:=\
+src/multiboot_asm.o \
 src/multiboot.o \
 src/boot_32.o \
 src/boot_64.o \
 src/gdt.o \
 src/cpu.o \
+src/cpu_asm.o \
 src/kernel.o \
 src/lomem.o \
 src/page.o \
 src/list.o \
 src/himem.o \
+src/heap.o \
 
 all: hellbender.kernel
 
@@ -48,7 +51,7 @@ hellbender.kernel: $(OBJS) linker.ld
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 clean:
-	rm $(OBJS) kernel.map hellbender.kernel.elf64 hellbender.kernel
+	rm $(OBJS) hellbender.kernel.map hellbender.kernel.elf64 hellbender.kernel
 
 install: hellbender.kernel
 	mkdir -p $(DESTDIR)$(BOOTDIR)
