@@ -1,0 +1,9 @@
+*~
+sysroot/
+isodir/
+kernel/hellbender.kernel*
+libc/*.a
+libk/*.a
+libk/build/
+**/*.o
+hellbender.iso
