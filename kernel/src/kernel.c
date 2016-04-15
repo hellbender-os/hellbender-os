@@ -4,6 +4,8 @@
 // this is used by some inline assembler to ensure memory ordering.
 unsigned long __force_order;
 
+struct kernel kernel;
+
 __attribute__((__noreturn__))
 void kernel_panic() {
   // TODO: Add proper kernel panic.
@@ -12,7 +14,9 @@ void kernel_panic() {
 }
 
 void kernel_add_cpu(struct cpu* cpu) {
-  (void)cpu;
+  SPIN_GUARD_RAW(kernel.lock);
+  if (kernel.n_cpus == KERNEL_MAX_CPUS) kernel_panic();
+  kernel.cpus[kernel.n_cpus++] = cpu;
 }
 
 void kernel_main() {
