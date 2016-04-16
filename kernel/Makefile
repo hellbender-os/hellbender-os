@@ -34,6 +34,10 @@ src/page.o \
 src/list.o \
 src/himem.o \
 src/heap.o \
+src/isr.o \
+src/isr_asm.o \
+src/idt.o \
+src/pic.o \
 
 all: hellbender.kernel
 
@@ -47,8 +51,11 @@ hellbender.kernel: $(OBJS) linker.ld
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-%.o: %.S
+%.o: %.S src/struct2asm.h
 	$(CC) -c $< -o $@ $(CFLAGS)
+
+src/struct2asm.h: src/struct2asm.c
+	$(CC) -S $< -o - | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
 
 clean:
 	rm $(OBJS) hellbender.kernel.map hellbender.kernel.elf64 hellbender.kernel

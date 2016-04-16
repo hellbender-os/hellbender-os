@@ -16,7 +16,6 @@
 #define PAGE_USER_RO (1|4)
 #define PAGE_LARGE 128
 
-extern unsigned long __force_order;
 INLINE void page_invalidate(void *virtual) {
   asm volatile("invlpg (%1)"
                : "=m"(__force_order)

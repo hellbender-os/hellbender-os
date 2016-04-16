@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+extern unsigned long __force_order; // required by some inline assembler stuff
+
 #define KERNEL_MAX_CPUS 8
 
 struct kernel {

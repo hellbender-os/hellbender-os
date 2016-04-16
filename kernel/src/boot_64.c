@@ -5,6 +5,8 @@
 #include "lomem.h"
 #include "himem.h"
 #include "cpu.h"
+#include "idt.h"
+#include "pic.h"
 
 #include <string.h>
 
@@ -40,11 +42,17 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
   lomem_init();
   himem_init();
 
-  // initialize all CPUs.
+  // initialize CPUs.
   cpu_init();
 
-  // start setting up kernel structures.
+  // initialize interrupt handling.
   VGA_AT(0,3) = VGA_ENTRY('L', WHITE_ON_BLACK);
+  pic_init();
+  //tss_init();
+  idt_init();
+
+  // start setting up kernel structures.
+  VGA_AT(0,4) = VGA_ENTRY('B', WHITE_ON_BLACK);
   BREAK;
   kernel_main();
 }

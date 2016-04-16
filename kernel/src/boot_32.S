@@ -59,9 +59,6 @@ boot_32_himem:
     movl %eax, %cr0
 
     # Set up GDT
-    movl $(gdt_ptr - KERNEL_OFFSET), %ebx
-    movl $(gdt - KERNEL_OFFSET), %eax
-    movl %eax, 2(%ebx) # GDT pointer needs to be set, size is already there.
     lgdt gdt_ptr - KERNEL_OFFSET
     
     # Load selectors.
@@ -77,6 +74,10 @@ boot_32_himem:
 
 boot_32_jump:
 .code64
+    # Re-set GDT to higher half address
+    movabs $gdt_ptr, %rax
+    lgdt (%rax)
+
     # Set up stack for kernel initialization code.
     movabs $(cpu_stack + CPU_STACK_SIZE - 8), %rsp
 
