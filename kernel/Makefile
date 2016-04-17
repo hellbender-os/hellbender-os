@@ -29,6 +29,8 @@ src/gdt.o \
 src/cpu.o \
 src/cpu_asm.o \
 src/kernel.o \
+src/process.o \
+src/thread.o \
 src/lomem.o \
 src/page.o \
 src/list.o \

@@ -135,6 +135,8 @@ struct multiboot_data {
 
   module_t modules[MAX_MODULES];
   unsigned n_modules;
+  int coresrv_module;
+  int initrd_module;
     
   Elf32_Shdr headers[MAX_HEADERS];
   unsigned n_headers;

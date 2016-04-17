@@ -7,6 +7,7 @@
 struct multiboot_data multiboot_data;
 
 int multiboot_copy(multiboot_info_t *info) {
+  // copy memory info, find memory limits.
   multiboot_data.memory_bottom = -1;
   uintptr_t mm_end = (uintptr_t)info->mmap_addr + info->mmap_length;
   for (uintptr_t mm = (uintptr_t)info->mmap_addr; mm < mm_end; mm += sizeof(uint32_t)) {
@@ -30,6 +31,7 @@ int multiboot_copy(multiboot_info_t *info) {
   multiboot_data.memory_bottom &= TABLE_ADDRESS_MASK;
   multiboot_data.memory_top -= multiboot_data.memory_top % TABLE_SIZE;
 
+  // copy module info, find memory limits, find coresrv, rootfs.
   if (info->mods_count > MAX_MODULES) {
     return -1;
   }
@@ -37,12 +39,21 @@ int multiboot_copy(multiboot_info_t *info) {
   memcpy(multiboot_data.modules,
          (module_t*)((uintptr_t)info->mods_addr), 
          multiboot_data.n_modules * sizeof(module_t));
+  multiboot_data.coresrv_module = -1;
+  multiboot_data.initrd_module = -1;
   for (unsigned k = 0; k < multiboot_data.n_modules; ++k) {
     module_t *m = multiboot_data.modules + k;
     uintptr_t mod_top = page_round_up(m->mod_end);
     if (mod_top > multiboot_data.allocated_top) multiboot_data.allocated_top = mod_top;
+    if (strcmp((char*)(uint64_t)m->string, "--coresrv") == 0) {
+      multiboot_data.coresrv_module = k;
+    }
+    if (strcmp((char*)(uint64_t)m->string, "--initrd") == 0) {
+      multiboot_data.initrd_module = k;
+    }
   }
 
+  // copy kernel ELF info, find memory limits.
   if (info->u.elf_sec.num > MAX_HEADERS) {
     return MULTIBOOT_TOO_MANY_ELF_HEADERS;
   }

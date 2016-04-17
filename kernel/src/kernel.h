@@ -27,6 +27,8 @@ void kernel_panic();
 
 void kernel_add_cpu(struct cpu* cpu);
 
+void kernel_start_core();
+
 void kernel_main();
 
 #endif

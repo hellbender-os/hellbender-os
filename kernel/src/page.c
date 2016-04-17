@@ -14,25 +14,25 @@ uint64_t page_dpt[512] __attribute__((aligned(0x1000)));
 uint64_t page_ml4t[512] __attribute__((aligned(0x1000)));
 /* = { 0 (uint64_t)&pdpt | 3 }; */
 
-INLINE void page_ensure_pdp_table(void* virtual, unsigned attributes) {
+INLINE void page_ensure_pdp_table(void* virtual, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pdpt = (uint64_t *)(((address>>36) & ~7) | 0xFFFFFFFFFFFFF000);
   if (!*pdpt) *pdpt = page_clear(lomem_alloc_4k()) | attributes;
 }
 
-INLINE void page_ensure_directory(void* virtual, unsigned attributes) {
+INLINE void page_ensure_directory(void* virtual, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pd = (uint64_t *)(((address>>27) & ~7) | 0xFFFFFFFFFFE00000);
   if (!*pd) *pd = page_clear(lomem_alloc_4k()) | attributes;
 }
 
-INLINE void page_ensure_pagetable(void* virtual, unsigned attributes) {
+INLINE void page_ensure_pagetable(void* virtual, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);
   if (!*pt) *pt = page_clear(lomem_alloc_4k()) | attributes;
 }
 
-void* page_map_4k(void* virtual, uintptr_t physical, unsigned attributes) {
+void* page_map_4k(void* virtual, uintptr_t physical, uint64_t attributes) {
   page_ensure_pdp_table(virtual, attributes);
   page_ensure_directory(virtual, attributes);
   page_ensure_pagetable(virtual, attributes);
@@ -43,7 +43,7 @@ void* page_map_4k(void* virtual, uintptr_t physical, unsigned attributes) {
   return (void*)(((uintptr_t)virtual) & PAGE_ADDRESS_MASK);
 }
 
-void* page_map_2M(void* virtual, uintptr_t physical, unsigned attributes) {
+void* page_map_2M(void* virtual, uintptr_t physical, uint64_t attributes) {
   page_ensure_pdp_table(virtual, attributes);
   page_ensure_directory(virtual, attributes);
   uintptr_t address = (uintptr_t)virtual;
@@ -73,7 +73,7 @@ uintptr_t page_unmap_2M(void* virtual) {
   } else kernel_panic(); // unmapping non-existing page.
 }
 
-uintptr_t page_remap_4k(void* virtual, unsigned attributes) {
+uintptr_t page_remap_4k(void* virtual, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
   uintptr_t physical = *page & PAGE_ADDRESS_MASK;
@@ -81,7 +81,7 @@ uintptr_t page_remap_4k(void* virtual, unsigned attributes) {
   return physical;
 }
 
-uintptr_t page_remap_2M(void* virtual, unsigned attributes) {
+uintptr_t page_remap_2M(void* virtual, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);
   uintptr_t physical = *pt & PAGE_ADDRESS_MASK;
@@ -89,7 +89,7 @@ uintptr_t page_remap_2M(void* virtual, unsigned attributes) {
   return physical;
 }
 
-uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, unsigned attributes) {
+uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pdpt = (uint64_t *)(((address>>36) & ~7) | 0xFFFFFFFFFFFFF000);
   uintptr_t old = *pdpt;
@@ -97,10 +97,22 @@ uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, unsigned attributes) 
   return old;
 }
 
-uintptr_t page_set_pd(void* virtual, uintptr_t physical, unsigned attributes) {
+uintptr_t page_set_pd(void* virtual, uintptr_t physical, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pd = (uint64_t *)(((address>>27) & ~7) | 0xFFFFFFFFFFE00000);
   uintptr_t old = *pd;
   *pd = physical | attributes;
   return old;
+}
+
+uintptr_t page_get_address(void* virtual) {
+  uintptr_t address = (uintptr_t)virtual;
+  uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);
+  uint64_t table = *pt;
+  if (table & PAGE_LARGE) { // this is 2MB page
+    return (table & TABLE_ADDRESS_MASK) | (((uint64_t)virtual) & ~TABLE_ADDRESS_MASK);
+  } else { // this is 4k page
+    uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
+    return *page & PAGE_ADDRESS_MASK;
+  }
 }

@@ -5,6 +5,7 @@
 #include "lomem.h"
 #include "himem.h"
 #include "cpu.h"
+#include "gdt.h"
 #include "idt.h"
 #include "pic.h"
 
@@ -43,16 +44,21 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
   himem_init();
 
   // initialize CPUs.
+  cpu_enable_features();
   cpu_init();
+  gdt_init(); // adds per-cpu TSS into GDT.
+  tss_update();
 
   // initialize interrupt handling.
   VGA_AT(0,3) = VGA_ENTRY('L', WHITE_ON_BLACK);
   pic_init();
-  //tss_init();
   idt_init();
 
-  // start setting up kernel structures.
+  // kick-start the core service.
   VGA_AT(0,4) = VGA_ENTRY('B', WHITE_ON_BLACK);
-  BREAK;
+  kernel_start_core();
+
+  // start scheduler and do stuff.
+  VGA_AT(0,5) = VGA_ENTRY('E', WHITE_ON_BLACK);
   kernel_main();
 }

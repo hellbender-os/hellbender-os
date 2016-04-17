@@ -19,11 +19,13 @@
 
 #define CPU_STACK_SIZE (2*PAGE_SIZE)
 
-#define N_SELECTORS 5
+#define N_SELECTORS 5       // excluding the TSS selector
+#define NULL_SELECTOR  0x00
 #define CODE_SELECTOR  0x08
 #define DATA_SELECTOR  0x10
 #define UCODE_SELECTOR 0x18
 #define UDATA_SELECTOR 0x20
+#define TSS_SELECTOR   0x28
 
 #define HIGH_MEMORY_LIMIT (0x10000000)
 

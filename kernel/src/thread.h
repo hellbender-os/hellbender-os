@@ -23,4 +23,6 @@ struct thread {
   uint64_t rsp_backup; // stores the rsp value when thread is not currently being executed.
 };
 
+struct thread* create_thread(uintptr_t entry_point, uintptr_t stack_top);
+
 #endif

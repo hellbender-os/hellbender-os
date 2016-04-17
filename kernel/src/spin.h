@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#include <stdint.h>
+
 typedef uint32_t __attribute__ ((aligned(CACHE_LINE))) spinlock_raw_t;
 
 typedef struct spinlock {

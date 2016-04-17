@@ -73,6 +73,8 @@ isr_push_state:
 1:      // }
         sti
         call *%rax
+        .global isr_to_usermode
+isr_to_usermode:         // this same code works when entering usermode the first time.
         cli
         // if (--cpu.nested_isr < 0) {
         decq offsetof_cpu_nested_isr(%rbx)
@@ -98,7 +100,7 @@ isr_push_state:
         mov offsetof_thread_registers_r14(%rsp), %r14
         mov offsetof_thread_registers_r15(%rsp), %r15
         add $(sizeof_thread_registers + 8), %rsp // also popping the error code.
-        iret
+        iretq
 
 
         // traps               Name	                 Vector	Type	Mnemonic Error code

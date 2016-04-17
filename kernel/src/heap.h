@@ -4,7 +4,7 @@
 #include "config.h"
 
 /* Kernel heap allows one to allocate/free 60+N*64 byte blocks.
- * Maximum allocation limit cannot be exceeded.
+ * Maximum allocation limit (HEAP_MAX_ALLOC) cannot be exceeded.
  * Returned pointers are always aligned to cache line boundary.
  *
  * Each CPU has its own heap with lists for block sizes N=0..15.
