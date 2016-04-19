@@ -12,7 +12,6 @@
         .global _start
 _start:
         # DEBUG: Write 'e' to VGA buffer to notify we are in usermode..
-        BREAK
         mov $0x0f65, %ax
         mov %ax, (0xB8010)
 

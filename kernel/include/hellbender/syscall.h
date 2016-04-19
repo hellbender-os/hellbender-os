@@ -1,11 +1,8 @@
+// Automagically generated my Makefile, do not edit.
 #ifndef __HELLBENDER_SYSCALL_H__
 #define __HELLBENDER_SYSCALL_H__
-
-__attribute__((__noreturn__))
-void syscall_exit(int status) {
-  //TODO: execute the call.
-  asm("cli;1:hlt;jmp 1b");
-  __builtin_unreachable();
-}
-
+#include <stdint.h>
+#define SYSCALL_INT 80
+uint64_t syscall_exit(int retval) ;
+uint64_t syscall_unknown() ;
 #endif

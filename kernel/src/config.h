@@ -36,4 +36,6 @@
 
 #define PROCESS_CONTEXT_MASK 0xFFF
 
+#define SYSCALL_INT 80
+
 #endif

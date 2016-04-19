@@ -1,9 +1,6 @@
 #include "isr.h"
 #include "thread.h"
 
-void isr_init() {
-}
-
 // traps
 
 void isr_routine_0(struct thread_state* state, unsigned ring) {

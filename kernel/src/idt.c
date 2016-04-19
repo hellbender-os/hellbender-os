@@ -27,9 +27,11 @@ struct __attribute__((packed)) {
   (uint64_t)/*idt_table -- allocated runtime*/0
  };
 
-#define idt_set(INTERRUPT) \
+#define idt_set_do(INTERRUPT)               \
   extern void isr_wrapper_ ## INTERRUPT (); \
   idt_set_entry(INTERRUPT, (uint64_t)&isr_wrapper_ ## INTERRUPT)
+
+#define idt_set(INTERRUPT) idt_set_do(INTERRUPT)
 
 static void idt_set_entry(unsigned interrupt, uint64_t offset) {
   struct idt_entry* target  = idt_table + interrupt;
@@ -40,9 +42,9 @@ static void idt_set_entry(unsigned interrupt, uint64_t offset) {
   target->offset_2 = (offset >> 32) & 0xFFFFFFFF;
 
   // encode attributes:
-  uint16_t ist = 0; // interrupt stack table (to use a clean stack for NMI and otherse).
+  uint16_t ist = 0;    // interrupt stack table (if using a clean stack for NMI and others).
   uint16_t type = 0xE; // 64-bit Interrupt Gate
-  uint16_t dpl = 0; // descriptor privilege level
+  uint16_t dpl = interrupt == SYSCALL_INT ? 3 : 0; // descriptor privilege level
   uint16_t present = 1;
   target->ist = (ist & 7);
   target->attributes = ((present & 1)<<7) | ((dpl & 3)<<5) | (type & 15);
@@ -95,6 +97,9 @@ void idt_init() {
   idt_set(45);
   idt_set(46);
   idt_set(47);
+
+  // Syscall
+  idt_set(SYSCALL_INT);
 
   asm volatile ("lidt (%0);"
        : /* no output registers */

@@ -27,6 +27,7 @@ src/libc.o \
 src/libc_init.o \
 src/heap.o \
 src/mutex.o \
+src/syscall.o \
 stdlib/abs.o \
 stdlib/atexit.o \
 stdlib/atoi.o \
@@ -90,11 +91,16 @@ libm.a:
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-%.o: %.S
+%.o: %.S src/syscall.inc
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DASM
 
+src/syscall.inc: $(DESTDIR)$(INCLUDEDIR)/hellbender/syscall.h src/syscall.S
+	echo "// Automagically generated my Makefile, do not edit." > $@
+	grep SYSCALL_INT $< >> $@
+	grep " syscall_" $< | perl -ne '++$$i;/^uint64_t\s+([^(]+)/; print "\n.global $$1\n$$1:\n  mov \$$($$i-1), %rax\n  int \$$SYSCALL_INT\n  ret\n";' >> $@
+
 clean:
-	rm -f $(BINARIES) $(OBJS)
+	rm -f src/syscall.inc $(BINARIES) $(OBJS)
 
 install: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)

@@ -1,5 +1,5 @@
         #include "config.h"
-        #include "struct2asm.h"
+        #include "struct2asm.inc"
 
         .section .text
         .code64
@@ -14,7 +14,7 @@
         .extern isr_routine_\IDX
         .global isr_wrapper_\IDX
         .balign 4
-isr_wrapper_\IDX\():
+isr_wrapper_\IDX:
         sub $(sizeof_thread_registers), %rsp
         mov %rax, offsetof_thread_registers_rax(%rsp)
         movabs $isr_routine_\IDX, %rax // the routine we will call to handle the interrup.
@@ -32,7 +32,7 @@ isr_wrapper_\IDX\():
         .extern isr_routine_\IDX
         .global isr_wrapper_\IDX
         .balign 4
-isr_wrapper_\IDX\():
+isr_wrapper_\IDX:
         pushq $0 // mock error code.
         sub $(sizeof_thread_registers), %rsp
         mov %rax, offsetof_thread_registers_rax(%rsp)
@@ -57,10 +57,13 @@ isr_push_state:
         mov %r13, offsetof_thread_registers_r13(%rsp)
         mov %r14, offsetof_thread_registers_r14(%rsp)
         mov %r15, offsetof_thread_registers_r15(%rsp)
-
+        mov $DATA_SELECTOR, %bx
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
         mov %rsp, %rdi // 1st parameter == struct thread_state*
         mov $0, %rsi   // 2nd parameter == source ring number (0 for kernel, 3 for userspace).
-
         // if (++cpu.nested_isr == 0) {
         movabs $cpu, %rbx
         incq offsetof_cpu_nested_isr(%rbx)
@@ -83,11 +86,11 @@ isr_to_usermode:         // this same code works when entering usermode the firs
         //   rsp = cpu.current_thread_rsp
         mov offsetof_cpu_current_thread_rsp(%rbx), %rsp
 1:      // }
-        mov $UDATA_SELECTOR, %ax
-        mov %ax, %ds
-        mov %ax, %es
-        mov %ax, %fs
-        mov %ax, %gs
+        mov $UDATA_SELECTOR, %bx
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
         mov offsetof_thread_registers_rax(%rsp), %rax
         mov offsetof_thread_registers_rbx(%rsp), %rbx
         mov offsetof_thread_registers_rcx(%rsp), %rcx
@@ -137,3 +140,51 @@ isr_to_usermode:         // this same code works when entering usermode the firs
         define_interrupt idx
         .set idx, (idx+1)
         .endr
+
+        
+        // Syscall
+        .macro __define_syscall INT
+        .extern dispatch
+        .global isr_wrapper_\INT
+isr_wrapper_\INT:
+        pushq %rax // syscall number as error code.
+        sub $(sizeof_thread_registers), %rsp
+        mov %rbx, offsetof_thread_registers_rbx(%rsp)
+        mov %rbp, offsetof_thread_registers_rbp(%rsp)
+        mov %r12, offsetof_thread_registers_r12(%rsp)
+        mov %r13, offsetof_thread_registers_r13(%rsp)
+        mov %r14, offsetof_thread_registers_r14(%rsp)
+        mov %r15, offsetof_thread_registers_r15(%rsp)
+        mov $DATA_SELECTOR, %bx
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
+        movabs $cpu, %rbx
+        incq offsetof_cpu_nested_isr(%rbx)
+        //    cpu.current_thread_rsp = rsp;
+        mov %rsp, offsetof_cpu_current_thread_rsp(%rbx)
+        //    rsp = cpu.kernel_stack_top
+        mov offsetof_cpu_kernel_stack_top(%rbx), %rsp
+        sti
+        call dispatch
+        cli
+        movabs $cpu, %rbx
+        decq offsetof_cpu_nested_isr(%rbx)
+        //   rsp = cpu.current_thread_rsp
+        mov offsetof_cpu_current_thread_rsp(%rbx), %rsp
+        mov $UDATA_SELECTOR, %bx
+        mov %bx, %ds
+        mov %bx, %es
+        mov %bx, %fs
+        mov %bx, %gs
+        mov offsetof_thread_registers_rbx(%rsp), %rbx
+        mov offsetof_thread_registers_rbp(%rsp), %rbp
+        mov offsetof_thread_registers_r12(%rsp), %r12
+        mov offsetof_thread_registers_r13(%rsp), %r13
+        mov offsetof_thread_registers_r14(%rsp), %r14
+        mov offsetof_thread_registers_r15(%rsp), %r15
+        add $(sizeof_thread_registers + 8), %rsp // also popping the error code.
+        iretq
+        .endm
+        __define_syscall SYSCALL_INT

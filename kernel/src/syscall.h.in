@@ -1,0 +1,3 @@
+#ifndef __HELLBENDER_SYSCALL_H__
+#define __HELLBENDER_SYSCALL_H__
+#include <stdint.h>
