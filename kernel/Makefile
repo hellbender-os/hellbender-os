@@ -32,7 +32,6 @@ src/process.o \
 src/thread.o \
 src/lomem.o \
 src/page.o \
-src/list.o \
 src/himem.o \
 src/heap.o \
 src/isr.o \

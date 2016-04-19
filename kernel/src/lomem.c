@@ -6,41 +6,60 @@
 #include "spin.h"
 #include "page.h"
 
-INLINE struct free_table* FREE_TABLE_HEADER(void *table) {
-  return (struct free_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE);
-}
+// Memory is split into page table worth segments (2MB).
+// The first or last page of each table is reserved to be used as a header, if needed.
+// If page address < 8*TABLE_SIZE, we use the last page, else we use the first page.
+// This way we get to use as much of the free space as possible without issues with
+// the zero page & kernel (as long as kernel fits below that limit).
 
-INLINE struct split_table* SPLIT_TABLE_HEADER(void *table) {
-  return (struct split_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE);
-}
-
-INLINE void* TABLE_ADDRESS(void *table) {
-  return (void*)(((uintptr_t)table) & TABLE_VIRTUAL_MASK);
-}
-
+// describes a page table that is completely free.
 struct free_table { // last page of a free table.
-  LIST_ITEM;
+  list_item_t tables;
 };
 
+// describes a page table that is partially free.
 struct split_table { // last page of a split table.
-  LIST_ITEM;
-  unsigned n_free;
-  list_t free_pages; // struct free_page
+  list_item_t tables;
+  uintptr_t o_unused; // offset from table bottom to the first unused page.
+  unsigned n_unused;  // number of unused pages at the bottom of the table.
+  unsigned n_free;    // number of reclaimed pages in the free_pages list.
+  list_t free_pages;  // struct free_page
 };
 
+// describes a page that has been released.
 struct free_page {
-  LIST_ITEM;
+  list_item_t pages;
 };
         
 struct lomem {
-  spinlock_raw_t free_lock; // protects free_tables.
-  list_t free_tables; // struct free_table
+  spinlock_raw_t free_lock;  // protects free_tables.
+  list_t free_tables;        // list of struct free_table.
 
-  spinlock_raw_t split_lock; // protects split_tables; split_table::n_free, split_table::free_pages.
-  list_t split_tables; // struct split_table
+  spinlock_raw_t split_lock; // protects split_tables (and enclosed split tables).
+  list_t split_tables;       // list of struct split_table.
 };
 
 static struct lomem lomem;
+
+#define TOP_HEADER_LIMIT (8*TABLE_SIZE)
+
+INLINE uintptr_t TABLE_ADDRESS(void *ptr) {
+  return kernel_v2p(ptr) & TABLE_PHYSICAL_MASK;
+}
+
+INLINE void* TABLE_HEADER(void *ptr) {
+  return (void*)((uintptr_t)ptr > (KERNEL_OFFSET + TOP_HEADER_LIMIT)
+                 ? (((uintptr_t)ptr) & TABLE_VIRTUAL_MASK)
+                 : (((uintptr_t)ptr) & TABLE_VIRTUAL_MASK) + TABLE_SIZE - PAGE_SIZE);
+}
+
+INLINE struct free_table* FREE_TABLE(void *ptr) {
+  return (struct free_table*)(TABLE_HEADER(ptr));
+}
+
+INLINE struct split_table* SPLIT_TABLE(void *ptr) {
+  return (struct split_table*)(TABLE_HEADER(ptr));
+}
 
 // 0 for existing, <0 unavailable
 static int lomem_check_page_exists(uintptr_t page, uintptr_t size) {
@@ -87,47 +106,52 @@ static int lomem_check_page_free(uintptr_t page) {
 }
 
 void lomem_init() {
-  list_init(&lomem.free_tables);
-  list_init(&lomem.split_tables);
-
   // check the status of every table:
-  for (uintptr_t table_base = multiboot_data.memory_bottom; 
-       table_base < multiboot_data.memory_top; 
-       table_base += TABLE_SIZE) {
+  for (uintptr_t table_base = multiboot_data.memory_bottom & TABLE_PHYSICAL_MASK; 
+       table_base < multiboot_data.memory_top; table_base += TABLE_SIZE) {
     uintptr_t table_top = table_base + TABLE_SIZE;
 
     // check if the whole table is trivially free.
-    if (table_base > multiboot_data.allocated_top && 
+    if (table_base >= multiboot_data.allocated_top && 
         lomem_check_page_exists(table_base, TABLE_SIZE) == 0) {
         // completely free table.
-        struct free_table* free = FREE_TABLE_HEADER(kernel_p2v(table_base));
-        LIST_INSERT(&lomem.free_tables, free);
+        struct free_table* free = FREE_TABLE(kernel_p2v(table_base));
+        list_insert(&lomem.free_tables, &free->tables);
         continue;
     }
 
-    // last table page must be free because that is used as table header.
-    uintptr_t last_page = table_top - PAGE_SIZE;
-    if (lomem_check_page_free(last_page) == 0) {
-      // check free pages in the table.
-      unsigned n_free = 0;
-      for (uintptr_t page = table_base; page < table_top; page += PAGE_SIZE) {
-        if (lomem_check_page_free(page) == 0) ++n_free;
+    // header page must be free.
+    struct split_table* split = SPLIT_TABLE(kernel_p2v(table_base));
+    uintptr_t header_page = kernel_v2p(split);
+    if (lomem_check_page_free(header_page) == 0) {
+      split->n_unused = 0;
+      split->o_unused = 0;
+      split->n_free = 0;
+      split->free_pages = (list_t)LIST_INIT;
+      uintptr_t page = table_base;
+      // find the first free page in the table.
+      for (; page < table_top; page += PAGE_SIZE) {
+        if (page == header_page || lomem_check_page_free(page) != 0) {
+          split->o_unused += PAGE_SIZE;
+        } else break;
       }
-      if (n_free == (TABLE_SIZE / PAGE_SIZE)) {
-        // completely free table.
-        struct free_table* free = FREE_TABLE_HEADER(kernel_p2v(table_base));
-        LIST_INSERT(&lomem.free_tables, free);
-      } else if (n_free > 1) {
-        // partially free table.
-        struct split_table* split = SPLIT_TABLE_HEADER(kernel_p2v(table_base));
-        split->n_free = n_free - 1;
-        list_init(&split->free_pages);
-        for (uintptr_t page = table_base; page < last_page; page += PAGE_SIZE) {
-          if (lomem_check_page_free(page) == 0) {
-            LIST_INSERT(&split->free_pages, (struct free_page*)kernel_p2v(page));
-          }
+      // count the unused pages at the bottom of the table.
+      for (; page < table_top; page += PAGE_SIZE) {
+        if (page != header_page && lomem_check_page_free(page) == 0) ++split->n_unused;
+        else break;
+      }
+      // add any other free pages to the 'free pages' list.
+      for (; page < table_top; page += PAGE_SIZE) {
+        if (page == header_page) continue;
+        if (lomem_check_page_free(page) == 0) {
+          ++split->n_free;
+          struct free_page *free = (struct free_page *)kernel_p2v(page);
+          list_insert(&split->free_pages, &free->pages);
         }
-        LIST_INSERT(&lomem.split_tables, split);
+      }
+      // tables with any free memory are added to the split table list.
+      if (split->n_unused || split->n_free) {
+        list_insert(&lomem.split_tables, &split->tables);
       }
     }
   }
@@ -136,27 +160,41 @@ void lomem_init() {
 uintptr_t lomem_alloc_4k() {
   { // try to find a split table.
     SPIN_GUARD_RAW(lomem.split_lock);
-    struct split_table* split = LIST_FIRST(&lomem.split_tables, struct split_table);
-    if (split) {
-      struct free_page* page = LIST_FIRST(&split->free_pages, struct free_page);
-      LIST_REMOVE(page);
-      if (--(split->n_free) == 0) {
-        LIST_REMOVE(split);
+    list_item_t *table_item = list_first(&lomem.split_tables);
+    if (table_item) {
+      uintptr_t page = 0;
+      struct split_table* split = list_container(table_item, struct split_table, tables);
+      if (split->n_unused) {
+        // use unused pages first.
+        page = TABLE_ADDRESS(split) + split->o_unused;
+        split->o_unused += PAGE_SIZE;
+        --split->n_unused;
+      } else {
+        // any table in the list must have some free, thus n_free > 0 if n_unused == 0.
+        list_item_t *page_item = list_first(&split->free_pages);
+        page = kernel_v2p(list_container(page_item, struct free_page, pages));
+        list_remove(page_item);
+        --split->n_free;
       }
-      return kernel_v2p(page);
+      if (split->n_unused == 0 && split->n_free == 0) {
+        // split tables are removed when they get empty.
+        list_remove(table_item);
+      }
+      return page;
     }
   }
-
+  // if split tables are not available, get one from free tables.
   return lomem_alloc_pages(1);
 }
 
 uintptr_t lomem_alloc_2M() {
   // find a free table.
   SPIN_GUARD_RAW(lomem.free_lock);
-  struct free_table* free = LIST_FIRST(&lomem.free_tables, struct free_table);
-  if (free) {
-    LIST_REMOVE(free);
-    return kernel_v2p(TABLE_ADDRESS(free));
+  list_item_t *free_item = list_first(&lomem.free_tables);
+  if (free_item) {
+    list_remove(free_item);
+    struct free_table* free = list_container(free_item, struct free_table, tables);
+    return TABLE_ADDRESS(free);
   }
 
   // out of memory.
@@ -170,29 +208,33 @@ uintptr_t lomem_alloc_pages(unsigned count) {
   struct free_table* free = 0;
   {
     SPIN_GUARD_RAW(lomem.free_lock);
-    free = LIST_FIRST(&lomem.free_tables, struct free_table);
-    if (free) {
-      LIST_REMOVE(free);
+    list_item_t *free_item = list_first(&lomem.free_tables);
+    if (free_item) {
+      list_remove(free_item);
+      free = list_container(free_item, struct free_table, tables);
     }
   }
   if (free) {
     struct split_table* split = (struct split_table*)free;
-    // add all but the N first and last table pages.
-    // last page is the split table header.
-    // first page(s) will be returned to caller.
     split->n_free = 0;
-    list_init(&split->free_pages);
-    uint8_t* base = (uint8_t*)TABLE_ADDRESS(free);
-    for (uintptr_t offset = count*PAGE_SIZE; offset < (TABLE_SIZE - PAGE_SIZE); offset += PAGE_SIZE) {
-      struct free_page* page = (struct free_page*)(base + offset);
-      LIST_INSERT(&split->free_pages, page);
-      ++split->n_free;
+    split->free_pages = (list_t)LIST_INIT;
+    // first page(s) will be returned to caller
+    // add the remaining page(s) are added as unused pages.
+    uintptr_t page = TABLE_ADDRESS(split);
+    split->n_unused = (TABLE_SIZE - PAGE_SIZE) / PAGE_SIZE - count;
+    // ..but we need to dodge the header page.
+    uintptr_t header_page = kernel_v2p(split);
+    if (page == header_page) {
+      page += PAGE_SIZE;
+      split->o_unused = 2 * PAGE_SIZE;
+    } else {
+      split->o_unused = PAGE_SIZE;
     }
-    if (split->n_free) {
+    if (split->n_unused) {
       SPIN_GUARD_RAW(lomem.split_lock);
-      LIST_INSERT(&lomem.split_tables, split);
+      list_insert(&lomem.split_tables, &split->tables);
     }
-    return kernel_v2p(base);
+    return page;
   }
 
   // out of memory.
@@ -200,36 +242,35 @@ uintptr_t lomem_alloc_pages(unsigned count) {
 }
 
 void lomem_free_2M(uintptr_t page) {
-  struct free_table* free = FREE_TABLE_HEADER(kernel_p2v(page));
+  struct free_table* free = FREE_TABLE(kernel_p2v(page));
   SPIN_GUARD_RAW(lomem.free_lock);
-  LIST_INSERT(&lomem.free_tables, free);
+  list_insert(&lomem.free_tables, &free->tables);
 }
 
 void lomem_free_pages(uintptr_t page, unsigned count) {
   struct free_table* free = 0;
   uint8_t* ptr = (uint8_t*)kernel_p2v(page);
-  void* table = TABLE_ADDRESS(ptr);
-  struct split_table* split = SPLIT_TABLE_HEADER(table);
+  struct split_table* split = SPLIT_TABLE(ptr);
   {
     SPIN_GUARD_RAW(lomem.split_lock);
     if (split->n_free == 0) {
-      LIST_INSERT(&lomem.split_tables, split);
+      list_insert(&lomem.split_tables, &split->tables);
     }
     split->n_free += count;
     if (split->n_free == ((TABLE_SIZE - PAGE_SIZE) / PAGE_SIZE)) {
       // when all pages are free, the table is free.
-      LIST_REMOVE(split);
+      list_remove(&split->tables);
       free = (struct free_table*)split;
     } else {
       for (unsigned i = 0; i < count; ++i, ptr += PAGE_SIZE) {
-        LIST_INSERT(&split->free_pages, (struct free_page*)ptr);
+        list_insert(&split->free_pages, &((struct free_page*)ptr)->pages);
       }
     }
   }
 
   if (free) {
     SPIN_GUARD_RAW(lomem.free_lock);
-    LIST_INSERT(&lomem.free_tables, free);
+    list_insert(&lomem.free_tables, &free->tables);
   }
 }
 
