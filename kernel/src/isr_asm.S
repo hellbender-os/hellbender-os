@@ -58,8 +58,8 @@ isr_push_state:
         mov %r14, offsetof_thread_registers_r14(%rsp)
         mov %r15, offsetof_thread_registers_r15(%rsp)
 
-        mov %rsp, %rsi // 1st parameter == struct thread_state*
-        mov $0, %rdi   // 2nd parameter == source ring number (0 for kernel, 3 for userspace).
+        mov %rsp, %rdi // 1st parameter == struct thread_state*
+        mov $0, %rsi   // 2nd parameter == source ring number (0 for kernel, 3 for userspace).
 
         // if (++cpu.nested_isr == 0) {
         movabs $cpu, %rbx
@@ -77,13 +77,17 @@ isr_push_state:
 isr_to_usermode:         // this same code works when entering usermode the first time.
         cli
         // if (--cpu.nested_isr < 0) {
+        movabs $cpu, %rbx
         decq offsetof_cpu_nested_isr(%rbx)
         jns 1f
         //   rsp = cpu.current_thread_rsp
-        movabs $cpu, %rbx
         mov offsetof_cpu_current_thread_rsp(%rbx), %rsp
 1:      // }
-
+        mov $UDATA_SELECTOR, %ax
+        mov %ax, %ds
+        mov %ax, %es
+        mov %ax, %fs
+        mov %ax, %gs
         mov offsetof_thread_registers_rax(%rsp), %rax
         mov offsetof_thread_registers_rbx(%rsp), %rbx
         mov offsetof_thread_registers_rcx(%rsp), %rcx

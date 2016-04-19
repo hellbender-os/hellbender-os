@@ -1,7 +1,6 @@
-#ifndef __HELLBENDER_KERNEL_VGA_H__
-#define __HELLBENDER_KERNEL_VGA_H__
+#ifndef __HELLBENDER_CORESRV_VGA_H__
+#define __HELLBENDER_CORESRV_VGA_H__
 
-#include "config.h"
 #include <stdint.h>
 
 enum vga_color
@@ -31,7 +30,7 @@ enum vga_color
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
-static uint16_t* const VGA_MEMORY = (uint16_t*) (KERNEL_OFFSET+0xB8000);
+static uint16_t* const VGA_MEMORY = (uint16_t*)(0xB8000);
 #define VGA_MEMORY_SIZE 0x20000
 
 #define VGA_AT(row, col) (VGA_MEMORY[row*(VGA_WIDTH)+col])

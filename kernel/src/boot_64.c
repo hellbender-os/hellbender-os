@@ -35,30 +35,32 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
   }
 
   // we no longer need the original memory map at zero address.
+  VGA_AT(0,2) = VGA_ENTRY('L', WHITE_ON_BLACK);
   page_set_pdpt(0, 0, 0);
   page_invalidate_all();
   
   // initialize page allocators.
-  VGA_AT(0,2) = VGA_ENTRY('L', WHITE_ON_BLACK);
+  VGA_AT(0,3) = VGA_ENTRY('L', WHITE_ON_BLACK);
   lomem_init();
   himem_init();
 
   // initialize CPUs.
+  VGA_AT(0,4) = VGA_ENTRY('B', WHITE_ON_BLACK);
   cpu_enable_features();
   cpu_init();
   gdt_init(); // adds per-cpu TSS into GDT.
   tss_update();
 
   // initialize interrupt handling.
-  VGA_AT(0,3) = VGA_ENTRY('L', WHITE_ON_BLACK);
+  VGA_AT(0,5) = VGA_ENTRY('E', WHITE_ON_BLACK);
   pic_init();
   idt_init();
 
   // kick-start the core service.
-  VGA_AT(0,4) = VGA_ENTRY('B', WHITE_ON_BLACK);
+  VGA_AT(0,6) = VGA_ENTRY('N', WHITE_ON_BLACK);
   kernel_start_core();
 
   // start scheduler and do stuff.
-  VGA_AT(0,5) = VGA_ENTRY('E', WHITE_ON_BLACK);
+  VGA_AT(0,7) = VGA_ENTRY('D', WHITE_ON_BLACK);
   kernel_main();
 }

@@ -7,7 +7,8 @@ cp -r sysroot/boot/* isodir/boot/
 
 cat > isodir/boot/grub/grub.cfg << EOF
 menuentry "hellbender" {
-    multiboot /boot/hellbender.kernel
+    multiboot /boot/hellbender
+    module /boot/coresrv --coresrv
 }
 EOF
 grub-mkrescue -o hellbender.iso isodir

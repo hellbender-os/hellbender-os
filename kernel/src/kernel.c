@@ -4,6 +4,9 @@
 #include "lomem.h"
 #include "page.h"
 #include "elf32.h"
+#include "vga.h"
+
+#include "hellbender/debug.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -32,12 +35,13 @@ void kernel_start_core() {
   module_t *core_mod = multiboot_data.modules + multiboot_data.coresrv_module;
   Elf32_Ehdr *elf = (Elf32_Ehdr*)kernel_p2v(core_mod->mod_start);
   // each ELF header may end up as a memory block.
-  // we also need one for initrd and stack each.
-  struct process_descriptor* pd = process_alloc_descriptor(elf->e_phnum + 2);
+  // we also need one for initrd, stack, and VGA each.
+  struct process_descriptor* pd = process_alloc_descriptor(elf->e_phnum + 3);
   pd->entry_point = (uintptr_t)elf->e_entry;
 
   // create memory map description of the binary.
   uintptr_t vmem_top = 0;
+  struct process_memory *pm_local = 0; // thread local section.
   for (unsigned i = 0; i < elf->e_phnum; ++i) {
     Elf32_Phdr *prog_header = (Elf32_Phdr*)
       ((uintptr_t)elf + elf->e_phoff + i * elf->e_phentsize);
@@ -52,33 +56,56 @@ void kernel_start_core() {
     // virtual address range where pages will be moved into:
     pm->v_base = (uintptr_t)prog_header->p_vaddr;
     pm->v_size = (size_t)prog_header->p_memsz;
-    uintptr_t v_top = pm->v_base + pm->v_size;
-    if (v_top > vmem_top) vmem_top = v_top;
 
     // actual memory address range to move:
     pm->m_base = kernel_p2v(core_mod->mod_start + prog_header->p_offset);
     pm->m_size = (size_t)prog_header->p_filesz;
+
+    // thread local section requires special care:
+    if (pm->v_base == THREAD_LOCAL_BASE) {
+      pm->flags = 0;
+      pm_local = pm;
+    } else {
+      uintptr_t v_top = pm->v_base + pm->v_size;
+      if (v_top > vmem_top) vmem_top = v_top;
+    }
+  }
+
+  // special thread locals init memory.
+  if (pm_local) {
+    pm_local->v_base = page_round_up(vmem_top);
+    pd->local_bottom = pm_local->v_base;
+    pd->local_size = pm_local->v_size;
+    uintptr_t v_top = pm_local->v_base + pm_local->v_size;
+    if (v_top > vmem_top) vmem_top = v_top;
   }
 
   // add a stack.
-  uintptr_t stack = lomem_alloc_2M();
-  size_t stack_size = TABLE_SIZE;
+  uintptr_t stack = lomem_alloc_4k();
+  size_t stack_size = PAGE_SIZE;
   if (!stack) kernel_panic();
   {
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(stack);
-    pm->m_size = stack_size;
+    pm->m_size = -(intptr_t)stack_size;
     pm->v_base = page_round_up(vmem_top);
-    pm->v_size = stack_size;
+    pm->v_size = USER_STACK_SIZE;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
-    memset(pm->m_base, 0, stack_size);
     pd->stack_bottom = pm->v_base;
-    pd->stack_top = pm->v_base + stack_size;
-    // by convention, top-most stack element points to the bottom.
-    uintptr_t *ptr = (uintptr_t*)kernel_p2v(stack + stack_size);
-    ptr[-1] = pd->stack_bottom;
+    pd->stack_top = pm->v_base + pm->v_size;
+    memset(pm->m_base, 0, stack_size);
+  }
+
+  // add VGA.
+  {
+    struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
+    pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
+    pm->m_base = VGA_MEMORY;
+    pm->m_size = VGA_MEMORY_SIZE;
+    pm->v_base = kernel_v2p(VGA_MEMORY);
+    pm->v_size = pm->m_size;
   }
 
   // add the initrd, if available.
@@ -101,16 +128,19 @@ void kernel_start_core() {
     ptr += 9;
     *(ptr++) = 0; // end of args.
     *(ptr++) = 0; // end of envs.
+
+    // by convention, top of stack points to argv.
+    uintptr_t *s = (uintptr_t*)kernel_p2v(stack + stack_size);
+    s[-1] = pd->stack_top - stack_size;
   }
 
   // make it happen!
   struct process *core = process_create(pd);
-  cpu_set_current(core->threads[0]);
+  cpu_set_thread(core->threads[0]);
 }
 
 __attribute__((__noreturn__))
 void kernel_main() {
-  BREAK;
   asm volatile ( "jmp isr_to_usermode" );
   __builtin_unreachable();
 }

@@ -4,6 +4,15 @@
 
 #include <string.h>
 
+#define FLAGS (MULTIBOOT_FLAGS_ALIGN | MULTIBOOT_FLAGS_MEMINFO)
+
+multiboot_header_t multiboot_header __attribute__ ((section (".multiboot"))) = {
+  MULTIBOOT_HEADER_MAGIC,
+  FLAGS,
+  -(MULTIBOOT_HEADER_MAGIC + FLAGS),
+  0, 0, 0, 0, 0
+};
+
 struct multiboot_data multiboot_data;
 
 int multiboot_copy(multiboot_info_t *info) {
@@ -28,7 +37,7 @@ int multiboot_copy(multiboot_info_t *info) {
     }
     mm += map->size;
   }
-  multiboot_data.memory_bottom &= TABLE_ADDRESS_MASK;
+  multiboot_data.memory_bottom &= TABLE_VIRTUAL_MASK;
   multiboot_data.memory_top -= multiboot_data.memory_top % TABLE_SIZE;
 
   // copy module info, find memory limits, find coresrv, rootfs.

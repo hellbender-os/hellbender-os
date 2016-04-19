@@ -1,10 +1,12 @@
 #include "cpu.h"
 #include "kernel.h"
+#include "process.h"
+#include "thread.h"
 #include "page.h"
 #include "lomem.h"
 
 // small stack to run the kernel.
-uint8_t cpu_stack[CPU_STACK_SIZE] __attribute__ ((aligned (PAGE_SIZE)));
+uint8_t cpu_stack[KERNEL_STACK_SIZE] __attribute__ ((aligned (PAGE_SIZE)));
 
 // struct cpu cpu; is defined in cpu_asm.S to give it a funny address.
 
@@ -36,20 +38,49 @@ void cpu_init() {
   // The 'cpu' symbol has the correct value to access the page.
 
   // initialize the structure.
-  cpu.kernel_stack_top = cpu_stack + CPU_STACK_SIZE;
+  cpu.kernel_stack_top = cpu_stack + KERNEL_STACK_SIZE;
 
   // Finally we want to register this CPU to the kernel.
   kernel_add_cpu((struct cpu*)kernel_p2v(cpu_page));
 }
 
-void cpu_set_current(struct thread* thread) {
-  // it is important that we are not interrupted while swapping the thread.
+static void cli_set_process(struct process* process) {
+  if (cpu.current_process == process) {
+    return;
+  }
+  cpu.current_process = process;
+  page_set_pdpt(0, kernel_v2p(process->pdpt), PAGE_USER_RW);
+  page_invalidate_all(); // TODO: use PCID to avoid invalidation.
+}
+
+void cpu_set_process(struct process* process) {
+  // it is important that we are not interrupted while swapping the process memory.
   asm volatile ("cli");
+  cli_set_process(process);
+  asm volatile ("sti");
+}
+
+void cpu_set_thread(struct thread* thread) {
+  size_t invalidate_pages = 0; // how many thread local pages need to be invalidated.
+  // it is important that we are not interrupted while swapping the thread stacks.
+  asm volatile ("cli");
+  cli_set_process(thread->process);
+  if (cpu.current_thread == thread) {
+    asm volatile ("sti");
+    return;
+  }
   if (cpu.current_thread) {
     cpu.current_thread->rsp_backup = cpu.current_thread_rsp;
-    cpu.current_thread = thread;
-    cpu.current_thread_rsp = thread->rsp_backup;
-    cpu.tss.rsp_0 = (uint64_t)thread->stack_top;
+    invalidate_pages = cpu.current_thread->thread_local_pages;
+  }
+  cpu.current_thread = thread;
+  cpu.current_thread_rsp = thread->rsp_backup;
+  cpu.tss.rsp_0 = (uint64_t)thread->stack_top;
+  cpu.thread_local_pt = kernel_v2p(thread->thread_local_pt);
+  if (thread->thread_local_pages > invalidate_pages) {
+    invalidate_pages = thread->thread_local_pages;
   }
   asm volatile ("sti");
+
+  thread_local_invalidate(invalidate_pages);
 }

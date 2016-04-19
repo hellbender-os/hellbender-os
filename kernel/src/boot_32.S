@@ -79,7 +79,7 @@ boot_32_jump:
     lgdt (%rax)
 
     # Set up stack for kernel initialization code.
-    movabs $(cpu_stack + CPU_STACK_SIZE - 8), %rsp
+    movabs $(cpu_stack + KERNEL_STACK_SIZE), %rsp
 
     # Jump to boot code in the higher half.
     movabs $boot_64, %rax

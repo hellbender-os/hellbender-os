@@ -6,9 +6,17 @@
 #include "spin.h"
 #include "page.h"
 
-#define FREE_TABLE_HEADER(table) ((struct free_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE))
-#define SPLIT_TABLE_HEADER(table) ((struct split_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE))
-#define TABLE_ADDRESS(table) ((void*)(((uintptr_t)table) & TABLE_ADDRESS_MASK))
+INLINE struct free_table* FREE_TABLE_HEADER(void *table) {
+  return (struct free_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE);
+}
+
+INLINE struct split_table* SPLIT_TABLE_HEADER(void *table) {
+  return (struct split_table*)(((uintptr_t)(table)) + TABLE_SIZE - PAGE_SIZE);
+}
+
+INLINE void* TABLE_ADDRESS(void *table) {
+  return (void*)(((uintptr_t)table) & TABLE_VIRTUAL_MASK);
+}
 
 struct free_table { // last page of a free table.
   LIST_ITEM;

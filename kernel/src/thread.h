@@ -1,7 +1,12 @@
 #ifndef __HELLBENDER_KERNEL_THREAD_H__
 #define __HELLBENDER_KERNEL_THREAD_H__
 
+#include "spin.h"
+
 #include <stdint.h>
+#include <stddef.h>
+
+struct process;
 
 struct thread_context {
   uint64_t error, rip, cs, rflags, rsp, ss;
@@ -19,10 +24,19 @@ struct thread_state {
 } __attribute__ ((packed));
 
 struct thread {
-  void* stack_top;
+  spinlock_raw_t lock;
+  uint64_t tid;
+  struct process *process;
+  void* stack_top;     // TSS stack to store registers on interrupt.
   uint64_t rsp_backup; // stores the rsp value when thread is not currently being executed.
+  uint64_t *thread_local_pt; // specially mapped pages for thread local variables.
+  size_t thread_local_pages; // how many pages are in the TL PT.
 };
 
-struct thread* create_thread(uintptr_t entry_point, uintptr_t stack_top);
+struct thread* thread_create(struct process* process,
+                             uintptr_t entry_point, uintptr_t stack_top,
+                             uintptr_t local_bottom, size_t local_size);
+
+void thread_local_invalidate(size_t pages);
 
 #endif

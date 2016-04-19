@@ -14,17 +14,31 @@ LIBDIR?=$(EXEC_PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=small -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 # -s
-CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude -Isrc
+
+CRT_OBJS:=\
+startfiles/crt0.o \
+startfiles/crti.o \
+startfiles/crtn.o \
 
 OBJS:=\
+$(CRT_OBJS) \
+src/libc.o \
+src/libc_init.o \
+src/heap.o \
+src/mutex.o \
 stdlib/abs.o \
+stdlib/atexit.o \
 stdlib/atoi.o \
 stdlib/bsearch.o \
 stdlib/div.o \
+stdlib/exit.o \
+stdlib/free.o \
 stdlib/itoa.o \
 stdlib/labs.o \
 stdlib/ldiv.o \
 stdlib/lltoa.o \
+stdlib/malloc.o \
 stdlib/qsort.o \
 stdlib/strtol.o \
 stdlib/ulltoa.o \
@@ -57,7 +71,7 @@ string/strstr.o \
 string/strtok.o \
 string/strxfrm.o \
 
-BINARIES=libc.a libg.a libm.a
+BINARIES=libc.a libg.a libm.a $(CRT_OBJS)
 
 all: $(BINARIES)
 
@@ -77,7 +91,7 @@ libm.a:
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.S
-	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DASM
 
 clean:
 	rm -f $(BINARIES) $(OBJS)

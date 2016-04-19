@@ -1,4 +1,4 @@
-export PROJECTS="libk kernel libc"
+export PROJECTS="libk kernel libc libpthread"
 
 export PATH="$HOME/opt/cross/bin:$PATH"
 

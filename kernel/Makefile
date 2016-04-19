@@ -21,7 +21,6 @@ LDFLAGS:=$(LDFLAGS) -ffreestanding -nostdlib -z max-page-size=0x1000 -Wl,--build
 LIBS:=$(LIBS) -static -nostdlib -lgcc -lk
 
 OBJS:=\
-src/multiboot_asm.o \
 src/multiboot.o \
 src/boot_32.o \
 src/boot_64.o \
@@ -41,12 +40,12 @@ src/isr_asm.o \
 src/idt.o \
 src/pic.o \
 
-all: hellbender.kernel
+all: hellbender
 
 .PHONY: all clean install install-headers
 
-hellbender.kernel: $(OBJS) linker.ld
-	$(CC) -Wl,-Map,hellbender.kernel.map -T linker.ld -o $@.elf64 $(LDFLAGS) $(OBJS) $(LIBS)
+hellbender: $(OBJS) linker.ld
+	$(CC) -Wl,-Map,hellbender.map -T linker.ld -o $@.elf64 $(LDFLAGS) $(OBJS) $(LIBS)
 	objcopy --strip-debug -I elf64-x86-64 -O elf32-i386 $@.elf64 $@
 	objcopy --only-keep-debug $@.elf64 $@.sym
 
@@ -54,17 +53,17 @@ hellbender.kernel: $(OBJS) linker.ld
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.S src/struct2asm.h
-	$(CC) -c $< -o $@ $(CFLAGS)
+	$(CC) -c $< -o $@ $(CFLAGS) -DASM
 
 src/struct2asm.h: src/struct2asm.c
 	$(CC) -S $< -o - | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
 
 clean:
-	rm $(OBJS) hellbender.kernel.map hellbender.kernel.elf64 hellbender.kernel
+	rm $(OBJS) src/struct2asm.h hellbender.map hellbender.elf64 hellbender
 
-install: hellbender.kernel
+install: hellbender
 	mkdir -p $(DESTDIR)$(BOOTDIR)
-	cp hellbender.kernel $(DESTDIR)$(BOOTDIR)
+	cp hellbender $(DESTDIR)$(BOOTDIR)
 
 install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
