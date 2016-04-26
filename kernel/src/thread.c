@@ -4,6 +4,7 @@
 #include "lomem.h"
 #include "page.h"
 #include "heap.h"
+#include "scheduler.h"
 
 #include <string.h>
 
@@ -18,6 +19,7 @@ struct thread* thread_create(struct process* process,
   t->tid = ++thread_next_id;
   t->process = process;
   t->stack_top = kernel_p2v(page_clear(lomem_alloc_4k()));
+  t->scheduler.priority = SCHEDULER_PRIORITY_NORMAL;
 
   // allocate thread locals.
   t->thread_local_pages = page_round_up(local_size) / PAGE_SIZE;

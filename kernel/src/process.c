@@ -3,6 +3,7 @@
 #include "heap.h"
 #include "lomem.h"
 #include "page.h"
+#include "scheduler.h"
 
 #include <string.h>
 
@@ -23,6 +24,7 @@ struct process* process_create(struct process_descriptor* desc) {
   p->pid = ++process_next_id;
   p->pcid = p->pid & PROCESS_CONTEXT_MASK;
   p->pdpt = (uint64_t*)kernel_p2v(page_clear(lomem_alloc_4k()));
+  p->scheduler.priority = SCHEDULER_PRIORITY_NORMAL;
 
   // map all memory.
   for (unsigned i = 0; i < desc->n_maps; ++i) {
@@ -72,9 +74,8 @@ struct process* process_create(struct process_descriptor* desc) {
   struct thread *t = thread_create(p,
                                    desc->entry_point, desc->stack_top,
                                    desc->local_bottom, desc->local_size);
-
-  if (p->n_threads == PROCESS_MAX_THREADS) kernel_panic();
-  p->threads[p->n_threads++] = t;
+  list_insert(&p->threads, &t->process_threads);
+  scheduler_wakeup(t);
   return p;
 }
 

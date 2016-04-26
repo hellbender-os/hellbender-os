@@ -1,5 +1,7 @@
 #define sizeof_thread_context 48
 #define sizeof_thread_registers 128
+#define offsetof_thread_registers_tmp 120
+#define sizeof_thread_registers_tmp 8
 #define offsetof_thread_registers_rax 0
 #define sizeof_thread_registers_rax 8
 #define offsetof_thread_registers_rbx 8

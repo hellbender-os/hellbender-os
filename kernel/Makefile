@@ -36,10 +36,13 @@ src/himem.o \
 src/heap.o \
 src/isr.o \
 src/isr_asm.o \
+src/isr_routine.o \
 src/idt.o \
 src/pic.o \
-src/dispatch.o \
+src/syscall_resolve.o \
 src/syscall.o \
+src/signal.o \
+src/scheduler.o \
 
 all: hellbender
 
@@ -53,13 +56,13 @@ hellbender: $(OBJS) linker.ld
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-%.o: %.S src/struct2asm.inc src/dispatch.inc
+%.o: %.S src/struct2asm.inc src/syscall_resolve.inc
 	$(CC) -c $< -o $@ $(CFLAGS) -DASM
 
 src/struct2asm.inc: src/struct2asm.c
 	$(CC) -S $< -o - | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
 
-src/dispatch.inc: src/syscall.c
+src/syscall_resolve.inc: src/syscall.c
 	echo "// Automagically generated my Makefile, do not edit." > $@
 	grep " syscall_" $< | perl -ne '/^uint64_t\s+([^(]+)/; print ".quad $$1\n";' >> $@
 
@@ -71,7 +74,7 @@ include/hellbender/syscall.h: src/syscall.c src/syscall.h.in
 	echo "#endif" >> $@
 
 clean:
-	rm $(OBJS) src/struct2asm.inc src/dispatch.inc include/hellbender/syscall.h hellbender.map hellbender.elf64 hellbender
+	rm $(OBJS) src/struct2asm.inc src/syscall_resolve.inc include/hellbender/syscall.h hellbender.map hellbender.elf64 hellbender
 
 install: hellbender
 	mkdir -p $(DESTDIR)$(BOOTDIR)

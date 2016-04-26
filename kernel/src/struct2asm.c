@@ -18,6 +18,7 @@ foo() {
   STRUCT(thread_context);
 
   STRUCT(thread_registers);
+  MEMBER(thread_registers, tmp);
   MEMBER(thread_registers, rax);
   MEMBER(thread_registers, rbx);
   MEMBER(thread_registers, rcx);

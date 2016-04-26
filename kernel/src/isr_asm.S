@@ -3,6 +3,21 @@
 
         .section .text
         .code64
+        .extern scheduler_run
+        .extern signal_delivery
+        .extern syscall_resolve
+        .global isr_to_usermode
+
+        // scheduler can change the thread. because we only have one kernel
+        // thread, we need a way to remember what is the correct way to
+        // exit back to usermode. this wrapper gives scheduler the correct
+        // return address for current thread, and the scheduler returns
+        // the correct return address for what ever thread was activated.
+isr_call_scheduler:
+        pop %rdi
+        call scheduler_run
+        push %rax
+        ret
 
         // errors are interrupts that push an error code into the stack:
         .altmacro
@@ -17,7 +32,9 @@
 isr_wrapper_\IDX:
         sub $(sizeof_thread_registers), %rsp
         mov %rax, offsetof_thread_registers_rax(%rsp)
+        mov %rdx, offsetof_thread_registers_rdx(%rsp)
         movabs $isr_routine_\IDX, %rax // the routine we will call to handle the interrup.
+        mov $\IDX, %rdx                // 3rd parameter == ISR number.
         jmp isr_push_state
         .endm
 
@@ -36,16 +53,38 @@ isr_wrapper_\IDX:
         pushq $0 // mock error code.
         sub $(sizeof_thread_registers), %rsp
         mov %rax, offsetof_thread_registers_rax(%rsp)
+        mov %rdx, offsetof_thread_registers_rdx(%rsp)
         movabs $isr_routine_\IDX, %rax // the routine we will call to handle the interrup.
+        mov $\IDX, %rdx                // 3rd parameter == ISR number.
         jmp isr_push_state
         .endm
 
-        
+
+        // PIC interrupts share a common handler.
+        .altmacro
+        .macro define_pic IDX
+        __define_pic %IDX
+        .endm
+
+        .macro __define_pic IDX
+        .extern pic_isr
+        .global isr_wrapper_\IDX
+        .balign 4
+isr_wrapper_\IDX:
+        pushq $0 // mock error code.
+        sub $(sizeof_thread_registers), %rsp
+        mov %rax, offsetof_thread_registers_rax(%rsp)
+        mov %rdx, offsetof_thread_registers_rdx(%rsp)
+        movabs $pic_isr, %rax // the routine we will call to handle the interrup.
+        mov $\IDX, %rdx       // 3rd parameter == ISR number.
+        jmp isr_push_state
+        .endm
+
+
         // common state saving / restoring:
 isr_push_state:
         mov %rbx, offsetof_thread_registers_rbx(%rsp)
         mov %rcx, offsetof_thread_registers_rcx(%rsp)
-        mov %rdx, offsetof_thread_registers_rdx(%rsp)
         mov %rbp, offsetof_thread_registers_rbp(%rsp)
         mov %rsi, offsetof_thread_registers_rsi(%rsp)
         mov %rdi, offsetof_thread_registers_rdi(%rsp)
@@ -68,22 +107,26 @@ isr_push_state:
         movabs $cpu, %rbx
         incq offsetof_cpu_nested_isr(%rbx)
         jnz 1f
-        mov $3, %rdi
+        mov $3, %rsi
         //    cpu.current_thread_rsp = rsp;
         mov %rsp, offsetof_cpu_current_thread_rsp(%rbx)
         //    rsp = cpu.kernel_stack_top
         mov offsetof_cpu_kernel_stack_top(%rbx), %rsp
 1:      // }
-        sti
+        // isr_routine(state, ring, irq);
         call *%rax
-        .global isr_to_usermode
-isr_to_usermode:         // this same code works when entering usermode the first time.
-        cli
+        sti // enable interrupts for a while, so that any pending interrupts get handled
+        nop // before we run scheduler and exit to usermode. all this effort would be
+        cli // wasted if we were to immediately handle an interrupt from usermode.
         // if (--cpu.nested_isr < 0) {
         movabs $cpu, %rbx
         decq offsetof_cpu_nested_isr(%rbx)
         jns 1f
+        call isr_call_scheduler // this can & WILL modify ANY register.
+        call signal_delivery
+isr_to_usermode:         // this same code works when entering usermode the first time.
         //   rsp = cpu.current_thread_rsp
+        movabs $cpu, %rbx
         mov offsetof_cpu_current_thread_rsp(%rbx), %rsp
 1:      // }
         mov $UDATA_SELECTOR, %bx
@@ -134,17 +177,17 @@ isr_to_usermode:         // this same code works when entering usermode the firs
         define_interrupt 20 // Virtualization Exception      20 (0x14)	Fault	#VE	No
         define_error     30 // Security Exception            30 (0x1E)	-	#SX	Yes
 
+ 
         // PIC interrupts
         .set idx, 32
         .rept 16
-        define_interrupt idx
+        define_pic idx
         .set idx, (idx+1)
         .endr
 
         
-        // Syscall
+        // Syscall needs to save only callee save registers.
         .macro __define_syscall INT
-        .extern dispatch
         .global isr_wrapper_\INT
 isr_wrapper_\INT:
         pushq %rax // syscall number as error code.
@@ -164,12 +207,25 @@ isr_wrapper_\INT:
         incq offsetof_cpu_nested_isr(%rbx)
         //    cpu.current_thread_rsp = rsp;
         mov %rsp, offsetof_cpu_current_thread_rsp(%rbx)
+        mov %rsp, %rbp
         //    rsp = cpu.kernel_stack_top
         mov offsetof_cpu_kernel_stack_top(%rbx), %rsp
-        sti
-        call dispatch
-        cli
+        call syscall_resolve // returns the syscall address
+1:
+        call *%rax // returns the continuation address; saved for later.
+        mov %rax, offsetof_thread_registers_tmp(%rbp)
+        sti // enable interrupts for a while, so that any pending interrupts get handled
+        nop // before we run scheduler and exit to usermode. all this effort would be
+        cli // wasted if we were to immediately handle an interrupt from usermode.
+        call isr_call_scheduler // this can & WILL modify ANY register.
+        // check if continuation should be called.
         movabs $cpu, %rbx
+        mov offsetof_cpu_current_thread_rsp(%rbx), %rbp
+        mov offsetof_thread_registers_tmp(%rbp), %rax
+        test %rax, %rax
+        jnz 1b // we repeat the call sequence as long as there is a continuation function.
+        call signal_delivery
+        // --cpu.nested_isr;
         decq offsetof_cpu_nested_isr(%rbx)
         //   rsp = cpu.current_thread_rsp
         mov offsetof_cpu_current_thread_rsp(%rbx), %rsp
@@ -178,6 +234,7 @@ isr_wrapper_\INT:
         mov %bx, %es
         mov %bx, %fs
         mov %bx, %gs
+        mov offsetof_thread_registers_rax(%rsp), %rax
         mov offsetof_thread_registers_rbx(%rsp), %rbx
         mov offsetof_thread_registers_rbp(%rsp), %rbp
         mov offsetof_thread_registers_r12(%rsp), %r12

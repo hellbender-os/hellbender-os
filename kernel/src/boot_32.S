@@ -38,9 +38,9 @@ boot_32_himem:
     add $8, %ebx
     loop .SetEntry2M
     
-    # Set the PAE enable bit in CR4.
+    # Set the PAE (physical address extension), PGE (global-page extension) bits in CR4.
     movl %cr4, %eax
-    orl $(1<<5), %eax
+    orl $(1<<5 | 1<<7), %eax
     movl %eax, %cr4
     
     # Load CR3 with the physical address of the PML4 table.

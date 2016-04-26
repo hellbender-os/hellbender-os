@@ -1,198 +1,90 @@
 #include "isr.h"
-#include "thread.h"
+#include "process.h"
+#include "spin.h"
+#include "list.h"
+#include "heap.h"
 
-// traps
+struct isr_item {
+  list_item_t item;
+  struct process* process;
+  int signum;
+};
 
-void isr_routine_0(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
+struct isr_signal {
+  spinlock_raw_t lock; // protects irq[x].list
+  struct irq {
+    union {
+      struct {
+        spinlock_raw_t lock; // protects process, signum.
+        list_t list;
+        struct process* process;
+        int signum;
+      };
+      uint8_t dummy[CACHE_LINE];
+    };
+  } irq[IRQ_LIMIT];
+};
+
+static struct isr_signal isr_signal;
+
+
+// only one process can receive any single interrupt.
+void isr_set_signal(unsigned irq_nr, struct process *process, int signum) {
+  struct irq* irq = isr_signal.irq + irq_nr;
+  SPIN_GUARD_RAW(isr_signal.lock);
+  struct isr_item *si = HEAP_NEW(struct isr_item);
+  si->process = process;
+  si->signum = signum;
+  list_insert(&irq->list, &si->item);
+  {
+    SPIN_GUARD_RAW(irq->lock);
+    irq->process = process;
+    irq->signum = signum;
+  }
 }
 
-void isr_routine_1(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
+void isr_clear_signal(unsigned irq_nr, struct process *process) {
+  struct irq* irq = isr_signal.irq + irq_nr;
+  int signum = 0;
+  SPIN_GUARD_RAW(isr_signal.lock);
+  for (list_item_t *li = list_first(&irq->list); li;) {
+    struct isr_item *item =  list_container(li, struct isr_item, item);
+    if (item->process == process) {
+      li = list_remove(li);
+      heap_free(item);
+    } else {
+      li = list_next(li);
+    }
+  }
+  list_item_t *li = list_first(&irq->list);
+  if (li) {
+    struct isr_item *item = list_container(li, struct isr_item, item);
+    process = item->process;
+    signum = item->signum;
+  } else {
+    process = 0;
+    signum = 0;
+  }
+  {
+    SPIN_GUARD_RAW(irq->lock);
+    irq->process = process;
+    irq->signum = signum;
+  }
 }
 
-void isr_routine_2(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
+void isr_send_signal(unsigned irq_nr) {
+  // get the process that should receive the signal, while holding the lock.
+  struct irq* irq = isr_signal.irq + irq_nr;
+  struct process* process = 0;
+  int signum = 0;
+  {
+    SPIN_GUARD_RAW(irq->lock);
+    process = irq->process;
+    signum = irq->signum;
+  }
 
-void isr_routine_3(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_4(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_5(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_6(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_7(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_8(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_9(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_10(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_11(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_12(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_13(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_14(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_15(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_16(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_17(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_18(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_19(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_20(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_30(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-// master PIC interrupts
-
-void isr_routine_32(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_33(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_34(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_35(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_36(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_37(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_38(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_39(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-// slave PIC interrups
-
-void isr_routine_40(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_41(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_42(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_43(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_44(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_45(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_46(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
-}
-
-void isr_routine_47(struct thread_state* state, unsigned ring) {
-  (void)state;
-  (void)ring;
+  // send the signal while not holding the lock.
+  if (process) {
+    signal_process(process, signum, irq_nr);
+  }
 }

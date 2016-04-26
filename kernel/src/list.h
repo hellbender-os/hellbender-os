@@ -1,5 +1,5 @@
-#ifndef __HELLBENDER_LIST_H__
-#define __HELLBENDER_LIST_H__
+#ifndef __HELLBENDER_KERNEL_LIST_H__
+#define __HELLBENDER_KERNEL_LIST_H__
 
 #include "config.h"
 #include <stddef.h>
@@ -22,9 +22,10 @@ INLINE void list_insert(list_t *list, list_item_t *item) {
   list->head.next = item;
 }
 
-INLINE void list_remove(list_item_t *item) {
+INLINE list_item_t* list_remove(list_item_t *item) {
   item->prev->next = item->next;
   if (item->next) item->next->prev = item->prev;
+  return item->next;
 }
 
 INLINE list_item_t* list_first(list_t *list) {

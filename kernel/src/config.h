@@ -2,6 +2,7 @@
 #define __HELLBENDER_KERNEL_CONFIG_H__
 
 #define INLINE __attribute__((always_inline)) inline
+#define BARRIER asm volatile("" ::: "memory")
 
 #define CACHE_LINE 64
 
@@ -33,6 +34,11 @@
 
 #define CPU_PAGE_ADDRESS  0xFFFFFFFFFFFFE000 // where the CPU structure is mapped
 #define THREAD_LOCAL_BASE 0xFFFFFFFFBFE00000 // where the thread locals are mapped
+
+#define SIGNAL_LIMIT 64
+#define IRQ_LIMIT 256
+
+#define PRIORITY_LIMIT 32
 
 #define PROCESS_CONTEXT_MASK 0xFFF
 

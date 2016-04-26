@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#define KERNEL_ASSERT(test) { if (!(test)) kernel_panic(); }
+
 extern unsigned long __force_order; // required by some inline assembler stuff
 
 #define KERNEL_MAX_CPUS 8

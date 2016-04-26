@@ -2,6 +2,10 @@
 #define __HELLBENDER_KERNEL_PROCESS_H__
 
 #include "spin.h"
+#include "list.h"
+#include "pqueue.h"
+#include "fifo.h"
+#include "signal.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -31,19 +35,47 @@ struct process_descriptor {
   struct process_memory memory_maps[1];
 };
 
-//TODO
-#define PROCESS_MAX_THREADS 16
-
 /* An actual, existing process.
  */
 struct process {
-  spinlock_raw_t lock;
-  uint64_t pid;
-  uint64_t pcid;
-  uint64_t *pdpt; // page directory pointer table for the process.
+  union {
+    struct {
+      spinlock_raw_t lock;
+      uint64_t pid;
+      uint64_t pcid;
+      uint64_t *pdpt; // page directory pointer table for the process.
+      
+      list_t threads; // struct thread::process_threads.
+    };
+    uint8_t dummy[CACHE_LINE];
+  };
 
-  struct thread* threads[PROCESS_MAX_THREADS];
-  unsigned n_threads;
+  // these fields are to be touched only by signal_* functions in signal.c
+  union process_signal {
+    struct {
+      spinlock_raw_t lock;      // you may lock thread.signal.lock while holding this lock.
+      uint64_t ignore_mask;     // bit set => signal ignored.
+      uint64_t default_mask;    // bit set => default action.
+      uint64_t pending_mask;    // bit set => signal is pending in sig[x].pending fifo.
+      list_t waiting_list;      // thread.signal.waiting_item; threads waiting some signal.
+      struct process_signal_info {
+        struct thread* waiting; // a thread that may be currently waiting this signal.
+        fifo_t pending;         // struct signal_pending (in signal.c).
+        //void* action;           // the sigaction function, or 0 if default action.
+      } sig[SIGNAL_LIMIT];
+    };
+    uint8_t dummy[CACHE_LINE];
+  } signal;
+
+  // these fields are to be touched only by scheduler_* functions in scheduler.c
+  union process_scheduler {
+    struct {
+      unsigned priority;
+      pqueue_t runnable_threads;   // thread.scheduler.runnable_item
+      pqueue_item_t runnable_item; // scheduler.runnable_processes
+    };
+    uint8_t dummy[CACHE_LINE];
+  } scheduler;
 };
 
 struct process_descriptor* process_alloc_descriptor(unsigned n_maps);

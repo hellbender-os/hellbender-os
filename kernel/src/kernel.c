@@ -5,6 +5,7 @@
 #include "page.h"
 #include "elf32.h"
 #include "vga.h"
+#include "scheduler.h"
 
 #include "hellbender/debug.h"
 
@@ -136,11 +137,14 @@ void kernel_start_core() {
 
   // make it happen!
   struct process *core = process_create(pd);
-  cpu_set_thread(core->threads[0]);
+  (void)core;
 }
 
 __attribute__((__noreturn__))
 void kernel_main() {
+  // enter user mode the first time somewhat manually:
+  scheduler_run(0);
+  --cpu.nested_isr;
   asm volatile ( "jmp isr_to_usermode" );
   __builtin_unreachable();
 }

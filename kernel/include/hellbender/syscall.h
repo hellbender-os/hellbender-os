@@ -4,5 +4,8 @@
 #include <stdint.h>
 #define SYSCALL_INT 80
 uint64_t syscall_exit(int retval) ;
+uint64_t syscall_set_signal_mask(uint64_t blocked_mask) ;
+uint64_t syscall_set_irq_signal(unsigned irqnum, int signum) ;
+uint64_t syscall_wait_signal(uint64_t wait_mask) ;
 uint64_t syscall_unknown() ;
 #endif

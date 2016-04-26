@@ -29,6 +29,8 @@ struct cpu {
 
 extern struct cpu cpu;
 
+#define CPU_THREAD_STATE ((struct thread_state*)(cpu.current_thread_rsp))
+
 void cpu_enable_features();
 
 void cpu_init();

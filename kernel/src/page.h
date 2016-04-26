@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define PAGE_NOEXECUTE    0 //TODO: enable NX feature 0x8000000000000000
+#define PAGE_NOEXECUTE    0x8000000000000000
 #define PAGE_GLOBAL       0x0000000000000100
 #define PAGE_LARGE        0x0000000000000080
 #define PAGE_CACHEDISABLE 0x0000000000000010

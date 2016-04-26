@@ -2,6 +2,8 @@
 #define __HELLBENDER_KERNEL_HEAP_H__
 
 #include "config.h"
+#include <stdint.h>
+#include <string.h>
 
 /* Kernel heap allows one to allocate/free 60+N*64 byte blocks.
  * Maximum allocation limit (HEAP_MAX_ALLOC) cannot be exceeded.
@@ -23,7 +25,15 @@ typedef struct heap {
   struct heap_block *free_lists[N_FREE_LISTS];
 } heap_t;
 
-void* heap_alloc(unsigned bytes);
+void* heap_alloc(size_t bytes);
 void heap_free(void* ptr);
+
+INLINE void* heap_alloc_clear(size_t bytes) {
+  void* ptr = heap_alloc(bytes);
+  if (ptr) memset(ptr, 0, bytes);
+  return ptr;
+}
+
+#define HEAP_NEW(type) ((type*)heap_alloc_clear(sizeof(type)))
 
 #endif
