@@ -65,9 +65,11 @@ libk.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 
 build/%.o: ../libc/%.c
+	mkdir -p `dirname $@`
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 build/%.o: ../libc/%.S
+	mkdir -p `dirname $@`
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:

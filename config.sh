@@ -1,4 +1,4 @@
-export PROJECTS="libk kernel libc libpthread"
+export PROJECTS="libk kernel libc libpthread coresrv"
 
 export PATH="$HOME/opt/cross/bin:$PATH"
 
