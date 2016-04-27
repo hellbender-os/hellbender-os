@@ -18,7 +18,7 @@ struct thread* thread_create(struct process* process,
   memset(t, 0, sizeof(struct thread));
   t->tid = ++thread_next_id;
   t->process = process;
-  t->stack_top = kernel_p2v(page_clear(lomem_alloc_4k()));
+  t->stack_top = kernel_p2v(page_clear(lomem_alloc_4k()) + PAGE_SIZE);
   t->scheduler.priority = SCHEDULER_PRIORITY_NORMAL;
 
   // allocate thread locals.

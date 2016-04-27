@@ -204,7 +204,23 @@ uintptr_t lomem_alloc_2M() {
 uintptr_t lomem_alloc_pages(unsigned count) {
   if (count >= (TABLE_SIZE/PAGE_SIZE)) kernel_panic();
 
-  // to allocate N pages, we always split a free table.
+  // first check if split tables have enough unused pages.
+  for (list_item_t *table_item = list_first(&lomem.split_tables); table_item;
+       table_item = list_next(table_item)) {
+    struct split_table* split = list_container(table_item, struct split_table, tables);
+    if (split->n_unused >= count) {
+      uintptr_t page = TABLE_ADDRESS(split) + split->o_unused;
+      split->o_unused += count * PAGE_SIZE;
+      split->n_unused -= count;
+      if (split->n_unused == 0 && split->n_free == 0) {
+        // split tables are removed when they get empty.
+        list_remove(table_item);
+      }
+      return page;
+    }
+  }
+
+  // if not found in split tables, we split a 2M free table.
   struct free_table* free = 0;
   {
     SPIN_GUARD_RAW(lomem.free_lock);

@@ -3,15 +3,15 @@
 #include "lomem.h"
 
 // page directory for the first 1 Gb.
-uint64_t page_dir[512] __attribute__((aligned(0x1000)));
+uint64_t page_dir[512] __attribute__((aligned(PAGE_SIZE)));
 // first 1GB mapped using 2MB pages.
 
 // page directory pointer table for the first 512 Gb.
-uint64_t page_dpt[512] __attribute__((aligned(0x1000)));
+uint64_t page_dpt[512] __attribute__((aligned(PAGE_SIZE)));
 /*  = { (uint64_t)&page_dir | 3 }; */
 
 // page-map level-4 table
-uint64_t page_ml4t[512] __attribute__((aligned(0x1000)));
+uint64_t page_ml4t[512] __attribute__((aligned(PAGE_SIZE)));
 /* = { 0 (uint64_t)&pdpt | 3 }; */
 
 INLINE void page_ensure_pdp_table(void* virtual, uint64_t attributes) {
