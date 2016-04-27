@@ -1,7 +1,6 @@
 #ifndef __HELLBENDER_KERNEL_LIST_H__
 #define __HELLBENDER_KERNEL_LIST_H__
 
-#include "config.h"
 #include <stddef.h>
 
 typedef struct list_item {

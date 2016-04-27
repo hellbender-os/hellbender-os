@@ -15,7 +15,7 @@ LIBDIR?=$(EXEC_PREFIX)/lib
 
 CFLAGS:=$(CFLAGS) -std=gnu11 -ffreestanding -fbuiltin -mcmodel=large -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 #-s
-CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_kernel -Iinclude -Iinclude/hellbender
 LDFLAGS:=$(LDFLAGS) -ffreestanding -nostdlib -z max-page-size=0x1000 -Wl,--build-id=none
 #-Wl,--strip-debug -Wl,-s
 LIBS:=$(LIBS) -static -nostdlib -lgcc -lk
@@ -70,7 +70,7 @@ src/syscall_resolve.inc: src/syscall.c
 include/hellbender/syscall.h: src/syscall.c src/syscall.h.in
 	echo "// Automagically generated my Makefile, do not edit." > $@
 	cat src/syscall.h.in >> $@
-	grep SYSCALL_INT src/config.h >> $@
+	grep SYSCALL_INT include/hellbender/config.h >> $@
 	grep " syscall_" src/syscall.c | tr "{" ";" >> $@
 	echo "#endif" >> $@
 

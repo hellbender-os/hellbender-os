@@ -22,6 +22,7 @@ LIBS:=$(LIBS) -static
 
 OBJS:=\
 src/main.o \
+src/broker.o \
 
 all: coresrv
 
