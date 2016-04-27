@@ -38,7 +38,12 @@ struct process* process_create(struct process_descriptor* desc) {
     if (v_size % PAGE_SIZE) v_size += PAGE_SIZE - v_size % PAGE_SIZE;
     
     if (m_size > 0) { // map actual memory, starting from bottom.
-      if (m_size % PAGE_SIZE) m_size += PAGE_SIZE - m_size % PAGE_SIZE;
+      if (m_size % PAGE_SIZE) {
+        // round physical memory to page boundary, clearing the end of the page.
+        intptr_t delta = PAGE_SIZE - m_size % PAGE_SIZE;
+        memset((void*)(m_base + m_size), 0, delta);
+        m_size += delta;
+      }
       while (v_size > 0 && m_size > 0) {
         uintptr_t address = page_get_address((void*)m_base);
         process_page_map(p, (void*)v_base, address, 
