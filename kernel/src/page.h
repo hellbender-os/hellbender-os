@@ -63,6 +63,7 @@ uintptr_t page_remap_2M(void* virtual, uint64_t attributes);
 uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, uint64_t attributes);
 uintptr_t page_set_pd(void* virtual, uintptr_t physical, uint64_t attributes);
 
+uintptr_t page_get_pdpt(void* virtual);
 uintptr_t page_get_address(void* virtual);
 
 #endif

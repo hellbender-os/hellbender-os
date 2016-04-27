@@ -30,9 +30,16 @@ enum vga_color
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
-static uint16_t* const VGA_MEMORY = (uint16_t*)(0xB8000);
+//static uint16_t* const VGA_MEMORY = (uint16_t*)(_vga_base);
+__attribute__((always_inline)) inline
+uint16_t* VGA_MEMORY() {
+  register uint16_t *ptr;
+  asm ("lea _vga_base(%%rip), %0"
+       : "=r"(ptr));
+  return ptr;
+}
 #define VGA_MEMORY_SIZE 0x20000
 
-#define VGA_AT(row, col) (VGA_MEMORY[row*(VGA_WIDTH)+col])
+#define VGA_AT(row, col) (VGA_MEMORY()[row*(VGA_WIDTH)+col])
 
 #endif

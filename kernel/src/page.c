@@ -105,6 +105,13 @@ uintptr_t page_set_pd(void* virtual, uintptr_t physical, uint64_t attributes) {
   return old;
 }
 
+uintptr_t page_get_pdpt(void* virtual) {
+  uintptr_t address = (uintptr_t)virtual;
+  uint64_t *pdpt = (uint64_t *)(((address>>36) & ~7) | 0xFFFFFFFFFFFFF000);
+  uintptr_t old = *pdpt;
+  return old;
+}
+
 uintptr_t page_get_address(void* virtual) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);

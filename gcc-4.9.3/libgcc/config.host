@@ -315,11 +315,11 @@ esac
 
 case ${host} in
 i[34567]86-*-hellbender*)
-	extra_parts="$extra_parts crtbegin.o crtend.o"
+	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o"
 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
 	;;
 x86_64-*-hellbender*)
-	extra_parts="$extra_parts crtbegin.o crtend.o"
+	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o"
 	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
 	;;
 aarch64*-*-elf)

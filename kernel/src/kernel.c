@@ -6,6 +6,7 @@
 #include "elf32.h"
 #include "vga.h"
 #include "scheduler.h"
+#include "service.h"
 
 #include "hellbender/debug.h"
 
@@ -38,6 +39,8 @@ void kernel_start_core() {
   // each ELF header may end up as a memory block.
   // we also need one for initrd, stack, and VGA each.
   struct process_descriptor* pd = process_alloc_descriptor(elf->e_phnum + 3);
+  pd->vmem_base = 0;
+  pd->vmem_size = USERMODE_SIZE;
   pd->entry_point = (uintptr_t)elf->e_entry;
 
   // create memory map description of the binary.
@@ -136,6 +139,7 @@ void kernel_start_core() {
   }
 
   // make it happen!
+  service_relocate(pd);
   struct process *core = process_create(pd);
   (void)core;
 }

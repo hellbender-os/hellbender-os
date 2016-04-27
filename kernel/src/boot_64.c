@@ -8,6 +8,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "pic.h"
+#include "service.h"
 
 #include <string.h>
 
@@ -48,6 +49,7 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
   VGA_AT(0,4) = VGA_ENTRY('B', WHITE_ON_BLACK);
   cpu_enable_features();
   cpu_init();
+  service_init();
   gdt_init(); // adds per-cpu TSS into GDT.
   tss_update();
 

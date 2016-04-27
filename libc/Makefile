@@ -28,6 +28,7 @@ src/libc_init.o \
 src/heap.o \
 src/mutex.o \
 src/syscall.o \
+src/vga.o \
 stdlib/abs.o \
 stdlib/atexit.o \
 stdlib/atoi.o \
@@ -91,8 +92,11 @@ libm.a:
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
-%.o: %.S src/syscall.inc
+%.o: %.S src/struct2asm.inc src/syscall.inc
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DASM
+
+src/struct2asm.inc: src/struct2asm.c
+	$(CC) -S $< -o - | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
 
 src/syscall.inc: $(DESTDIR)$(INCLUDEDIR)/hellbender/syscall.h src/syscall.S
 	echo "// Automagically generated my Makefile, do not edit." > $@

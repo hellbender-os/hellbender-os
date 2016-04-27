@@ -58,10 +58,10 @@ hellbender: $(OBJS) linker.ld
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.S src/struct2asm.inc src/syscall_resolve.inc
-	$(CC) -c $< -o $@ $(CFLAGS) -DASM
+	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DASM
 
 src/struct2asm.inc: src/struct2asm.c
-	$(CC) -S $< -o - | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
+	$(CC) -S $< -o - $(CFLAGS) $(CPPFLAGS) | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@
 
 src/syscall_resolve.inc: src/syscall.c
 	echo "// Automagically generated my Makefile, do not edit." > $@

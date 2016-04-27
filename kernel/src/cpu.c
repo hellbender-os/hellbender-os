@@ -64,7 +64,7 @@ void cpu_set_process(struct process* process) {
     return;
   }
   cpu.current_process = process;
-  if (process) {
+  if (process && process->usermode) {
     page_set_pdpt(0, kernel_v2p(process->pdpt), PAGE_USER_RW);
   } else {
     page_set_pdpt(0, 0, 0);
@@ -74,7 +74,6 @@ void cpu_set_process(struct process* process) {
 
 void cpu_set_thread(struct thread* thread) {
   size_t invalidate_pages = 0; // how many thread local pages need to be invalidated.
-  // it is important that we are not interrupted while swapping the thread stacks.
   if (cpu.current_thread == thread) {
     return;
   }
@@ -91,6 +90,7 @@ void cpu_set_thread(struct thread* thread) {
     if (thread->thread_local_pages > invalidate_pages) {
       invalidate_pages = thread->thread_local_pages;
     }
+    // TODO: enable / disable user mode & service mode.
   } else {
     cpu.current_thread_rsp = 0;
     cpu.tss.rsp_0 = 0;

@@ -23,9 +23,18 @@ struct process* process_create(struct process_descriptor* desc) {
   memset(p, 0, sizeof(struct process));
   p->pid = ++process_next_id;
   p->pcid = p->pid & PROCESS_CONTEXT_MASK;
-  p->pdpt = (uint64_t*)kernel_p2v(page_clear(lomem_alloc_4k()));
+  p->vmem_base = desc->vmem_base;
+  p->vmem_size = desc->vmem_size;
+  if (p->vmem_base == USERMODE_OFFSET) {
+    p->usermode = 1;
+    p->pdpt = (uint64_t*)kernel_p2v(page_clear(lomem_alloc_4k()));
+  } else {
+    p->pdpt = (uint64_t*)kernel_p2v(page_get_pdpt((void*)p->vmem_base) 
+                                    & PAGE_PHYSICAL_MASK);
+  }
   p->scheduler.priority = SCHEDULER_PRIORITY_NORMAL;
 
+  // TODO: respect virtual memory bounds.
   // map all memory.
   for (unsigned i = 0; i < desc->n_maps; ++i) {
     struct process_memory *m = desc->memory_maps + i;
@@ -86,6 +95,9 @@ struct process* process_create(struct process_descriptor* desc) {
 
 void process_page_map(struct process* proc, void* virt, uintptr_t phys, uint64_t attrib) {
   uintptr_t address = (uintptr_t)virt;
+  if (address < proc->vmem_base) kernel_panic();
+  if (address + PAGE_SIZE > proc->vmem_base + proc->vmem_size) kernel_panic();
+  address -= proc->vmem_base;
 
   // we support just 512GB of virtual address space/process.
   uint64_t pdpt_offset = (address>>39) & 0x1FF;

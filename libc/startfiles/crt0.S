@@ -1,5 +1,6 @@
 #include <hellbender/debug.h>
-
+#include "struct2asm.inc"
+        
         .section .text.startup
         .code64
         .extern main
@@ -9,11 +10,13 @@
         .extern _init
         .extern _argc
         .extern _argv
+        .extern _vga_base
         .global _start
+        
 _start:
         # DEBUG: Write 'e' to VGA buffer to notify we are in usermode..
         mov $0x0f65, %ax
-        mov %ax, (0xB8010)
+        mov %ax, (_vga_base+0x10)(%rip)
 
         # Save the top of stack, argv (already in the stack).
         mov %rsp, -16(%rsp)
@@ -35,13 +38,14 @@ _start:
  
 	# Parse argv, envp from the stack.
 	call _libc_init_args
+        mov %rax, %rbx # keep the returned struct libc pointer.
 
         # Run global constructors.
         call _init
 
 	# Run main (with argc and argv).
-        mov (_argv), %rdi
-        mov (_argc), %rsi
+        mov offsetof_libc_argc(%rbx), %rdi
+        mov offsetof_libc_argv(%rbx), %rsi
         call main
 
 	# Terminate the process with the exit code.

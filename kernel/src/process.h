@@ -26,6 +26,8 @@ struct process_memory {
  * allocate sizeof(struct process_descriptor) + (N-1)*sizeof(struct process_memory)
  */
 struct process_descriptor {
+  uintptr_t vmem_base; // limits on process virtual memory area.
+  uintptr_t vmem_size;
   uintptr_t entry_point;
   uintptr_t stack_bottom; // lowest valid stack address.
   uintptr_t stack_top;    // stack_bottom + size of stack.
@@ -44,6 +46,9 @@ struct process {
       uint64_t pid;
       uint64_t pcid;
       uint64_t *pdpt; // page directory pointer table for the process.
+      uintptr_t vmem_base; // limits on process virtual memory area.
+      uintptr_t vmem_size;
+      unsigned usermode; // 1 for user mode process; 0 for service process.
       
       list_t threads; // struct thread::process_threads.
     };

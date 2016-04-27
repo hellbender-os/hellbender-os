@@ -3,13 +3,13 @@
 #define TARGET_HELLBENDER 1
 
 #undef ENDFILE_SPEC
-#define ENDFILE_SPEC "crtend.o%s crtn.o%s"
+#define ENDFILE_SPEC "crtendS.o%s crtn.o%s"
 
 #undef STARTFILE_SPEC
-#define STARTFILE_SPEC "%{!shared: \
-			 %{!symbolic: \
-			  %{pg:gcrt0.o%s}%{!pg:%{p:mcrt0.o%s}%{!p:crt0.o%s}}}}\
-			crti.o%s crtbegin.o%s"
+#define STARTFILE_SPEC "crti.o%s crtbeginS.o%s"
+
+#undef CC1_SPEC
+#define CC1_SPEC "%{!ffreestanding:-fPIC -fvisibility=hidden}"
 
 /* Default arguments you want when running your
    i686-hellbender-gcc/x86_64-hellbender-gcc toolchain */
