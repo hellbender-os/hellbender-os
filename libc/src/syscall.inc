@@ -25,8 +25,14 @@ syscall_wait_signal:
   int $SYSCALL_INT
   ret
 
+.global syscall_register_service
+syscall_register_service:
+  mov $(5-1), %rax
+  int $SYSCALL_INT
+  ret
+
 .global syscall_unknown
 syscall_unknown:
-  mov $(5-1), %rax
+  mov $(6-1), %rax
   int $SYSCALL_INT
   ret

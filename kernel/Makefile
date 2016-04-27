@@ -43,6 +43,7 @@ src/syscall_resolve.o \
 src/syscall.o \
 src/signal.o \
 src/scheduler.o \
+src/service.o \
 
 all: hellbender
 

@@ -41,6 +41,7 @@ struct thread {
       uint64_t ret_address; // address from which scheduler_run was called.
       uint64_t *thread_local_pt; // specially mapped pages for thread local variables.
       size_t thread_local_pages; // how many pages are in the TL PT.
+      unsigned in_service; // 1 if thread is executing in service domain.
     };
     uint8_t dummy[CACHE_LINE];
   };

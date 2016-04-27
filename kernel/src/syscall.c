@@ -2,6 +2,7 @@
 #include "vga.h"
 #include "isr.h"
 #include "signal.h"
+#include "service.h"
 
 #include <stdint.h>
 
@@ -52,6 +53,11 @@ uint64_t continue_wait_signal() {
 uint64_t syscall_wait_signal(uint64_t wait_mask) {
   if (signal_wait(cpu.current_thread, wait_mask)) return continue_wait_signal();
   else return (uint64_t)continue_wait_signal;
+}
+
+uint64_t syscall_register_service(void* func) {
+  CPU_THREAD_STATE->registers.rax = service_register((uint64_t)func);
+  return 0;
 }
 
 // this should be last.
