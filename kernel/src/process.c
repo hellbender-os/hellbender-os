@@ -86,7 +86,8 @@ struct process* process_create(struct process_descriptor* desc) {
       vmem->flags |= PROCESS_VMEM_SEMI_COW;
     }
     while (v_size > 0) {
-      process_page_map(p, (void*)v_base, kernel_v2p(zero_page), PAGE_USER_RO);
+      process_page_map(p, (void*)v_base, kernel_v2p(zero_page), 
+                       (m->flags & ~PAGE_WRITEABLE) | PAGE_USERMODE | PAGE_PRESENT);
       v_base += PAGE_SIZE;
       v_size -= PAGE_SIZE;
     }
@@ -166,4 +167,15 @@ struct process_vmem* process_reserve_vmem(struct process* proc, void* base, size
   }
 
   return vmem;
+}
+
+struct process_vmem* process_get_vmem(struct process* proc, void* ptr) {
+  uint64_t* pt = process_page_table(proc, proc->vmem_base);
+  uintptr_t address = (uintptr_t)ptr;
+  uint64_t page_offset = address / TABLEDIR_SIZE;
+  uint64_t *p_page = pt + page_offset;
+  if (!*p_page) return 0;
+  struct process_vmem **vdpt = (struct process_vmem**)kernel_p2v(*p_page & PAGE_PHYSICAL_MASK);
+  uint64_t vdp_offset = (address / TABLE_SIZE) % (USERMODE_SIZE / TABLE_SIZE);
+  return vdpt[vdp_offset];
 }

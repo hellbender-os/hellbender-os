@@ -89,6 +89,15 @@ uintptr_t page_remap_2M(void* virtual, uint64_t attributes) {
   return physical;
 }
 
+uint64_t page_change_4k(void* virtual, uintptr_t physical,
+                        uint64_t add_attributes, uint64_t del_attributes) {
+  uintptr_t address = (uintptr_t)virtual;
+  uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
+  uintptr_t attributes = *page & ~PAGE_PHYSICAL_MASK;
+  *page = physical | (attributes & ~del_attributes) | add_attributes;
+  return attributes;
+}
+
 uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pdpt = (uint64_t *)(((address>>36) & ~7) | 0xFFFFFFFFFFFFF000);
@@ -122,4 +131,11 @@ uintptr_t page_get_address(void* virtual) {
     uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
     return *page & PAGE_PHYSICAL_MASK;
   }
+}
+
+void page_copy_on_write(void* virtual) {
+  void* page = (void*)(((uintptr_t)virtual) & PAGE_VIRTUAL_MASK);
+  uintptr_t copy = lomem_alloc_4k();
+  memcpy(kernel_p2v(copy), page, PAGE_SIZE);
+  page_change_4k(page, copy, PAGE_WRITEABLE, 0);
 }

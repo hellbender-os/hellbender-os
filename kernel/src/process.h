@@ -105,6 +105,8 @@ uint64_t* process_page_table(struct process* proc, uintptr_t address);
 
 struct process_vmem* process_reserve_vmem(struct process* proc, void* base, size_t size);
 
+struct process_vmem* process_get_vmem(struct process* proc, void* ptr);
+
 void process_page_map(struct process* proc, void* virt, uintptr_t phys, uint64_t attrib);
 
 #endif

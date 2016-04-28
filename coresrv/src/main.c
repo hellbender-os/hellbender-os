@@ -16,6 +16,10 @@ void broker_init();
 int main(int argc, char* argv[]) {
   (void)argc;
   (void)argv;
+  uint8_t foo[8192];
+  if (foo[8191] == 0) {
+    foo[8191] = 1;
+  }
 
   struct coresrv_init *data = (struct coresrv_init *)_libc_init_get()->data;
   VGA_MEMORY((uint16_t*)data->vga_base);

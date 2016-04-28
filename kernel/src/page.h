@@ -60,10 +60,15 @@ uintptr_t page_unmap_2M(void* virtual);
 uintptr_t page_remap_4k(void* virtual, uint64_t attributes);
 uintptr_t page_remap_2M(void* virtual, uint64_t attributes);
 
+uint64_t page_change_4k(void* virtual, uintptr_t physical, 
+                        uint64_t add_attributes, uint64_t del_attributes);
+
 uintptr_t page_set_pdpt(void* virtual, uintptr_t physical, uint64_t attributes);
 uintptr_t page_set_pd(void* virtual, uintptr_t physical, uint64_t attributes);
 
 uintptr_t page_get_pdpt(void* virtual);
 uintptr_t page_get_address(void* virtual);
+
+void page_copy_on_write(void* virtual);
 
 #endif
