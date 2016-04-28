@@ -6,13 +6,14 @@
 #include "heap.h"
 #include "scheduler.h"
 
+#include <hellbender/libc_init.h>
 #include <string.h>
 
 static uint64_t thread_next_id = 0;
 
 struct thread* thread_create(struct process* process,
                              uintptr_t entry_point, uintptr_t stack_top,
-                             uintptr_t local_bottom, size_t local_size) {
+                             struct libc_init *libc) {
   // allocate a new thread.
   struct thread* t = heap_alloc(sizeof(struct thread*));
   memset(t, 0, sizeof(struct thread));
@@ -21,15 +22,19 @@ struct thread* thread_create(struct process* process,
   t->stack_top = kernel_p2v(page_clear(lomem_alloc_4k()) + PAGE_SIZE);
   t->scheduler.priority = SCHEDULER_PRIORITY_NORMAL;
 
+  libc->process_id = process->pid;
+  libc->thread_id = t->tid;
+
   // allocate thread locals.
-  t->thread_local_pages = page_round_up(local_size) / PAGE_SIZE;
-  if (local_size) {
+  t->thread_local_pages = page_round_up(libc->threadlocal_size) / PAGE_SIZE;
+  if (t->thread_local_pages) {
     uintptr_t *local_pt = kernel_p2v(page_clear(lomem_alloc_4k()));
     t->thread_local_pt = local_pt;
     for (size_t i = 0; i < t->thread_local_pages; --i, ++local_pt) {
       *local_pt = page_clear(lomem_alloc_4k());
     }
   }
+  libc->threadlocal_base = (void*)THREAD_LOCAL_BASE;
 
   // initialize state.
   t->rsp_backup = (uintptr_t)t->stack_top - sizeof(struct thread_state);
@@ -37,16 +42,8 @@ struct thread* thread_create(struct process* process,
   state->context.rip = entry_point;
   state->context.cs = UCODE_SELECTOR;
   state->context.rflags = 0x200; // IF enabled.
-  state->context.rsp = stack_top;
+  state->context.rsp = stack_top; // MUST point to struct libc_init!
   state->context.ss = UDATA_SELECTOR;
-  // by convention: registers rdi, rsi, rdx define the thread local init memory.
-  state->registers.rdi = THREAD_LOCAL_BASE;
-  state->registers.rsi = local_bottom;
-  state->registers.rdx = local_size;
-  // by convention r8, r9 describe the process / thread.
-  state->registers.rcx = 0;
-  state->registers.r8 = process->pid;
-  state->registers.r9 = t->tid;
 
   return t;
 }

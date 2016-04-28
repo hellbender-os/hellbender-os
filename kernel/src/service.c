@@ -35,7 +35,6 @@ uintptr_t service_relocate(struct process_descriptor* pd) {
   pd->entry_point += base;
   pd->stack_bottom += base;
   pd->stack_top += base;
-  pd->local_bottom += base;
   for (unsigned i = 0; i < pd->n_maps; ++i) {
     struct process_memory *pm = pd->memory_maps + i;
     pm->v_base += base;

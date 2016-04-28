@@ -16,8 +16,10 @@
 #define TABLE_PHYSICAL_MASK 0xFFFFFFE00000
 #define TABLE_OFFSET_MASK 0x1FFFFF
 
+#define TABLEDIR_SIZE (512*TABLE_SIZE)
+
 #define KERNEL_STACK_SIZE (2*PAGE_SIZE)
-#define USER_STACK_SIZE   (2*PAGE_SIZE) // TODO: more when we have on demand allocation.
+#define USER_STACK_SIZE   (TABLE_SIZE)
 
 #define N_SELECTORS 5       // excluding the TSS selector
 #define NULL_SELECTOR  0x00

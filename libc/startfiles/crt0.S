@@ -14,30 +14,16 @@
         .global _start
         
 _start:
-        # DEBUG: Write 'e' to VGA buffer to notify we are in usermode..
-        mov $0x0f65, %ax
-        mov %ax, (_vga_base+0x10)(%rip)
+        # Top of stack points to struct libc_init, we pass this to _libc_init.
+        mov %rsp, %rdi
 
-        # Save the top of stack, argv (already in the stack).
-        mov %rsp, -16(%rsp)
-        sub $16, %rsp
-        mov %rsp, %rbp
+        # Align stack and set up the end of the linked stack frame list:
+        and $-16, %rsp
+        pushq $0
+        pushq $0
 
-        # By convention, we get thread local information in registers rdi, rsi, rdx.
-        # and thread id, process id in r8, r9 (see kernel/src/thread.c).
-        # We pass these to _libc_init_thread.
-        call _libc_init_thread
-
-        # We set argv and stack for parameters to _libc_init:
-        mov 8(%rsp), %rdi # 1st parameter is argv, just below the original top of stack.
-        mov (%rsp), %rsi  # 2nd parameter is the original top of stack.
-        
-        # Set up the end of the linked stack frame list:
-        movq $0, (%rsp)
-        movq $0, 8(%rsp)
- 
-	# Parse argv, envp from the stack.
-	call _libc_init_args
+        # Initialize the libc (parses argv, envp, etc.)
+        call _libc_init
         mov %rax, %rbx # keep the returned struct libc pointer.
 
         # Run global constructors.

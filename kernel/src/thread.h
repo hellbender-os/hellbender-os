@@ -11,6 +11,7 @@
 #include <stddef.h>
 
 struct process;
+struct libc_init;
 
 struct thread_context {
   uint64_t error, rip, cs, rflags, rsp, ss;
@@ -73,7 +74,7 @@ struct thread {
 
 struct thread* thread_create(struct process* process,
                              uintptr_t entry_point, uintptr_t stack_top,
-                             uintptr_t local_bottom, size_t local_size);
+                             struct libc_init *libc);
 
 void thread_local_invalidate(size_t pages);
 

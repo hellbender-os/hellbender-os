@@ -11,6 +11,19 @@
 #include <stddef.h>
 
 struct thread;
+struct libc_init;
+
+#define PROCESS_VMEM_SEMI_COW 0x1000 // copy-on-write pages without reference counting.
+
+/* Describes a reserved virtual memory block.
+ * Block size is a multiple of TABLE_SIZE.
+ */
+struct process_vmem {
+  list_item_t item;
+  void *base;
+  size_t size;
+  uint64_t flags;
+};
 
 // Describes a memory area for a new process.
 struct process_memory {
@@ -31,8 +44,8 @@ struct process_descriptor {
   uintptr_t entry_point;
   uintptr_t stack_bottom; // lowest valid stack address.
   uintptr_t stack_top;    // stack_bottom + size of stack.
-  uintptr_t local_bottom; // address for thread local initialization memory.
-  size_t local_size;      // size of thread local memory.
+  uintptr_t stack_reserved; // how many bytes from the top of stack are already used.
+  struct libc_init *libc;   // libc initialization data (at the top of the stack).
   unsigned n_maps;
   struct process_memory memory_maps[1];
 };
@@ -51,6 +64,7 @@ struct process {
       unsigned usermode; // 1 for user mode process; 0 for service process.
       
       list_t threads; // struct thread::process_threads.
+      list_t vmem; // process_vmem.item
     };
     uint8_t dummy[CACHE_LINE];
   };
@@ -86,6 +100,10 @@ struct process {
 struct process_descriptor* process_alloc_descriptor(unsigned n_maps);
 
 struct process* process_create(struct process_descriptor* desc);
+
+uint64_t* process_page_table(struct process* proc, uintptr_t address);
+
+struct process_vmem* process_reserve_vmem(struct process* proc, void* base, size_t size);
 
 void process_page_map(struct process* proc, void* virt, uintptr_t phys, uint64_t attrib);
 

@@ -47,3 +47,5 @@ install: coresrv
 	cp coresrv $(DESTDIR)$(BOOTDIR)
 
 install-headers:
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -RT include $(DESTDIR)$(INCLUDEDIR)

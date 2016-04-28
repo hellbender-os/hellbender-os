@@ -14,7 +14,7 @@
 	_DEFINE(sizeof_##s##_##m, SIZEOF(s, m));
  
 /* function with your structures and members */
-foo() {
+void foo() {
   STRUCT(thread_context);
 
   STRUCT(thread_registers);

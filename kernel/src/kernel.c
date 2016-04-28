@@ -8,7 +8,9 @@
 #include "scheduler.h"
 #include "service.h"
 
-#include "hellbender/debug.h"
+#include <hellbender/debug.h>
+#include <hellbender/libc_init.h>
+#include <hellbender/coresrv_init.h>
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -31,6 +33,12 @@ void kernel_add_cpu(struct cpu* cpu) {
   kernel.cpus[kernel.n_cpus++] = cpu;
 }
 
+INLINE uintptr_t table_round_up(uintptr_t physical) {
+  if (physical % TABLE_SIZE) {
+    return physical + (TABLE_SIZE - (physical % TABLE_SIZE));
+  } else return physical;
+}
+
 void kernel_start_core() {
   // create the core service.
   if (multiboot_data.coresrv_module == -1) kernel_panic();
@@ -41,7 +49,8 @@ void kernel_start_core() {
   struct process_descriptor* pd = process_alloc_descriptor(elf->e_phnum + 3);
   pd->vmem_base = 0;
   pd->vmem_size = USERMODE_SIZE;
-  pd->entry_point = (uintptr_t)elf->e_entry;
+  service_relocate(pd);
+  pd->entry_point = pd->vmem_base + (uintptr_t)elf->e_entry;
 
   // create memory map description of the binary.
   uintptr_t vmem_top = 0;
@@ -58,15 +67,16 @@ void kernel_start_core() {
     if ((prog_header->p_flags & PF_W) != 0) pm->flags |= PAGE_WRITEABLE;
 
     // virtual address range where pages will be moved into:
-    pm->v_base = (uintptr_t)prog_header->p_vaddr;
+    pm->v_base = pd->vmem_base + (uintptr_t)prog_header->p_vaddr;
     pm->v_size = (size_t)prog_header->p_memsz;
+    if (pm->v_base % TABLE_SIZE) kernel_panic(); // each block must be at table boundary!
 
     // actual memory address range to move:
     pm->m_base = kernel_p2v(core_mod->mod_start + prog_header->p_offset);
     pm->m_size = (size_t)prog_header->p_filesz;
 
     // thread local section requires special care:
-    if (pm->v_base == THREAD_LOCAL_BASE) {
+    if (pm->v_base == pd->vmem_base + THREAD_LOCAL_BASE) {
       pm->flags = 0;
       pm_local = pm;
     } else {
@@ -75,41 +85,54 @@ void kernel_start_core() {
     }
   }
 
-  // special thread locals init memory.
-  if (pm_local) {
-    pm_local->v_base = page_round_up(vmem_top);
-    pd->local_bottom = pm_local->v_base;
-    pd->local_size = pm_local->v_size;
-    uintptr_t v_top = pm_local->v_base + pm_local->v_size;
-    if (v_top > vmem_top) vmem_top = v_top;
-  }
-
   // add a stack.
-  uintptr_t stack = lomem_alloc_4k();
+  uintptr_t stack = page_clear(lomem_alloc_4k());
   size_t stack_size = PAGE_SIZE;
+  uintptr_t stack_top = stack + stack_size;
   if (!stack) kernel_panic();
   {
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(stack);
     pm->m_size = -(intptr_t)stack_size;
-    pm->v_base = page_round_up(vmem_top);
+    pm->v_base = table_round_up(vmem_top);
     pm->v_size = USER_STACK_SIZE;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
     pd->stack_bottom = pm->v_base;
     pd->stack_top = pm->v_base + pm->v_size;
-    memset(pm->m_base, 0, stack_size);
+  }
+
+  // top of stack is used for libc & coresrv initialization data.
+  pd->stack_reserved = sizeof(struct libc_init) + sizeof(struct coresrv_init);
+  if (pd->stack_reserved > stack_size) kernel_panic();
+  struct coresrv_init *coresrv = 
+    (struct coresrv_init *)kernel_p2v(stack_top - sizeof(struct coresrv_init));
+  struct libc_init *libc = (struct libc_init *)kernel_p2v(stack_top - pd->stack_reserved);
+  libc->data = (void*)(pd->stack_top - sizeof(struct coresrv_init));
+  pd->libc = libc;
+
+  // special thread locals init memory.
+  if (pm_local) {
+    pm_local->v_base = table_round_up(vmem_top);
+    uintptr_t v_top = pm_local->v_base + pm_local->v_size;
+    if (v_top > vmem_top) vmem_top = v_top;
+    libc->threadlocal_init = (void*)pm_local->v_base;
+    libc->threadlocal_size = pm_local->v_size;
   }
 
   // add VGA.
   {
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
-    pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
+    pm->flags = PAGE_WRITETHROUGH | PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = VGA_MEMORY;
     pm->m_size = VGA_MEMORY_SIZE;
-    pm->v_base = kernel_v2p(VGA_MEMORY);
+    pm->v_base = table_round_up(vmem_top);
     pm->v_size = pm->m_size;
+    uintptr_t v_top = pm->v_base + pm->v_size;
+    if (v_top > vmem_top) vmem_top = v_top;
+    coresrv->vga_base = (void*)pm->v_base;
+    coresrv->vga_size = pm->v_size;
   }
 
   // add the initrd, if available.
@@ -119,27 +142,15 @@ void kernel_start_core() {
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(initrd_mod->mod_start);
     pm->m_size = initrd_mod->mod_end - initrd_mod->mod_start;
-    pm->v_base = page_round_up(vmem_top);
+    pm->v_base = table_round_up(vmem_top);
     pm->v_size = pm->m_size;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
-
-    // add initrd info as command line arguments to the bottom of the stack:
-    char* ptr = (char*)kernel_p2v(stack);
-    for (char *c = _ulltoa_n(pm->v_base, ptr, 9, 16); c > ptr; --c) c[-1] = '0';
-    ptr += 9;
-    for (char *c = _ulltoa_n(pm->v_size, ptr, 9, 16); c > ptr; --c) c[-1] = '0';
-    ptr += 9;
-    *(ptr++) = 0; // end of args.
-    *(ptr++) = 0; // end of envs.
-
-    // by convention, top of stack points to argv.
-    uintptr_t *s = (uintptr_t*)kernel_p2v(stack + stack_size);
-    s[-1] = pd->stack_top - stack_size;
+    coresrv->initrd_base = (void*)pm->v_base;
+    coresrv->initrd_size = pm->v_size;
   }
 
   // make it happen!
-  service_relocate(pd);
   struct process *core = process_create(pd);
   (void)core;
 }
