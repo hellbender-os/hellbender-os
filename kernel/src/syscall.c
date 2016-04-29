@@ -60,6 +60,17 @@ uint64_t syscall_register_service(void* func) {
   return 0;
 }
 
+uint64_t syscall_alloc_tables(uint64_t n_tables) {
+  struct process_vmem* vmem = 
+    process_alloc_vmem(n_tables * TABLE_SIZE);
+  if (vmem) {
+    CPU_THREAD_STATE->registers.rax = (uint64_t)vmem->base;
+  } else {
+    CPU_THREAD_STATE->registers.rax = 0;
+  }
+  return 0;
+}
+
 // this should be last.
 uint64_t syscall_unknown() {
   // TODO: kill the process?

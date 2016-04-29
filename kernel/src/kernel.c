@@ -33,12 +33,6 @@ void kernel_add_cpu(struct cpu* cpu) {
   kernel.cpus[kernel.n_cpus++] = cpu;
 }
 
-INLINE uintptr_t table_round_up(uintptr_t physical) {
-  if (physical % TABLE_SIZE) {
-    return physical + (TABLE_SIZE - (physical % TABLE_SIZE));
-  } else return physical;
-}
-
 void kernel_start_core() {
   // create the core service.
   if (multiboot_data.coresrv_module == -1) kernel_panic();
@@ -95,7 +89,7 @@ void kernel_start_core() {
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(stack);
     pm->m_size = -(intptr_t)stack_size;
-    pm->v_base = table_round_up(vmem_top);
+    pm->v_base = page_table_round_up(vmem_top);
     pm->v_size = USER_STACK_SIZE;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
@@ -114,7 +108,7 @@ void kernel_start_core() {
 
   // special thread locals init memory.
   if (pm_local) {
-    pm_local->v_base = table_round_up(vmem_top);
+    pm_local->v_base = page_table_round_up(vmem_top);
     uintptr_t v_top = pm_local->v_base + pm_local->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
     libc->threadlocal_init = (void*)pm_local->v_base;
@@ -127,7 +121,7 @@ void kernel_start_core() {
     pm->flags = PAGE_WRITETHROUGH | PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = VGA_MEMORY;
     pm->m_size = VGA_MEMORY_SIZE;
-    pm->v_base = table_round_up(vmem_top);
+    pm->v_base = page_table_round_up(vmem_top);
     pm->v_size = pm->m_size;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;
@@ -142,7 +136,7 @@ void kernel_start_core() {
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(initrd_mod->mod_start);
     pm->m_size = initrd_mod->mod_end - initrd_mod->mod_start;
-    pm->v_base = table_round_up(vmem_top);
+    pm->v_base = page_table_round_up(vmem_top);
     pm->v_size = pm->m_size;
     uintptr_t v_top = pm->v_base + pm->v_size;
     if (v_top > vmem_top) vmem_top = v_top;

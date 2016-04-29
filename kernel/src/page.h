@@ -46,6 +46,12 @@ INLINE uintptr_t page_round_up(uintptr_t physical) {
   } else return physical;
 }
 
+INLINE uintptr_t page_table_round_up(uintptr_t physical) {
+  if (physical % TABLE_SIZE) {
+    return physical + (TABLE_SIZE - (physical % TABLE_SIZE));
+  } else return physical;
+}
+
 INLINE uintptr_t page_clear(uintptr_t physical) {
   memset(kernel_p2v(physical), 0, PAGE_SIZE);
   return physical;
@@ -70,5 +76,6 @@ uintptr_t page_get_pdpt(void* virtual);
 uintptr_t page_get_address(void* virtual);
 
 void page_copy_on_write(void* virtual);
+void page_fill_table(void* virtual, uintptr_t physical, uint64_t attributes);
 
 #endif

@@ -33,9 +33,9 @@ INLINE void page_ensure_pagetable(void* virtual, uint64_t attributes) {
 }
 
 void* page_map_4k(void* virtual, uintptr_t physical, uint64_t attributes) {
-  page_ensure_pdp_table(virtual, attributes);
-  page_ensure_directory(virtual, attributes);
-  page_ensure_pagetable(virtual, attributes);
+  page_ensure_pdp_table(virtual, attributes | PAGE_WRITEABLE);
+  page_ensure_directory(virtual, attributes | PAGE_WRITEABLE);
+  page_ensure_pagetable(virtual, attributes | PAGE_WRITEABLE);
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
   if (!*page) *page = (physical & PAGE_PHYSICAL_MASK) | attributes;
@@ -44,8 +44,8 @@ void* page_map_4k(void* virtual, uintptr_t physical, uint64_t attributes) {
 }
 
 void* page_map_2M(void* virtual, uintptr_t physical, uint64_t attributes) {
-  page_ensure_pdp_table(virtual, attributes);
-  page_ensure_directory(virtual, attributes);
+  page_ensure_pdp_table(virtual, attributes | PAGE_WRITEABLE);
+  page_ensure_directory(virtual, attributes | PAGE_WRITEABLE);
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);
   if (!*pt) *pt = (physical & TABLE_PHYSICAL_MASK) | attributes | PAGE_LARGE;
@@ -139,3 +139,16 @@ void page_copy_on_write(void* virtual) {
   memcpy(kernel_p2v(copy), page, PAGE_SIZE);
   page_change_4k(page, copy, PAGE_WRITEABLE, 0);
 }
+
+void page_fill_table(void* virtual, uintptr_t physical, uint64_t attributes) {
+  page_ensure_pdp_table(virtual, attributes | PAGE_WRITEABLE);
+  page_ensure_directory(virtual, attributes | PAGE_WRITEABLE);
+  page_ensure_pagetable(virtual, attributes | PAGE_WRITEABLE);
+  uintptr_t address = (uintptr_t)virtual;
+  uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
+  uint64_t value = (physical & PAGE_PHYSICAL_MASK) | attributes;
+  for (unsigned i = 512; i; --i, ++page) {
+    *page = value;
+  }
+}
+

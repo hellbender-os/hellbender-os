@@ -31,8 +31,14 @@ syscall_register_service:
   int $SYSCALL_INT
   ret
 
+.global syscall_alloc_tables
+syscall_alloc_tables:
+  mov $(6-1), %rax
+  int $SYSCALL_INT
+  ret
+
 .global syscall_unknown
 syscall_unknown:
-  mov $(6-1), %rax
+  mov $(7-1), %rax
   int $SYSCALL_INT
   ret

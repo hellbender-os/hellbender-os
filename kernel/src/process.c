@@ -132,12 +132,30 @@ void process_page_map(struct process* proc, void* virt, uintptr_t phys, uint64_t
   *p_page = (phys & PAGE_PHYSICAL_MASK) | attrib;
 }
 
+struct process_vmem* process_alloc_vmem(size_t size) {
+  struct process* proc = cpu.current_process; 
+  SPIN_GUARD_RAW(proc->lock);
+  if (proc->vmem_top + size > proc->vmem_base + proc->vmem_size) return 0;
+
+  uintptr_t base = page_table_round_up(proc->vmem_top);
+  struct process_vmem* vmem = process_reserve_vmem(proc, (void*)base, size);
+  vmem->flags = PAGE_USER_RW | PROCESS_VMEM_SEMI_COW;
+  while (size > 0) {
+    page_fill_table((void*)base, kernel_v2p(zero_page), PAGE_USER_RO);
+    base += TABLE_SIZE;
+    size -= TABLE_SIZE;
+  }
+  return vmem;
+}
+
 struct process_vmem* process_reserve_vmem(struct process* proc, void* base, size_t size) {
   // each allocated vmem area has a descriptor structure.
   struct process_vmem *vmem = HEAP_NEW(struct process_vmem);
   vmem->base = base;
   vmem->size = size;
   list_insert(&proc->vmem, &vmem->item);
+  uintptr_t top = (uintptr_t)base + size;
+  if (top > proc->vmem_top) proc->vmem_top = top;
 
   // the first page table is the vmem descriptor pointer table.
   uint64_t* pt = process_page_table(proc, proc->vmem_base);

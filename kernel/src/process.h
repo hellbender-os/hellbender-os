@@ -59,8 +59,9 @@ struct process {
       uint64_t pid;
       uint64_t pcid;
       uint64_t *pdpt; // page directory pointer table for the process.
-      uintptr_t vmem_base; // limits on process virtual memory area.
-      uintptr_t vmem_size;
+      uintptr_t vmem_base; // start of process virtual memory area.
+      uintptr_t vmem_size; // total size of available virtual memory area.
+      uintptr_t vmem_top;  // where next virtual memory can be allocated.
       unsigned usermode; // 1 for user mode process; 0 for service process.
       
       list_t threads; // struct thread::process_threads.
@@ -102,6 +103,8 @@ struct process_descriptor* process_alloc_descriptor(unsigned n_maps);
 struct process* process_create(struct process_descriptor* desc);
 
 uint64_t* process_page_table(struct process* proc, uintptr_t address);
+
+struct process_vmem* process_alloc_vmem(size_t size);
 
 struct process_vmem* process_reserve_vmem(struct process* proc, void* base, size_t size);
 
