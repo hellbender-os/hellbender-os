@@ -5,6 +5,7 @@
 #include "vga.h"
 
 #include <signal.h>
+#include <stdlib.h>
 
 int test_srv(int i) {
   return i;
@@ -20,6 +21,11 @@ int main(int argc, char* argv[]) {
   if (foo[8191] == 0) {
     foo[8191] = 1;
   }
+  uint8_t *data1 = (uint8_t *)malloc(12);
+  uint8_t *data2 = (uint8_t *)malloc(123);
+  
+  *data1 = 123;
+  *data2 = 123;
 
   struct coresrv_init *data = (struct coresrv_init *)_libc_init_get()->data;
   VGA_MEMORY((uint16_t*)data->vga_base);
