@@ -15,7 +15,7 @@ struct thread* thread_create(struct process* process,
                              uintptr_t entry_point, uintptr_t stack_top,
                              struct libc_init *libc) {
   // allocate a new thread.
-  struct thread* t = heap_alloc(sizeof(struct thread*));
+  struct thread* t = heap_alloc(sizeof(struct thread));
   memset(t, 0, sizeof(struct thread));
   t->tid = ++thread_next_id;
   t->process = process;
