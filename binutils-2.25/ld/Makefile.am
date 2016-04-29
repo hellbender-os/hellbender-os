@@ -1932,7 +1932,7 @@ eelf_x86_64_sol2.c: $(srcdir)/emulparams/elf_x86_64_sol2.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
 
 eelf_x86_64_hellbender.c: $(srcdir)/emulparams/elf_x86_64_hellbender.sh \
-  $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}
+  $(ELF_DEPS) $(srcdir)/scripttempl/elf-hellbender.sc ${GEN_DEPENDS}
 
 ehppa64linux.c: $(srcdir)/emulparams/hppa64linux.sh \
   $(ELF_DEPS) $(srcdir)/scripttempl/elf.sc ${GEN_DEPENDS}

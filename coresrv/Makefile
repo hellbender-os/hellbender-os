@@ -17,6 +17,7 @@ CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -Wall -W
 #-s
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_coresrv -Iinclude
 LDFLAGS:=$(LDFLAGS) -z max-page-size=0x1000 -Wl,--build-id=none
+#-Wl,--verbose
 #-Wl,--strip-debug -Wl,-s
 LIBS:=$(LIBS) -static
 
@@ -29,7 +30,7 @@ all: coresrv
 .PHONY: all clean install install-headers
 
 coresrv: $(OBJS)
-	$(CC) -Wl,-Map,coresrv.map -o $@.elf64 $(LDFLAGS) $(OBJS) $(LIBS)
+	$(CC) -Wl,-Map,coresrv.map -o $@.elf64 $(CFLAGS) $(LDFLAGS) $(OBJS) $(LIBS)
 	objcopy --strip-debug -I elf64-x86-64 -O elf32-i386 $@.elf64 $@
 	objcopy --only-keep-debug $@.elf64 $@.sym
 

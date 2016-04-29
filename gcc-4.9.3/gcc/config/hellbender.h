@@ -13,8 +13,7 @@
 
 /* Default arguments you want when running your
    i686-hellbender-gcc/x86_64-hellbender-gcc toolchain */
-#define LIB_SPEC "-lc -lg -lm" /* link against C standard libraries */
-                               /* modify this based on your needs */
+#define LIB_SPEC "%{!g:-lc; :-lg}" /* link against C standard libraries */
 
 /* Don't automatically add extern "C" { } around header files. */
 #undef  NO_IMPLICIT_EXTERN_C
