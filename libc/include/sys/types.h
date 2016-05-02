@@ -94,7 +94,7 @@ typedef struct {
 } pthread_once_t;
 // Used for dynamic package initialization.
 
-typedef struct {
+typedef struct pthread_rwlock {
 } pthread_rwlock_t;
 // Used for read-write locks.
 

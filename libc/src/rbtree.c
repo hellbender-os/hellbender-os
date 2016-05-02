@@ -1,5 +1,9 @@
 #include <hellbender/rbtree.h>
 
+/* based on the free implementation at:
+ * http://web.mit.edu/~emin/Desktop/ref_to_emin/www.old/source_code/red_black_tree/
+ */
+
 static rbtree_item_t *binary_insert(rbtree_t *tree, rbtree_item_t *z) {
   rbtree_item_t *x = tree->root.left;
   rbtree_item_t *y = &tree->root;

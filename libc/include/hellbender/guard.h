@@ -4,6 +4,7 @@
 #include "inline.h"
 
 typedef struct pthread_mutex pthread_mutex_t;
+typedef struct pthread_rwlock pthread_rwlock_t;
 
 // Various definitons for RAII lock guards.
 

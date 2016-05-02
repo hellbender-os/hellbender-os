@@ -16,8 +16,6 @@ typedef struct dict {
   rbtree_t tree;
 } dict_t;
 
-int dict_rbtree_comp(rbtree_item_t *item1, rbtree_item_t *item2);
-
 // returns 0 on success, existing item on failure.
 INLINE dict_item_t *dict_insert(dict_t *dict, dict_item_t *item) {
   rbtree_item_t *old = rbtree_insert(&dict->tree, &item->item);
@@ -51,9 +49,7 @@ INLINE dict_item_t *dict_find(dict_t *dict, const char *key, int key_len) {
  } else return 0;
 }
 
-INLINE void dict_init(dict_t *dict) {
-  rbtree_init(&dict->tree, dict_rbtree_comp);
-}
+void dict_init(dict_t *dict);
 
 #define dict_container(ptr, type, member) (type *)((char *)(1 ? (ptr) : &((type *)0)->member) - offsetof(type, member))
 

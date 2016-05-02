@@ -1,6 +1,6 @@
 #include <hellbender/dict.h>
 
-int dict_rbtree_comp(rbtree_item_t *item1, rbtree_item_t *item2) {
+static int dict_rbtree_comp(rbtree_item_t *item1, rbtree_item_t *item2) {
   dict_item_t *di1 = rbtree_container(item1, dict_item_t, item);
   dict_item_t *di2 = rbtree_container(item2, dict_item_t, item);
   int len1 = di1->key_len;
@@ -20,4 +20,8 @@ int dict_rbtree_comp(rbtree_item_t *item1, rbtree_item_t *item2) {
     }
     return 0;
   }
+}
+
+void dict_init(dict_t *dict) {
+  rbtree_init(&dict->tree, dict_rbtree_comp);
 }
