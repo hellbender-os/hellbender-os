@@ -2,7 +2,8 @@
 #define __HELLBENDER_KERNEL_SIGNAL_H__
 
 #include "config.h"
-#include "list.h"
+
+#include <hellbender/list.h>
 
 #include <stdint.h>
 

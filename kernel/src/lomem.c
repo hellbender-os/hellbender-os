@@ -2,9 +2,10 @@
 #include "kernel.h"
 #include "multiboot.h"
 #include "config.h"
-#include "list.h"
 #include "spin.h"
 #include "page.h"
+
+#include <hellbender/list.h>
 
 // Memory is split into page table worth segments (2MB).
 // The first or last page of each table is reserved to be used as a header, if needed.

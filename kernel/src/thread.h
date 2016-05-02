@@ -2,10 +2,11 @@
 #define __HELLBENDER_KERNEL_THREAD_H__
 
 #include "spin.h"
-#include "list.h"
-#include "fifo.h"
 #include "pqueue.h"
 #include "signal.h"
+
+#include <hellbender/list.h>
+#include <hellbender/fifo.h>
 
 #include <stdint.h>
 #include <stddef.h>

@@ -1,7 +1,8 @@
-#ifndef __HELLBENDER_KERNEL_FIFO_H__
-#define __HELLBENDER_KERNEL_FIFO_H__
+#ifndef __HELLBENDER_FIFO_H__
+#define __HELLBENDER_FIFO_H__
 
-#include "config.h"
+#include "inline.h"
+
 #include <stddef.h>
 
 typedef struct fifo_item {

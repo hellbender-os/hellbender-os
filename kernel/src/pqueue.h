@@ -2,7 +2,9 @@
 #define __HELLBENDER_KERNEL_PQUEUE_H__
 
 #include "config.h"
-#include "list.h"
+
+#include <hellbender/list.h>
+
 #include <stddef.h>
 
 typedef list_item_t pqueue_item_t;

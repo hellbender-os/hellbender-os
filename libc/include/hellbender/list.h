@@ -1,5 +1,7 @@
-#ifndef __HELLBENDER_KERNEL_LIST_H__
-#define __HELLBENDER_KERNEL_LIST_H__
+#ifndef __HELLBENDER_LIST_H__
+#define __HELLBENDER_LIST_H__
+
+#include "inline.h"
 
 #include <stddef.h>
 

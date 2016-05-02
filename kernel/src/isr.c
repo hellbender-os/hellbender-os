@@ -1,8 +1,9 @@
 #include "isr.h"
 #include "process.h"
 #include "spin.h"
-#include "list.h"
 #include "heap.h"
+
+#include <hellbender/list.h>
 
 struct isr_item {
   list_item_t item;
