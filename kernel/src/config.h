@@ -1,7 +1,9 @@
 #ifndef __HELLBENDER_KERNEL_CONFIG_H__
 #define __HELLBENDER_KERNEL_CONFIG_H__
 
-#define INLINE __attribute__((always_inline)) inline
+#include <hellbender/inline.h>
+#include <hellbender/service_config.h>
+
 #define BARRIER asm volatile("" ::: "memory")
 
 #define CACHE_LINE 64
@@ -39,8 +41,6 @@
 
 #define SERVICE_OFFSET 0x8000000000
 #define SERVICE_SIZE     0x40000000
-#define SERVICE_TABLE_BASE 0x1000
-#define SERVICE_TABLE_SIZE 0x1000
 
 #define CPU_PAGE_ADDRESS  0xFFFFFFFFFFFFE000 // where the CPU structure is mapped
 #define THREAD_LOCAL_BASE 0xFFFFFFFFBFE00000 // where the thread locals are mapped

@@ -1,7 +1,7 @@
 #ifndef __CORESRV_BROKER_H__
 #define __CORESRV_BROKER_H__
 
-#include <hellbender/config.h>
+#include <hellbender/service_config.h>
 
 typedef void* (*broker_resolve_t)(const char* serviceId);
 

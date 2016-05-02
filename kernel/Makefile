@@ -70,7 +70,7 @@ src/syscall_resolve.inc: src/syscall.c
 include/hellbender/syscall.h: src/syscall.c src/syscall.h.in
 	echo "// Automagically generated my Makefile, do not edit." > $@
 	cat src/syscall.h.in >> $@
-	grep SYSCALL_INT include/hellbender/config.h >> $@
+	grep SYSCALL_INT src/config.h >> $@
 	grep " syscall_" src/syscall.c | tr "{" ";" >> $@
 	echo "#endif" >> $@
 
