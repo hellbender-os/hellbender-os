@@ -86,7 +86,7 @@ libc.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 	strip -g $@
 
-libg.a:
+libg.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 
 libm.a:
