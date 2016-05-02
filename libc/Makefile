@@ -26,11 +26,12 @@ $(CRT_OBJS) \
 src/libc.o \
 src/libc_init.o \
 src/heap.o \
-src/mutex.o \
 src/syscall.o \
 src/vga.o \
 src/rbtree.o \
 src/dict.o \
+pthread/mutex.o \
+pthread/rwlock.o \
 stdlib/abs.o \
 stdlib/atexit.o \
 stdlib/atoi.o \
