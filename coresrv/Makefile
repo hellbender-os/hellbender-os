@@ -24,6 +24,13 @@ LIBS:=$(LIBS) -static
 OBJS:=\
 src/main.o \
 src/broker.o \
+fs/vfs.o \
+fs/initfs.o \
+fs/tmpfs.o \
+fs/devfs.o \
+fs/fat16.o \
+dev/console.o \
+dev/ramdisk.o \
 
 all: coresrv
 
