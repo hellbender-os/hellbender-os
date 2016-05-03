@@ -200,7 +200,8 @@ static void* alloc_large(size_t size) {
 
 void* _heap_alloc(size_t size) { 
   // round size upwards to nearest 16.
-  size = (size + 15) & -16;
+  if (size) size = (size + 15) & -16;
+  else size = 16;
   if (size < MEDIUM_SIZE) return alloc_small(size);
   else if (size > LARGE_SIZE) return alloc_large(size);
   else return alloc_medium(size);

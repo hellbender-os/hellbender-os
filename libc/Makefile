@@ -36,6 +36,7 @@ stdlib/abs.o \
 stdlib/atexit.o \
 stdlib/atoi.o \
 stdlib/bsearch.o \
+stdlib/calloc.o \
 stdlib/div.o \
 stdlib/exit.o \
 stdlib/free.o \
