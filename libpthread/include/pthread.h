@@ -58,7 +58,7 @@
 #define PTHREAD_MUTEX_INITIALIZER { 0 }
 //pthread_mutex_t
 
-#define PTHREAD_RWLOCK_INITIALIZER
+#define PTHREAD_RWLOCK_INITIALIZER { }
 //pthread_rwlock_t
 
 //The following shall be declared as functions and may also be defined as macros. Function prototypes shall be provided.
