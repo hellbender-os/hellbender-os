@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 typedef struct ramdisk {
-  int (*create)(size_t size, bdev_t *dev);
+  int (*create)(size_t size, vfs_tag_t *tag);
 } ramdisk_t;
 
 typedef void (*ramdisk_bind_t)(ramdisk_t *vfs);

@@ -66,18 +66,18 @@ int main(int argc, char* argv[]) {
   console_init();
   console_t console;
   CONSOLE_BIND(&console);
-  cdev_t console_dev;
+  vfs_tag_t console_dev;
   if (console.create(&console_dev)) exit(-1);
-  if (devfs.add_cdev("console", &console_dev)) exit(-1);
+  if (devfs.add_dev(&dev_root, "console", &console_dev)) exit(-1);
   VGA_AT(0,7) = VGA_ENTRY('D', WHITE_ON_BLACK);
 
   VGA_AT(0,8) = VGA_ENTRY('e', WHITE_ON_BLACK);
   ramdisk_init();
   ramdisk_t ramdisk;
   RAMDISK_BIND(&ramdisk);
-  bdev_t ramdisk_dev;
+  vfs_tag_t ramdisk_dev;
   if (ramdisk.create(0x200000, &ramdisk_dev)) exit(-1);
-  if (devfs.add_bdev("ramdisk$", &ramdisk_dev)) exit(-1);
+  if (devfs.add_dev(&dev_root, "ramdisk$", &ramdisk_dev)) exit(-1);
   
   fat16_init();
   fat16_t fat16;
@@ -86,8 +86,6 @@ int main(int argc, char* argv[]) {
   if (fat16.create(&ramdisk_dev, &fat_root)) exit(-1);
   if (vfs.mount("/home", &fat_root)) exit(-1);
   VGA_AT(0,8) = VGA_ENTRY('E', WHITE_ON_BLACK);
-
-
 
   /*
   pid_t init = fork();

@@ -11,8 +11,7 @@ typedef struct bdev bdev_t;
 
 typedef struct devfs {
   int (*create)(vfs_tag_t *root);
-  int (*add_cdev)(const char *name, cdev_t *dev);
-  int (*add_bdev)(const char *name, bdev_t *dev);
+  int (*add_dev)(vfs_tag_t *root, const char *name, vfs_tag_t *tag);
 } devfs_t;
 
 typedef void (*devfs_bind_t)(devfs_t *vfs);

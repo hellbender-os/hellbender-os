@@ -4,7 +4,7 @@
 #include "cdev.h"
 
 typedef struct console {
-  int (*create)(cdev_t *dev);
+  int (*create)(vfs_tag_t *tag);
 } console_t;
 
 typedef void (*console_bind_t)(console_t *vfs);

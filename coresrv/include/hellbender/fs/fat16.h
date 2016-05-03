@@ -5,7 +5,7 @@
 #include <hellbender/dev/bdev.h>
 
 typedef struct fat16 {
-  int (*create)(bdev_t *dev, vfs_tag_t *root);
+  int (*create)(vfs_tag_t *dev, vfs_tag_t *root);
 } fat16_t;
 
 typedef void (*fat16_bind_t)(fat16_t *vfs);

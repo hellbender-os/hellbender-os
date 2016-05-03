@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#define VFS_IFACE_CDEV 1 // query for interface cdev_t
+#define VFS_IFACE_BDEV 2 // query for interface bdev_t
+
 typedef struct vfs_iter vfs_iter_t;
 typedef struct vfs_tag vfs_tag_t;
 typedef struct vfs_node vfs_node_t;
@@ -24,20 +27,17 @@ typedef struct vfs_tag {
 
 typedef struct vfs_iter {
   vfs_tag_t tag;
-  const char name[NAME_MAX+1];
-  int (*next)();
+  char name[NAME_MAX+1];
+  int (*next)(struct vfs_iter *this);
   struct { void *data; } impl;
 } vfs_iter_t;
 
 struct vfs_node_op {
-  int (*open)(vfs_node_t *this, const char *name, int flags, mode_t mode);
+  int (*open)(vfs_node_t *this, int flags, mode_t mode);
   int (*close)(vfs_node_t *this);
   ssize_t (*read)(vfs_node_t *this, void *buf, size_t nbyte, off_t offset);
   ssize_t (*write)(vfs_node_t *this, void *buf, size_t nbyte, off_t offset);
   int (*stat)(vfs_node_t *this, struct stat *buf);
-  int (*mknod)(vfs_node_t *this, const char *name, mode_t mode);
-  int (*chown)(vfs_node_t *this, const char *name, uid_t owner, gid_t group);
-  int (*chmod)(vfs_node_t *this, const char *name, mode_t mode, int flag);
   void* (*query)(vfs_node_t *this, int iface_id);
 };
 typedef struct vfs_node {
@@ -48,8 +48,8 @@ typedef struct vfs_node {
 
 typedef struct vfs {
   int (*mount)(const char *path, vfs_tag_t *root);
-  int (*unmount)(const char *path, vfs_node_t *root);
-  int (*traverse)(const char *path, vfs_node_t *node);
+  int (*unmount)(const char *path, vfs_tag_t *root);
+  int (*traverse)(const char *path, vfs_tag_t *tag);
 } vfs_t;
 
 typedef void (*vfs_bind_t)(vfs_t *vfs);
