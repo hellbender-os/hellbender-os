@@ -35,9 +35,8 @@ void* broker_register(const char* service_id, void* service_func) {
   GUARD_PTHREAD_RWLOCK_WRITE(&broker.rwlock);
 
   int key_len = strlen(service_id);
-  struct service_item *si = 
-    (struct service_item*)malloc(sizeof(struct service_item) + key_len + 1);
-  char *key = ((char *)si) + sizeof(struct service_item);
+  struct service_item *si = malloc(sizeof(*si) + key_len + 1);
+  char *key = ((char *)si) + sizeof(*si);
   strcpy(key, service_id);
   si->func = service_func;
   si->item.key = key;
