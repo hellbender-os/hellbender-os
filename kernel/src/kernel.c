@@ -131,7 +131,7 @@ void kernel_start_core() {
 
   // add the initrd, if available.
   if (multiboot_data.initrd_module != -1) {
-    module_t *initrd_mod = multiboot_data.modules + multiboot_data.coresrv_module;
+    module_t *initrd_mod = multiboot_data.modules + multiboot_data.initrd_module;
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
     pm->m_base = kernel_p2v(initrd_mod->mod_start);
