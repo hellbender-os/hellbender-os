@@ -5,11 +5,11 @@
 
 #include <stddef.h>
 
-typedef struct ramdisk {
-  int (*create)(size_t size, vfs_tag_t *tag);
-} ramdisk_t;
+typedef struct ramdisk_op {
+  int (*create)(size_t size, vfs_node_t *node);
+} ramdisk_op_t;
 
-typedef void (*ramdisk_bind_t)(ramdisk_t *vfs);
+typedef void (*ramdisk_bind_t)(ramdisk_op_t *ramdisk_op);
 #define RAMDISK_ID "coresrv::fs::ramdisk"
 #define RAMDISK_BIND ((ramdisk_bind_t)BROKER_LOOKUP(RAMDISK_ID))
 

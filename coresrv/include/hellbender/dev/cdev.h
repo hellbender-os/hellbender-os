@@ -10,9 +10,8 @@ struct cdev_op {
 };
 
 typedef struct cdev {
-  vfs_tag_t tag;
   struct cdev_op op;
-  struct { void *data; } impl;
+  struct vfs_impl impl;
 } cdev_t;
 
 #endif

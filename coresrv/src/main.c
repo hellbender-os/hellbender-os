@@ -39,52 +39,55 @@ int main(int argc, char* argv[]) {
   VFS_BIND(&vfs);
   VGA_AT(0,5) = VGA_ENTRY('E', WHITE_ON_BLACK);
 
+  devfs_init();
+  devfs_op_t devfs_op;
+  DEVFS_BIND(&devfs_op);
+  vfs_fs_t devfs;
+  if (devfs_op.create(&devfs)) exit(-1);
+  if (vfs.mount("/dev", &devfs)) exit(-1);
+
   VGA_AT(0,6) = VGA_ENTRY('n', WHITE_ON_BLACK);
   initfs_init();
-  initfs_t initfs;
-  INITFS_BIND(&initfs);
-  vfs_tag_t init_root;
-  if (initfs.create(data->initrd_base, data->initrd_size, &init_root)) exit(-1);
-  if (vfs.mount("/", &init_root)) exit(-1);
+  initfs_op_t initfs_op;
+  INITFS_BIND(&initfs_op);
+  vfs_fs_t initfs;
+  dev_t init_dev = devfs_op.alloc_dev();
+  if (initfs_op.create(data->initrd_base, data->initrd_size, init_dev, &initfs)) exit(-1);
+  if (vfs.mount("/", &initfs)) exit(-1);
 
   tmpfs_init();
-  tmpfs_t tmpfs;
-  TMPFS_BIND(&tmpfs);
-  vfs_tag_t tmp_root;
-  if (tmpfs.create(0x200000, &tmp_root)) exit(-1);
-  if (vfs.mount("/tmp", &tmp_root)) exit(-1);
+  tmpfs_op_t tmpfs_op;
+  TMPFS_BIND(&tmpfs_op);
+  vfs_fs_t tmpfs;
+  dev_t tmp_dev = devfs_op.alloc_dev();
+  if (tmpfs_op.create(0x200000, tmp_dev, &tmpfs)) exit(-1);
+  if (vfs.mount("/tmp", &tmpfs)) exit(-1);
 
-  devfs_init();
-  devfs_t devfs;
-  DEVFS_BIND(&devfs);
-  vfs_tag_t dev_root;
-  if (devfs.create(&dev_root)) exit(-1);
-  if (vfs.mount("/dev", &dev_root)) exit(-1);
   VGA_AT(0,6) = VGA_ENTRY('N', WHITE_ON_BLACK);
 
   VGA_AT(0,7) = VGA_ENTRY('d', WHITE_ON_BLACK);
   console_init();
-  console_t console;
-  CONSOLE_BIND(&console);
-  vfs_tag_t console_dev;
-  if (console.create(&console_dev)) exit(-1);
-  if (devfs.add_dev(&dev_root, "console", &console_dev)) exit(-1);
+  console_op_t console_op;
+  CONSOLE_BIND(&console_op);
+  vfs_node_t console;
+  if (console_op.create(&console)) exit(-1);
+  if (devfs_op.add_dev(&devfs, "console", &console, &console.stat.st_rdev)) exit(-1);
   VGA_AT(0,7) = VGA_ENTRY('D', WHITE_ON_BLACK);
 
   VGA_AT(0,8) = VGA_ENTRY('e', WHITE_ON_BLACK);
   ramdisk_init();
-  ramdisk_t ramdisk;
-  RAMDISK_BIND(&ramdisk);
-  vfs_tag_t ramdisk_dev;
-  if (ramdisk.create(0x200000, &ramdisk_dev)) exit(-1);
-  if (devfs.add_dev(&dev_root, "ramdisk$", &ramdisk_dev)) exit(-1);
+  ramdisk_op_t ramdisk_op;
+  RAMDISK_BIND(&ramdisk_op);
+  vfs_node_t ramdisk;
+  if (ramdisk_op.create(0x200000, &ramdisk)) exit(-1);
+  if (devfs_op.add_dev(&devfs, "ramdisk$", &ramdisk, &ramdisk.stat.st_rdev)) exit(-1);
   
   fat16_init();
-  fat16_t fat16;
-  FAT16_BIND(&fat16);
-  vfs_tag_t fat_root;
-  if (fat16.create(&ramdisk_dev, &fat_root)) exit(-1);
-  if (vfs.mount("/home", &fat_root)) exit(-1);
+  fat16_op_t fat16_op;
+  FAT16_BIND(&fat16_op);
+  vfs_fs_t fatfs;
+  if (fat16_op.create(&ramdisk, &fatfs)) exit(-1);
+  if (vfs.mount("/home", &fatfs)) exit(-1);
   VGA_AT(0,8) = VGA_ENTRY('E', WHITE_ON_BLACK);
 
   /*

@@ -9,12 +9,13 @@
 typedef struct cdev cdev_t;
 typedef struct bdev bdev_t;
 
-typedef struct devfs {
-  int (*create)(vfs_tag_t *root);
-  int (*add_dev)(vfs_tag_t *root, const char *name, vfs_tag_t *tag);
-} devfs_t;
+typedef struct devfs_op {
+  int (*create)(vfs_fs_t *fs);
+  int (*add_dev)(vfs_fs_t *fs, const char *name, vfs_node_t *node, dev_t *dev);
+  dev_t (*alloc_dev)();
+} devfs_op_t;
 
-typedef void (*devfs_bind_t)(devfs_t *vfs);
+typedef void (*devfs_bind_t)(devfs_op_t *devfs_op);
 #define DEVFS_ID "coresrv::fs::devfs"
 #define DEVFS_BIND ((devfs_bind_t)BROKER_LOOKUP(DEVFS_ID))
 

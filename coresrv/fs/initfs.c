@@ -1,15 +1,20 @@
 #include <hellbender/fs/initfs.h>
 #include <hellbender/broker.h>
 #include <hellbender/syscall.h>
+#include <hellbender/inline.h>
 
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <dirent.h>
 
-static struct initfs_data {
-  initfs_t initfs;
-  struct vfs_tag_op tag_op;
+static struct initfs {
+  struct initfs_op initfs_op;
+  struct vfs_fs_op fs_op;
   struct vfs_node_op node_op;
-} initfs_data;
+  struct vfs_file_op file_op;
+} initfs;
 
 struct initfs_header {
   uint16_t magic;
@@ -28,12 +33,12 @@ struct initfs_header {
 } __attribute__((packed));
 
 struct initfs_instance {
+  dev_t dev;
   uint8_t *buffer;
   size_t size;
 
   struct initfs_entry {
-    struct initfs_instance *instance;
-    struct initfs_entry *next;
+    struct initfs_entry *sibling;
     struct initfs_entry *children;
     struct initfs_entry *flat_next;
     struct initfs_header *header;
@@ -42,98 +47,137 @@ struct initfs_instance {
     const char *path;
     const uint8_t *data;
     size_t filesize;
+    time_t atime; // last access time.
   } root, *flat_first;
 };
 
-static void set_tag(struct initfs_entry *e, vfs_tag_t *t) {
-  struct initfs_header *h = e->header;
-  t->op = initfs_data.tag_op;
-  t->ino = h->ino;
-  t->uid = h->uid;
-  t->gid = h->gid;
-  t->mode = h->mode;
-  t->impl.data = e;
+struct initfs_impl {
+  struct initfs_instance *instance;
+  struct initfs_entry *node_entry;
+  struct vfs_node *file_node;
+};
+
+#define IMPL(n) ((struct initfs_impl*)&((n)->impl))
+
+static int initfs_stat(vfs_node_t *this, struct stat *buf) {
+  struct initfs_instance *instance = IMPL(this)->instance;
+  struct initfs_entry *entry = IMPL(this)->node_entry;
+  struct initfs_header *header = entry->header;
+  buf->st_dev = instance->dev;
+  buf->st_ino = (ino_t)header->ino;
+  buf->st_mode = (mode_t)header->mode;
+  buf->st_nlink = (nlink_t)1;
+  buf->st_uid = (uid_t)header->uid;
+  buf->st_gid = (gid_t)header->gid;
+  buf->st_rdev = (dev_t)header->rdev;
+  buf->st_size = (off_t)entry->filesize;
+  buf->st_atime = (time_t)entry->atime;
+  buf->st_mtime = (time_t)header->mtime_lo + (((time_t)header->mtime_hi)<<16);
+  buf->st_ctime = buf->st_mtime;
+  buf->st_blksize = (blksize_t)buf->st_size;
+  buf->st_blocks = (blkcnt_t)1;
+  return 0;
 }
 
-int initfs_find(vfs_tag_t *this, const char *name, int name_len, vfs_tag_t *tag) {
-  struct initfs_entry *entry = this->impl.data;
-  for (struct initfs_entry *child = entry->children; child; child = child->next) {
+int initfs_root(vfs_fs_t *this, vfs_node_t *node) {
+  node->op = initfs.node_op;
+  node->impl = this->impl;
+  IMPL(node)->node_entry = &IMPL(this)->instance->root;
+  initfs_stat(node, &node->stat);
+  return 0;
+}
+
+int initfs_open(vfs_node_t *this, int flags, vfs_file_t *file) {
+  // TODO: update atime.
+  file->op = initfs.file_op;
+  file->impl = this->impl;
+  IMPL(file)->file_node = this;
+  if (flags & O_RDONLY) {
+    return 0;
+  } else return EROFS;
+}
+
+int initfs_query(vfs_node_t *this, int iface_id, void **iface) {
+  (void)this;
+  (void)iface_id;
+  (void)iface;
+  return ENOSYS;
+}
+
+static int initfs_read(vfs_file_t *this, void *buf, size_t *nbytes_, off_t *offset_) {
+  size_t nbytes = *nbytes_;
+  off_t offset = *offset_;
+  struct initfs_entry *entry = IMPL(this)->node_entry;
+  if ((size_t)offset >= entry->filesize) nbytes = 0;
+  else if ((offset + nbytes) >= entry->filesize) nbytes = entry->filesize - offset;
+  memcpy(buf, entry->data, nbytes);
+  *nbytes_ = nbytes;
+  *offset_ += nbytes;
+  return 0;
+}
+
+static int initfs_readdir(vfs_node_t *this, void *buf, size_t *nbytes_, off_t *offset_) {
+  size_t nbytes = *nbytes_;
+  off_t offset = *offset_;
+  struct initfs_entry *entry = IMPL(this)->node_entry;
+  struct initfs_entry *child;
+  if (offset == 0) child = entry->children;
+  else child = (struct initfs_entry *)offset;
+  size_t nread = 0;
+  for (struct dirent *de = buf; child && nbytes >= sizeof(*de); 
+       nbytes -= sizeof(*de), nread += sizeof(*de), child = entry->sibling) {
+    de->d_ino = child->header->ino;
+    memcpy(&de->d_name, child->name, child->name_len + 1);
+    de->d_name_len = child->name_len;
+  }
+  *offset_ = (off_t)child;
+  *nbytes_ = nread;
+  return 0;
+}
+
+static int initfs_find(vfs_node_t *this, const char *name, int name_len, vfs_node_t *node) {
+  struct initfs_entry *entry = IMPL(this)->node_entry;
+  for (struct initfs_entry *child = entry->children; child; child = child->sibling) {
     if (strncmp(child->name, name, name_len) == 0
         && child->name[name_len] == '\0') {
-      set_tag(child, tag);
+      node->op = initfs.node_op;
+      node->impl = this->impl;
+      IMPL(node)->node_entry = child;
+      initfs_stat(node, &node->stat);
       return 0;
     }
   }
-  return -1;
+  return ENOENT;
 }
 
-static int set_iter(struct initfs_entry *e, vfs_iter_t *i) {
-  if (e) {
-    set_tag(e, &i->tag);
-    strcpy(i->name, e->name);
-    i->impl.data = e;
-    return 0;
-  } else return -1;
-}
-
-int initfs_next(vfs_iter_t *this) {
-  struct initfs_entry *entry = this->impl.data;
-  struct initfs_entry *child = entry->next;
-  return set_iter(child, this);
-}
-
-int initfs_list(vfs_tag_t *this, vfs_iter_t *iter) {
-  struct initfs_entry *entry = this->impl.data;
-  struct initfs_entry *child = entry->children;
-  iter->next = initfs_next;
-  return set_iter(child, iter);
-}
-
-int initfs_node(vfs_tag_t *this, vfs_node_t *node) {
-  node->tag = *this;
-  node->op = initfs_data.node_op;
-  node->impl.data = 0;
+int initfs_enqueue(vfs_file_t *this, vfs_io_t *io) {
+  vfs_node_t *node = IMPL(this)->file_node;
+  int errno;
+  switch (io->opcode) {
+  case VFS_OPCODE_CLOSE: return 0;
+  case VFS_OPCODE_FLUSH: return 0;
+  case VFS_OPCODE_READ: 
+    errno = initfs_read(this, io->buf, &io->nbytes, &io->offset);
+    break;
+  case VFS_OPCODE_WRITE: return EROFS;
+  case VFS_OPCODE_READDIR:
+    errno = initfs_readdir(node, io->buf, &io->nbytes, &io->offset);
+    break;
+  case VFS_OPCODE_MKNOD: return EROFS;
+  case VFS_OPCODE_UNLINK: return EROFS;
+  case VFS_OPCODE_FIND:
+    errno = initfs_find(node, io->buf, io->nbytes, io->node);
+    break;
+  default: return EINVAL;
+  }
+  if (!errno) io->onsuccess(io); else io->onfailure(io, errno);
   return 0;
 }
 
-int initfs_open(vfs_node_t *this, int flags, mode_t mode) {
+int initfs_cancel(vfs_file_t *this, vfs_io_t *io) {
   (void)this;
-  (void)flags;
-  (void)mode;
-  return -1;
-}
-
-int initfs_close(vfs_node_t *this) {
-  (void)this;
-  return -1;
-}
-
-ssize_t initfs_read(vfs_node_t *this, void *buf, size_t nbyte, off_t offset) {
-  (void)this;
-  (void)buf;
-  (void)nbyte;
-  (void)offset;
-  return -1;
-}
-
-ssize_t initfs_write(vfs_node_t *this, void *buf, size_t nbyte, off_t offset) {
-  (void)this;
-  (void)buf;
-  (void)nbyte;
-  (void)offset;
-  return -1;
-}
-
-int initfs_stat(vfs_node_t *this, struct stat *buf) {
-  (void)this;
-  (void)buf;
-  return -1;
-}
-
-void* initfs_query(vfs_node_t *this, int iface_id) {
-  (void)this;
-  (void)iface_id;
-  return 0;
+  (void)io;
+  return VFS_CANCEL_ALLDONE;
 }
 
 // like strrchr but skips the last character (dir names end with separator).
@@ -204,40 +248,40 @@ static int initfs_parse(struct initfs_instance *instance) {
     entry->path = fullpath;
     entry->data = filesize ? data : NULL;
     entry->filesize = filesize;
+    entry->atime = (time_t)header->mtime_lo + (((time_t)header->mtime_hi)<<16);
     if (parent) {
-      entry->next = parent->children;
+      entry->sibling = parent->children;
       parent->children = entry;
     }
   }
   return has_root ? 0 : -1;
 }
 
-int initfs_create(void *initrd_base, size_t initrd_size, vfs_tag_t *root) {
+int initfs_create(void *initrd_base, size_t initrd_size, dev_t dev, vfs_fs_t *fs) {
+  fs->op = initfs.fs_op;
   struct initfs_instance *instance = calloc(1, sizeof(*instance));
+  instance->dev = dev;
   instance->buffer = (uint8_t*)initrd_base;
   instance->size = initrd_size;
   if (!initfs_parse(instance)) {
-    set_tag(&instance->root, root);
+    IMPL(fs)->instance = instance;
     return 0;
-  } else return 1;
+  } else {
+    free(instance);
+    return -1;
+  }
 }
 
-void initfs_bind(initfs_t *initfs) {
-  *initfs = initfs_data.initfs;
+void initfs_bind(initfs_op_t *initfs_op) {
+  *initfs_op = initfs.initfs_op;
 }
 
 void initfs_init() {
   BROKER_REGISTER(INITFS_ID, REGISTER_SERVICE(initfs_bind));
-  initfs_data.initfs.create = REGISTER_SERVICE(initfs_create);
-
-  initfs_data.tag_op.find = initfs_find;
-  initfs_data.tag_op.list = initfs_list;
-  initfs_data.tag_op.node = initfs_node;
-  
-  initfs_data.node_op.open  = initfs_open;
-  initfs_data.node_op.close = initfs_close;
-  initfs_data.node_op.read  = initfs_read;
-  initfs_data.node_op.write = initfs_write;
-  initfs_data.node_op.stat  = initfs_stat;
-  initfs_data.node_op.query = initfs_query;
+  initfs.initfs_op.create = REGISTER_SERVICE(initfs_create);
+  initfs.fs_op.root       = REGISTER_SERVICE(initfs_root);
+  initfs.node_op.open     = REGISTER_SERVICE(initfs_open);
+  initfs.node_op.query    = REGISTER_SERVICE(initfs_query);
+  initfs.file_op.enqueue  = REGISTER_SERVICE(initfs_enqueue);
+  initfs.file_op.cancel   = REGISTER_SERVICE(initfs_cancel);
 }
