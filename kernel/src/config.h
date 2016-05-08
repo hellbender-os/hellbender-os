@@ -3,22 +3,17 @@
 
 #include <hellbender/inline.h>
 #include <hellbender/service_config.h>
+#include <hellbender/sizes.h>
 
 #define BARRIER asm volatile("" ::: "memory")
 
-#define CACHE_LINE 64
-
-#define PAGE_SIZE 4096
 #define PAGE_VIRTUAL_MASK (~(PAGE_SIZE-1))
 #define PAGE_PHYSICAL_MASK 0xFFFFFFFFF000
 #define PAGE_OFFSET_MASK 0xFFF
 
-#define TABLE_SIZE (512*PAGE_SIZE)
 #define TABLE_VIRTUAL_MASK (~(TABLE_SIZE-1))
 #define TABLE_PHYSICAL_MASK 0xFFFFFFE00000
 #define TABLE_OFFSET_MASK 0x1FFFFF
-
-#define TABLEDIR_SIZE (512*TABLE_SIZE)
 
 #define KERNEL_STACK_SIZE (2*PAGE_SIZE)
 #define USER_STACK_SIZE   (TABLE_SIZE)
