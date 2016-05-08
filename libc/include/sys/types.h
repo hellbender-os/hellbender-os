@@ -1,6 +1,7 @@
 #ifndef _SYS_TYPES_H
 #define _SYS_TYPES_H
 
+#include <stdint.h> // nonconforming
 #include <sys/types.h> // nonconforming: for pthread_t, size_t, uid_t
 
 // The Open Group Base Specifications Issue 7
@@ -32,7 +33,7 @@ typedef unsigned gid_t;
 typedef unsigned id_t;
 // Used as a general identifier; can be used to contain at least a pid_t, uid_t, or gid_t.
 
-typedef unsigned ino_t;
+typedef uint64_t ino_t;
 // Used for file serial numbers.
 
 typedef unsigned key_t;
@@ -44,10 +45,10 @@ typedef unsigned mode_t;
 typedef unsigned nlink_t;
 // Used for link counts.
 
-typedef int off_t;
+typedef int64_t off_t;
 // Used for file sizes.
 
-typedef unsigned pid_t;
+typedef int pid_t;
 // Used for process IDs and process group IDs.
 
 typedef struct {
