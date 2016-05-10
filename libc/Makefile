@@ -49,6 +49,12 @@ stdlib/qsort.o \
 stdlib/strtol.o \
 stdlib/ulltoa.o \
 stdlib/utoa.o \
+stdio/fflush.o \
+stdio/fprintf.o \
+stdio/fputc.o \
+stdio/fputs.o \
+stdio/fwrite.o \
+stdio/sprintf.o \
 string/memccpy.o \
 string/memchr.o \
 string/memcmp.o \
