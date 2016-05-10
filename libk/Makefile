@@ -17,6 +17,7 @@ CFLAGS:=$(CFLAGS) -std=gnu11 -ffreestanding -fbuiltin -mcmodel=large -mno-red-zo
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libk -Iinclude
 
 OBJS:=\
+build/src/io.o \
 build/stdlib/abs.o \
 build/stdlib/atoi.o \
 build/stdlib/bsearch.o \

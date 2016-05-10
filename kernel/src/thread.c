@@ -41,7 +41,7 @@ struct thread* thread_create(struct process* process,
   struct thread_state *state = (struct thread_state*)t->rsp_backup;
   state->context.rip = entry_point;
   state->context.cs = UCODE_SELECTOR;
-  state->context.rflags = 0x200; // IF enabled.
+  state->context.rflags = 0x3200; // IF enabled; IOPL==3.
   state->context.rsp = stack_top; // MUST point to struct libc_init!
   state->context.ss = UDATA_SELECTOR;
 

@@ -30,6 +30,7 @@ src/syscall.o \
 src/vga.o \
 src/rbtree.o \
 src/dict.o \
+src/io.o \
 pthread/mutex.o \
 pthread/rwlock.o \
 stdlib/abs.o \

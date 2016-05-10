@@ -16,9 +16,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-// this is used by some inline assembler to ensure memory ordering.
-unsigned long __force_order;
-
 struct kernel kernel;
 
 __attribute__((__noreturn__))
