@@ -5,6 +5,7 @@
 #include "thread.h"
 #include "process.h"
 #include "service.h"
+#include "log.h"
 
 #include <hellbender/debug.h>
 
@@ -107,7 +108,9 @@ void isr_routine_14(struct thread_state* state, unsigned ring) {
            && vmem->flags & PROCESS_VMEM_SEMI_COW) {
     page_copy_on_write(ptr);
   }
-  else { kernel_panic(); }
+  else { 
+    log_error("isr", "page_fault", "Unknown page fault");
+  }
   // TODO do what page fault does.
 }
 

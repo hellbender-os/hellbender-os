@@ -2,38 +2,56 @@
 #define __HELLBENDER_KERNEL_VGA_H__
 
 #include "config.h"
+#include <hellbender/inline.h>
+
 #include <stdint.h>
 
-enum vga_color
-{
-	COLOR_BLACK = 0,
-	COLOR_BLUE = 1,
-	COLOR_GREEN = 2,
-	COLOR_CYAN = 3,
-	COLOR_RED = 4,
-	COLOR_MAGENTA = 5,
-	COLOR_BROWN = 6,
-	COLOR_LIGHT_GREY = 7,
-	COLOR_DARK_GREY = 8,
-	COLOR_LIGHT_BLUE = 9,
-	COLOR_LIGHT_GREEN = 10,
-	COLOR_LIGHT_CYAN = 11,
-	COLOR_LIGHT_RED = 12,
-	COLOR_LIGHT_MAGENTA = 13,
-	COLOR_LIGHT_BROWN = 14,
-	COLOR_WHITE = 15,
-};
+#define VGA_RGB(r,g,b) (((r)&0xff)|(((g)&0xff)<<8)|(((b)&0xff)<<16))
 
-#define VGA_COLOR(fg, bg) (((uint8_t)fg) | (((uint8_t)bg) << 4))
-#define VGA_ENTRY(ch, co) (((uint16_t)ch) | (((uint16_t)co) << 8))
-#define WHITE_ON_BLACK (VGA_COLOR(COLOR_WHITE, COLOR_BLACK))
+struct vga {
+  uint32_t *txt_shadow; // text buffer of rows*cols; red,green<<8,blue<<16,char<<24
+  uint8_t *fb;          // rgb24 or rgb32 of rows*row_step
+  uint64_t fb_size;
+  unsigned txt_rows, txt_cols;
+  unsigned txt_row, txt_col;
+  uint32_t *txt_cursor;
+  unsigned row_step, col_step;
+  unsigned stride32, stride64; // how many dwords/qwords per scanline
+  uint8_t *fb_cursor;
+  uint32_t fg, bg;
+  uint32_t fg24[3], bg24[3];
+  uint64_t fg32, bg32;
 
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
+  struct vga_op {
+    void (*set_fg)(uint32_t rgb);
+    void (*set_bg)(uint32_t rgb);
+    void (*putc)(char c);
+    void (*puts)(const char* str);
+  } op;
+} vga;
 
-static uint16_t* const VGA_MEMORY = (uint16_t*) (KERNEL_OFFSET+0xB8000);
-#define VGA_MEMORY_SIZE 0x20000
+void vga_init();
 
-#define VGA_AT(row, col) (VGA_MEMORY[row*(VGA_WIDTH)+col])
+void vga_set_cursor(unsigned row, unsigned col);
+
+void vga_get_cursor(unsigned *row, unsigned *col);
+
+void vga_newl();
+
+INLINE void vga_set_fg(uint32_t rgb) {
+  vga.op.set_fg(rgb);
+}
+
+INLINE void vga_set_bg(uint32_t rgb) {
+  vga.op.set_bg(rgb);
+}
+
+INLINE void vga_putc(char c) {
+  vga.op.putc(c);
+}
+
+INLINE void vga_puts(const char* str) {
+  vga.op.puts(str);
+}
 
 #endif

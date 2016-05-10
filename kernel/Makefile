@@ -44,6 +44,8 @@ src/syscall.o \
 src/signal.o \
 src/scheduler.o \
 src/service.o \
+src/vga.o \
+src/log.o \
 
 all: hellbender
 
@@ -59,6 +61,9 @@ hellbender: $(OBJS) linker.ld
 
 %.o: %.S src/struct2asm.inc src/syscall_resolve.inc
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS) -DASM
+
+src/vga_font.h: fonts/Bm437_IBM_VGA8.FON
+	./fonts/fontool.py -o $@ $<
 
 src/struct2asm.inc: src/struct2asm.c
 	$(CC) -S $< -o - $(CFLAGS) $(CPPFLAGS) | grep '^->' | awk '($$1 == "->") { print "#define " $$2 " " substr($$3,2) }' > $@

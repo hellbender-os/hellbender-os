@@ -3,6 +3,7 @@
 #include "lomem.h"
 #include "page.h"
 #include "kernel.h"
+#include "log.h"
 
 #include <stdint.h>
 
@@ -52,7 +53,7 @@ static void idt_set_entry(unsigned interrupt, uint64_t offset) {
 
 void idt_init() {
   // allocate IDT
-  if (idt_ptr.size > 4096) kernel_panic();
+  if (idt_ptr.size > 4096) log_error("idt", "init", "IDT segment too large");
   idt_table = (struct idt_entry*)kernel_p2v(page_clear(lomem_alloc_4k()));
   idt_ptr.address = (uintptr_t)idt_table;
 

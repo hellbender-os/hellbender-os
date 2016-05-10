@@ -7,6 +7,7 @@
 #include "vga.h"
 #include "scheduler.h"
 #include "service.h"
+#include "log.h"
 
 #include <hellbender/debug.h>
 #include <hellbender/libc_init.h>
@@ -29,13 +30,18 @@ void kernel_panic() {
 
 void kernel_add_cpu(struct cpu* cpu) {
   SPIN_GUARD_RAW(kernel.lock);
-  if (kernel.n_cpus == KERNEL_MAX_CPUS) kernel_panic();
-  kernel.cpus[kernel.n_cpus++] = cpu;
+  if (kernel.n_cpus == KERNEL_MAX_CPUS) {
+    log_warn("kernel", "add_cpu", "Too many CPUs");
+  } else {
+    kernel.cpus[kernel.n_cpus++] = cpu;
+  }
 }
 
 void kernel_start_core() {
   // create the core service.
-  if (multiboot_data.coresrv_module == -1) kernel_panic();
+  if (multiboot_data.coresrv_module == -1) {
+    log_error("kernel", "start_core", "Coresrv module not found");
+  }
   module_t *core_mod = multiboot_data.modules + multiboot_data.coresrv_module;
   Elf32_Ehdr *elf = (Elf32_Ehdr*)kernel_p2v(core_mod->mod_start);
   // each ELF header may end up as a memory block.
@@ -63,7 +69,9 @@ void kernel_start_core() {
     // virtual address range where pages will be moved into:
     pm->v_base = pd->vmem_base + (uintptr_t)prog_header->p_vaddr;
     pm->v_size = (size_t)prog_header->p_memsz;
-    if (pm->v_base % TABLE_SIZE) kernel_panic(); // each block must be at table boundary!
+    if (pm->v_base % TABLE_SIZE) { // each block must be at table boundary!
+      log_error("kernel", "start_core", "Unaligned ELF segment");
+    }
 
     // actual memory address range to move:
     pm->m_base = kernel_p2v(core_mod->mod_start + prog_header->p_offset);
@@ -83,7 +91,7 @@ void kernel_start_core() {
   uintptr_t stack = page_clear(lomem_alloc_4k());
   size_t stack_size = PAGE_SIZE;
   uintptr_t stack_top = stack + stack_size;
-  if (!stack) kernel_panic();
+  if (!stack) log_error("kernel", "start_core", "Out of memory");
   {
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
     pm->flags = PAGE_WRITEABLE | PAGE_NOEXECUTE;
@@ -99,7 +107,9 @@ void kernel_start_core() {
 
   // top of stack is used for libc & coresrv initialization data.
   pd->stack_reserved = sizeof(struct libc_init) + sizeof(struct coresrv_init);
-  if (pd->stack_reserved > stack_size) kernel_panic();
+  if (pd->stack_reserved > stack_size) {
+    log_error("kernel", "start_core", "Stack too small");
+  }
   struct coresrv_init *coresrv = 
     (struct coresrv_init *)kernel_p2v(stack_top - sizeof(struct coresrv_init));
   struct libc_init *libc = (struct libc_init *)kernel_p2v(stack_top - pd->stack_reserved);
@@ -119,8 +129,8 @@ void kernel_start_core() {
   {
     struct process_memory *pm = pd->memory_maps + (pd->n_maps++);
     pm->flags = PAGE_WRITETHROUGH | PAGE_WRITEABLE | PAGE_NOEXECUTE;
-    pm->m_base = VGA_MEMORY;
-    pm->m_size = VGA_MEMORY_SIZE;
+    pm->m_base = vga.fb;
+    pm->m_size = vga.fb_size;
     pm->v_base = page_table_round_up(vmem_top);
     pm->v_size = pm->m_size;
     uintptr_t v_top = pm->v_base + pm->v_size;

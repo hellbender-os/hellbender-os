@@ -30,6 +30,7 @@
 /* The flags for the Multiboot header. */
 #define MULTIBOOT_FLAGS_ALIGN   (1<<0)
 #define MULTIBOOT_FLAGS_MEMINFO (1<<1)
+#define MULTIBOOT_FLAGS_GFXINFO (1<<2)
      
 /* The magic number passed by a Multiboot-compliant boot loader. */
 #define MULTIBOOT_BOOTLOADER_MAGIC      0x2BADB002
@@ -60,6 +61,10 @@ typedef struct multiboot_header
   uint32_t load_end_addr;
   uint32_t bss_end_addr;
   uint32_t entry_addr;
+  uint32_t mode_type;
+  uint32_t width;
+  uint32_t height;
+  uint32_t depth;
 } multiboot_header_t;
      
 /* The symbol table for a.out. */
@@ -84,19 +89,30 @@ typedef struct elf_section_header_table
 typedef struct multiboot_info
 {
   uint32_t flags;
-  uint32_t mem_lower;
-  uint32_t mem_upper;
-  uint32_t boot_device;
-  uint32_t cmdline;
-  uint32_t mods_count;
-  uint32_t mods_addr;
+  uint32_t mem_lower;         //    (present if flags[0] is set)
+  uint32_t mem_upper;         //    (present if flags[0] is set)
+  uint32_t boot_device;       //    (present if flags[1] is set)
+  uint32_t cmdline;           //    (present if flags[2] is set)
+  uint32_t mods_count;        //    (present if flags[3] is set)
+  uint32_t mods_addr;         //    (present if flags[3] is set)
   union
   {
     aout_symbol_table_t aout_sym;
     elf_section_header_table_t elf_sec;
-  } u;
-  uint32_t mmap_length;
-  uint32_t mmap_addr;
+  } u;                        //    (present if flags[4] or flags[5] is set)
+  uint32_t mmap_length;       //    (present if flags[6] is set)
+  uint32_t mmap_addr;         //    (present if flags[6] is set)
+  uint32_t drives_length;     //    (present if flags[7] is set)
+  uint32_t drives_addr;       //    (present if flags[7] is set)
+  uint32_t config_table;      //    (present if flags[8] is set)
+  uint32_t boot_loader_name;  //    (present if flags[9] is set)
+  uint32_t apm_table;         //    (present if flags[10] is set)
+  uint32_t vbe_control_info;  //    (present if flags[11] is set)
+  uint32_t vbe_mode_info;
+  uint32_t vbe_mode;
+  uint32_t vbe_interface_seg;
+  uint32_t vbe_interface_off;
+  uint32_t vbe_interface_len;
 } multiboot_info_t;
      
 /* The module structure. */
@@ -120,6 +136,62 @@ typedef struct memory_map
   uint32_t type;
 } memory_map_t;
 
+typedef struct __attribute__((packed)) vbe_control_info {
+  uint32_t vbe_signature;        // db 'VESA' VBE Signature
+  uint16_t vbe_version;          // dw 0200h or 0300h ; VBE Version
+  uint32_t oem_string_ptr;       // dd ? ; Pointer to OEM String
+  uint32_t capabilities;         // db 4 dup (?) ; Capabilities of graphics controller
+  uint32_t video_mode_ptr;       // dd ? ; Pointer to VideoModeList (uint16_t*)
+  uint16_t total_memory;         // dw ? ; Number of 64kb memory blocks
+                                 //  ; Added for VBE 2.0
+  //uint16_t oem_software_rev;     // dw ? ; VBE implementation Software revision
+  //uint32_t oem_vendor_name_ptr;  // dd ? ; Pointer to Vendor Name String
+  //uint32_t oem_product_name_ptr; // dd ? ; Pointer to Product Name String
+  //uint32_t oem_product_rev_ptr;  // dd ? ; Pointer to Product Revision String
+  //uint8_t reserved[222];         // db 222 dup (?) ; VBE implementation scratch area
+  //uint8_t oem_data[256];         // db 256 dup (?) ; Data Area for OEM Strings
+} vbe_control_info_t;
+
+typedef struct __attribute__((packed)) vbe_mode_info {
+  // ; Mandatory information for all VBE revisions
+  uint16_t mode_attributes;       // dw ? ; mode attributes
+  uint8_t win_a_attributes;       // db ? ; window A attributes
+  uint8_t win_b_attributes;       // db ? ; window B attributes
+  uint16_t win_granularity;       // dw ? ; window granularity
+  uint16_t win_size;              // dw ? ; window size
+  uint16_t win_a_segment;         // dw ? ; window A start segment
+  uint16_t win_b_segment;         // dw ? ; window B start segment
+  uint32_t win_func_ptr;          // dd ? ; pointer to window function
+  uint16_t bytes_per_scanline;    // dw ? ; bytes per scan line
+  // ; Mandatory information for VBE 1.2 and above
+  uint16_t x_resolution;          // dw ? ; horizontal resolution in pixels or characters
+  uint16_t y_resolution;          // dw ? ; vertical resolution in pixels or characters
+  uint8_t x_char_size;            // db ? ; character cell width in pixels
+  uint8_t y_char_size;            // db ? ; character cell height in pixels
+  uint8_t number_of_planes;       // db ? ; number of memory planes
+  uint8_t bits_per_pixel;         // db ? ; bits per pixel
+  uint8_t number_of_banks;        // db ? ; number of banks
+  uint8_t memory_model;           // db ? ; memory model type
+  uint8_t bank_size;              // db ? ; bank size in KB
+  uint8_t number_of_image_pages;  // db ? ; number of images
+  uint8_t reserved_1;             // db 1 ; reserved for page function
+  // ; Direct Color fields (required for direct/6 and YUV/7 memory models)
+  uint8_t red_mask_size;          // db ? ; size of direct color red mask in bits
+  uint8_t red_field_position;     // db ? ; bit position of lsb of red mask
+  uint8_t green_mask_size;        // db ? ; size of direct color green mask in bits
+  uint8_t green_field_position;   // db ? ; bit position of lsb of green mask
+  uint8_t blue_mask_size;         // db ? ; size of direct color blue mask in bits
+  uint8_t blue_field_position;    // db ? ; bit position of lsb of blue mask
+  uint8_t rsvd_mask_size;         // db ? ; size of direct color reserved mask in bits
+  uint8_t rsvd_field_position;    // db ? ; bit position of lsb of reserved mask
+  uint8_t direct_color_mode_info; // db ? ; direct color mode attributes
+  // ; Mandatory information for VBE 2.0 and above
+  uint32_t phys_base_ptr;         // dd ? ; physical address for flat memory frame buffer
+  uint32_t offscreen_mem_offset;  // dd ? ; pointer to start of off screen memory
+  uint16_t offscreen_mem_size;    // dw ? ; amount of off screen memory in 1k units
+  //uint8_t reserved_2;             // db 206 dup (?) ; remainder of ModeInfoBlock
+} vbe_mode_info_t;
+
 /* Structure to copy all multiboot stuff into (because otherwise we cannot
  * use any memory due to the possibility of overwriting multiboot data).
  */
@@ -141,6 +213,9 @@ struct multiboot_data {
   uintptr_t memory_bottom;
   uintptr_t memory_top;
   uintptr_t allocated_top; // anything above this is free.
+
+  vbe_control_info_t vbe_info;
+  vbe_mode_info_t mode_info;
 };
 
 extern struct multiboot_data multiboot_data;

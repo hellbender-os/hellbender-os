@@ -37,8 +37,14 @@ syscall_alloc_tables:
   int $SYSCALL_INT
   ret
 
+.global syscall_log
+syscall_log:
+  mov $(7-1), %rax
+  int $SYSCALL_INT
+  ret
+
 .global syscall_unknown
 syscall_unknown:
-  mov $(7-1), %rax
+  mov $(8-1), %rax
   int $SYSCALL_INT
   ret

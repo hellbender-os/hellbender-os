@@ -2,4 +2,4 @@
 set -e
 . ./iso.sh
 
-qemu-system-$(./target-triplet-to-arch.sh $HOST) -nographic -s -k fi -curses -cdrom hellbender.iso
+qemu-system-$(./target-triplet-to-arch.sh $HOST) -s -k fi -cdrom hellbender.iso

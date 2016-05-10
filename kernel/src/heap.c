@@ -4,6 +4,7 @@
 #include "config.h"
 #include "cpu.h"
 #include "spin.h"
+#include "log.h"
 
 struct heap_header {
   int64_t size; // size of the whole block == user data size + sizeof(struct heap_header).
@@ -36,7 +37,7 @@ struct heap_wilderness {
 static void* heap_large_alloc(size_t bytes) {
   unsigned n_pages = (bytes + sizeof(struct heap_header) + PAGE_SIZE - 1) / PAGE_SIZE;
   uintptr_t address = lomem_alloc_pages(n_pages);
-  if (!address) kernel_panic();
+  if (!address) log_error("heap", "large_alloc", "Out of memory");
   struct heap_block *block = (struct heap_block*)kernel_p2v(address);
   block->hdr.size = -(int)n_pages;
   return HEAP_BLOCK2PTR(block);
@@ -79,7 +80,7 @@ void* heap_alloc(size_t bytes) {
       heap_wilderness.ptr += block_size;
       heap_wilderness.size -= block_size;
       return HEAP_BLOCK2PTR(block);
-    } else kernel_panic();
+    } else log_error("heap", "alloc", "Out of memory");
   }
 }
 

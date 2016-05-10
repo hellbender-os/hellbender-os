@@ -3,6 +3,7 @@
 #include "isr.h"
 #include "signal.h"
 #include "service.h"
+#include "log.h"
 
 #include <stdint.h>
 
@@ -30,8 +31,7 @@
 uint64_t syscall_exit(int retval) {
   (void)retval;
   // TODO: actual exit
-  VGA_AT(0,10) = VGA_ENTRY('!', WHITE_ON_BLACK);
-  kernel_panic();
+  log_error("syscall", "exit", "TODO");
 }
 
 uint64_t syscall_set_signal_mask(uint64_t blocked_mask) {
@@ -71,8 +71,13 @@ uint64_t syscall_alloc_tables(uint64_t n_tables) {
   return 0;
 }
 
+uint64_t syscall_log(const char *component, const char *function, const char *message) {
+  log_info(component, function, message);
+  return 0;
+}
+
 // this should be last.
 uint64_t syscall_unknown() {
   // TODO: kill the process?
-  kernel_panic();
+  log_error("syscall", "unknown", "TODO");
 }

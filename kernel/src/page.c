@@ -1,6 +1,7 @@
 #include "page.h"
 #include "kernel.h"
 #include "lomem.h"
+#include "log.h"
 
 // page directory for the first 1 Gb.
 uint64_t page_dir[512] __attribute__((aligned(PAGE_SIZE)));
@@ -39,7 +40,7 @@ void* page_map_4k(void* virtual, uintptr_t physical, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *page = (uint64_t *)(((address>> 9) & ~7) | 0xFFFFFF8000000000);
   if (!*page) *page = (physical & PAGE_PHYSICAL_MASK) | attributes;
-  else kernel_panic(); // overwriting a page is not allowed!
+  else log_error("page", "map_4k", "Invalid argument"); // overwriting a page is not allowed!
   return (void*)(((uintptr_t)virtual) & PAGE_PHYSICAL_MASK);
 }
 
@@ -49,7 +50,7 @@ void* page_map_2M(void* virtual, uintptr_t physical, uint64_t attributes) {
   uintptr_t address = (uintptr_t)virtual;
   uint64_t *pt = (uint64_t *)(((address>>18) & ~7) | 0xFFFFFFFFC0000000);
   if (!*pt) *pt = (physical & TABLE_PHYSICAL_MASK) | attributes | PAGE_LARGE;
-  else kernel_panic(); // overwriting a page table is not allowed!
+  else log_error("page", "map_2M", "Invalid argument"); // overwriting a page table is not allowed!
   return (void*)(((uintptr_t)virtual) & TABLE_PHYSICAL_MASK);
 }
 
@@ -60,7 +61,7 @@ uintptr_t page_unmap_4k(void* virtual) {
     uintptr_t physical = *page & PAGE_PHYSICAL_MASK;
     *page = 0;
     return physical;
-  } else kernel_panic(); // unmapping non-existing page.
+  } else log_error("page", "unmap_4k", "Invalid argument"); // unmapping non-existing page.
 }
 
 uintptr_t page_unmap_2M(void* virtual) {
@@ -70,7 +71,7 @@ uintptr_t page_unmap_2M(void* virtual) {
     uintptr_t physical = *pt & TABLE_PHYSICAL_MASK;
     *pt = 0;
     return physical;
-  } else kernel_panic(); // unmapping non-existing page.
+  } else log_error("page", "unmap_2M", "Invalid argument"); // unmapping non-existing page.
 }
 
 uintptr_t page_remap_4k(void* virtual, uint64_t attributes) {

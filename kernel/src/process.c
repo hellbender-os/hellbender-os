@@ -4,6 +4,7 @@
 #include "lomem.h"
 #include "page.h"
 #include "scheduler.h"
+#include "log.h"
 
 #include <hellbender/libc_init.h>
 #include <string.h>
@@ -45,8 +46,8 @@ struct process* process_create(struct process_descriptor* desc) {
     uintptr_t v_size = m->v_size;
     uintptr_t m_base = (uintptr_t)m->m_base;
     intptr_t m_size = m->m_size;
-    if (v_base % TABLE_SIZE) kernel_panic();
-    if (m_base % PAGE_SIZE) kernel_panic();
+    if (v_base % TABLE_SIZE) log_error("process", "create", "Unaligned virtual base");
+    if (m_base % PAGE_SIZE) log_error("process", "create", "Unaligned physical base");
     if (v_size % PAGE_SIZE) v_size += PAGE_SIZE - v_size % PAGE_SIZE;
     
     // reserve virtual memory to hold the physical pages.
@@ -103,13 +104,19 @@ struct process* process_create(struct process_descriptor* desc) {
 }
 
 uint64_t* process_page_table(struct process* proc, uintptr_t address) {
-  if (address < proc->vmem_base) kernel_panic();
-  if (address + PAGE_SIZE > proc->vmem_base + proc->vmem_size) kernel_panic();
+  if (address < proc->vmem_base) {
+    log_error("process", "page_table", "Address too low");
+  }
+  if (address + PAGE_SIZE > proc->vmem_base + proc->vmem_size) {
+    log_error("process", "page_table", "Address too high");
+  }
   address -= proc->vmem_base;
 
   // we support just 512GB of virtual address space/process.
   uint64_t pdpt_offset = (address>>39) & 0x1FF;
-  if (pdpt_offset > 0) kernel_panic();
+  if (pdpt_offset > 0) {
+    log_error("process", "page_table", "Out of bounds");
+  }
   uint64_t *pdpt = proc->pdpt;
 
   uint64_t pd_offset = (address>>30) & 0x1FF;

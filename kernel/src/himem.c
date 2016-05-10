@@ -4,6 +4,7 @@
 #include "page.h"
 #include "spin.h"
 #include "lomem.h"
+#include "log.h"
 
 /* We keep free pages in a "linked directory list".
  * Each directory contains up to DIRECTORY_SIZE free pages.
@@ -138,17 +139,14 @@ uintptr_t himem_alloc_page() {
     return page;
   }
 
-  // we have run out of memory..
-  kernel_panic();
+  log_error("himem", "alloc_page", "Out of memory");
 }
 
 void himem_free_page(uintptr_t page) {
   SPIN_GUARD_RAW(himem.lock);
 
   // TODO: use a magic token to check that the page is not mapped!
-  if (page < HIGH_MEMORY_LIMIT) {
-    kernel_panic();
-  }
+  if (page < HIGH_MEMORY_LIMIT) log_error("himem", "alloc_page", "Invalid argument");
   
   // try to put the page into the second directory.
   if (himem.second->header.free < DIRECTORY_SIZE) {

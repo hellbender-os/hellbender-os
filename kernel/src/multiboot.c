@@ -4,13 +4,21 @@
 
 #include <string.h>
 
-#define FLAGS (MULTIBOOT_FLAGS_ALIGN | MULTIBOOT_FLAGS_MEMINFO)
+#define FLAGS (MULTIBOOT_FLAGS_ALIGN | MULTIBOOT_FLAGS_MEMINFO | MULTIBOOT_FLAGS_GFXINFO)
 
 multiboot_header_t multiboot_header __attribute__ ((section (".multiboot"))) = {
-  MULTIBOOT_HEADER_MAGIC,
-  FLAGS,
-  -(MULTIBOOT_HEADER_MAGIC + FLAGS),
-  0, 0, 0, 0, 0
+  MULTIBOOT_HEADER_MAGIC,              // magic
+  FLAGS,                               // flags
+  -(MULTIBOOT_HEADER_MAGIC + FLAGS),   // checksum
+  0,                                   // header_addr   (flag bit 16)
+  0,                                   // load_addr     (flag bit 16)
+  0,                                   // load_end_addr (flag bit 16)
+  0,                                   // bss_end_addr  (flag bit 16)
+  0,                                   // entry_addr    (flag bit 16)
+  0,                                   // mode_type     (flag MULTIBOOT_FLAGS_GFXINFO)
+  1024,                                // width         (flag MULTIBOOT_FLAGS_GFXINFO)
+  768,                                 // height        (flag MULTIBOOT_FLAGS_GFXINFO)
+  24,                                  // depth         (flag MULTIBOOT_FLAGS_GFXINFO)
 };
 
 struct multiboot_data multiboot_data;
@@ -76,6 +84,12 @@ int multiboot_copy(multiboot_info_t *info) {
     if (mod_top > multiboot_data.allocated_top) multiboot_data.allocated_top = mod_top;
   }
 
+  if (info->vbe_control_info) {
+    multiboot_data.vbe_info = *(vbe_control_info_t*)(uintptr_t)info->vbe_control_info;
+  }
+  if (info->vbe_mode_info) {
+    multiboot_data.mode_info = *(vbe_mode_info_t*)(uintptr_t)info->vbe_mode_info;
+  }
   return 0;
 }
 

@@ -4,6 +4,7 @@
 #include "thread.h"
 #include "page.h"
 #include "lomem.h"
+#include "log.h"
 #include <hellbender/debug.h>
 
 // small stack to run the kernel.
@@ -23,7 +24,7 @@ void cpu_enable_features() {
                 "xorq (%%rsp), %0       \n"
                 "popfq                  \n"
                 : "=r"(id_bit));
-  if (!id_bit) kernel_panic();
+  if (!id_bit) log_error("cpu", "enable_features", "CPUID not supported");
 
   // CPU Vendor string.
   //uint32_t max_func, vendor1, vendor2, vendor3;
@@ -33,7 +34,7 @@ void cpu_enable_features() {
   register uint32_t func = 0x80000001;
   register uint32_t ebx, ecx, edx;
   asm volatile ("cpuid" : "+a"(func), "=b"(ebx), "=c"(ecx), "=d"(edx));
-  if ((edx & (1<<20)) == 0) kernel_panic();
+  if ((edx & (1<<20)) == 0) log_error("cpu", "enable_features", "No-execute not supported");
 
   // Enable no-execute feature:
   #define MSR_EFER 0xC0000080

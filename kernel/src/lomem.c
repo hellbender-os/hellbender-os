@@ -4,6 +4,7 @@
 #include "config.h"
 #include "spin.h"
 #include "page.h"
+#include "log.h"
 
 #include <hellbender/list.h>
 
@@ -203,7 +204,7 @@ uintptr_t lomem_alloc_2M() {
 }
 
 uintptr_t lomem_alloc_pages(unsigned count) {
-  if (count >= (TABLE_SIZE/PAGE_SIZE)) kernel_panic();
+  if (count >= (TABLE_SIZE/PAGE_SIZE)) log_error("lomem", "alloc_pages", "Invalid argument");
 
   // first check if split tables have enough unused pages.
   for (list_item_t *table_item = list_first(&lomem.split_tables); table_item;
