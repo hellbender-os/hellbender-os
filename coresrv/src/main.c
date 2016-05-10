@@ -10,6 +10,7 @@
 #include <hellbender/fs/fat16.h>
 #include <hellbender/dev/console.h>
 #include <hellbender/dev/ramdisk.h>
+#include <hellbender/dev/pci.h>
 
 #include <signal.h>
 #include <stdlib.h>
@@ -20,6 +21,7 @@ void vfs_init();
 void initfs_init();
 void tmpfs_init();
 void devfs_init();
+void pci_init();
 void fat16_init();
 void console_init();
 void ramdisk_init();
@@ -37,13 +39,10 @@ int main(int argc, char* argv[]) {
   VFS_BIND(&vfs);
   syscall_log("coresrv", "main", "created VFS");
 
+  // devfs needs to be bound first so that we can allocate device numbers.
   devfs_init();
   devfs_op_t devfs_op;
   DEVFS_BIND(&devfs_op);
-  vfs_fs_t devfs;
-  if (devfs_op.create(&devfs)) exit(-1);
-  if (vfs.mount("/dev", &devfs)) exit(-1);
-  syscall_log("coresrv", "main", "mounted devfs at /dev");
 
   initfs_init();
   initfs_op_t initfs_op;
@@ -54,6 +53,35 @@ int main(int argc, char* argv[]) {
   if (vfs.mount("/", &initfs)) exit(-1);
   syscall_log("coresrv", "main", "mounted initfs at /");
 
+  vfs_fs_t devfs;
+  if (devfs_op.create(&devfs)) exit(-1);
+  if (vfs.mount("/dev", &devfs)) exit(-1);
+  syscall_log("coresrv", "main", "mounted devfs at /dev");
+
+  pci_init();
+  pci_op_t pci_op;
+  PCI_BIND(&pci_op);
+  vfs_node_t pci;
+  if (pci_op.create(&pci)) exit(-1);
+  if (devfs_op.add_dev(&devfs, "pci", &pci, &pci.stat.st_rdev)) exit(-1);
+  syscall_log("coresrv", "main", "added /dev/pci");
+
+  console_init();
+  console_op_t console_op;
+  CONSOLE_BIND(&console_op);
+  vfs_node_t console;
+  if (console_op.create(&console)) exit(-1);
+  if (devfs_op.add_dev(&devfs, "console", &console, &console.stat.st_rdev)) exit(-1);
+  syscall_log("coresrv", "main", "added /dev/console");
+
+  ramdisk_init();
+  ramdisk_op_t ramdisk_op;
+  RAMDISK_BIND(&ramdisk_op);
+  vfs_node_t ramdisk;
+  if (ramdisk_op.create(0x200000, &ramdisk)) exit(-1);
+  if (devfs_op.add_dev(&devfs, "ramdisk$", &ramdisk, &ramdisk.stat.st_rdev)) exit(-1);
+  syscall_log("coresrv", "main", "added /dev/ramdisk");
+
   tmpfs_init();
   tmpfs_op_t tmpfs_op;
   TMPFS_BIND(&tmpfs_op);
@@ -62,22 +90,6 @@ int main(int argc, char* argv[]) {
   if (tmpfs_op.create(0x200000, tmp_dev, &tmpfs)) exit(-1);
   if (vfs.mount("/tmp", &tmpfs)) exit(-1);
   syscall_log("coresrv", "main", "mounted tmpfs at /tmp");
-
-  console_init();
-  console_op_t console_op;
-  CONSOLE_BIND(&console_op);
-  vfs_node_t console;
-  if (console_op.create(&console)) exit(-1);
-  if (devfs_op.add_dev(&devfs, "console", &console, &console.stat.st_rdev)) exit(-1);
-  syscall_log("coresrv", "main", "added console");
-
-  ramdisk_init();
-  ramdisk_op_t ramdisk_op;
-  RAMDISK_BIND(&ramdisk_op);
-  vfs_node_t ramdisk;
-  if (ramdisk_op.create(0x200000, &ramdisk)) exit(-1);
-  if (devfs_op.add_dev(&devfs, "ramdisk$", &ramdisk, &ramdisk.stat.st_rdev)) exit(-1);
-  syscall_log("coresrv", "main", "added ramdisk");
   
   fat16_init();
   fat16_op_t fat16_op;
