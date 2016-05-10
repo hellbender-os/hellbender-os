@@ -1,6 +1,6 @@
 #include "heap.h"
 
-#include <hellbender/config.h>
+#include <hellbender/sizes.h>
 #include <hellbender/syscall.h>
 #include <hellbender/fifo.h>
 
@@ -35,6 +35,7 @@
                             // blocks larger than this require several regions.
 #define N_SLABS 63          // slab bins for sizes 16,32,48,...,976,992,1008
 
+#define TABLE_VIRTUAL_MASK (~(TABLE_SIZE-1))
 #define REGION_PTR_MASK (~(REGION_SIZE-1))
 
 #define REGION_PTR(ptr) ((void*)(((uintptr_t)(ptr)) & REGION_PTR_MASK))
