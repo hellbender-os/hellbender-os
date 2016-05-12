@@ -46,12 +46,13 @@ src/scheduler.o \
 src/service.o \
 src/vga.o \
 src/log.o \
+src/sdt.o \
 
 all: hellbender
 
 .PHONY: all clean install install-headers
 
-hellbender: $(OBJS) linker.ld
+hellbender: $(OBJS) linker.ld include/hellbender/syscall.h
 	$(CC) -Wl,-Map,hellbender.map -T linker.ld -o $@.elf64 $(LDFLAGS) $(OBJS) $(LIBS)
 	objcopy --strip-debug -I elf64-x86-64 -O elf32-i386 $@.elf64 $@
 	objcopy --only-keep-debug $@.elf64 $@.sym
