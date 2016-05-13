@@ -14,8 +14,7 @@
         .global _start
         
 _start:
-        # Top of stack points to struct libc_init, we pass this to _libc_init.
-        mov %rsp, %rdi
+        # Kernel passes libc_init structure in rdi, that is the parameter to _libc_init
 
         # Align stack and set up the end of the linked stack frame list:
         and $-16, %rsp

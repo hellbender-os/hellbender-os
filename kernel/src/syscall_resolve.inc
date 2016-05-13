@@ -6,4 +6,5 @@
 .quad syscall_register_service
 .quad syscall_alloc_tables
 .quad syscall_log
+.quad syscall_create_thread
 .quad syscall_unknown

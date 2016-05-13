@@ -95,9 +95,10 @@ struct process* process_create(struct process_descriptor* desc) {
   }
 
   // create thread
-  struct thread *t = thread_create(p,
-                                   desc->entry_point, desc->stack_top - desc->stack_reserved,
-                                   desc->libc);
+  uintptr_t stack_top = desc->stack_top - desc->stack_reserved;
+  struct thread *t = thread_create(p, stack_top, desc->entry_point, stack_top);
+  desc->libc->process_id = p->pid;
+  desc->libc->thread_id = t->tid;
   list_insert(&p->threads, &t->process_threads);
   scheduler_wakeup(t);
   return p;

@@ -4,6 +4,7 @@
 #include "signal.h"
 #include "service.h"
 #include "log.h"
+#include "scheduler.h"
 
 #include <stdint.h>
 
@@ -61,8 +62,7 @@ uint64_t syscall_register_service(void* func) {
 }
 
 uint64_t syscall_alloc_tables(uint64_t n_tables) {
-  struct process_vmem* vmem = 
-    process_alloc_vmem(n_tables * TABLE_SIZE);
+  struct process_vmem* vmem =  process_alloc_vmem(n_tables * TABLE_SIZE);
   if (vmem) {
     CPU_THREAD_STATE->registers.rax = (uint64_t)vmem->base;
   } else {
@@ -73,6 +73,23 @@ uint64_t syscall_alloc_tables(uint64_t n_tables) {
 
 uint64_t syscall_log(const char *component, const char *function, const char *message) {
   log_info(component, function, message);
+  return 0;
+}
+
+uint64_t syscall_create_thread(void (*func)(void *data), void *data, int priority) {
+  struct process_vmem* vmem = process_alloc_vmem(USER_STACK_SIZE);
+  if (vmem) {
+    uintptr_t stack_top = (uintptr_t)vmem->base + vmem->size;
+    struct thread *thread = thread_create(cpu.current_process, stack_top,
+                                          (uintptr_t)func, (uintptr_t)data);
+    if (!thread) log_error("syscall", "create_thread", "out of memory");
+    thread->scheduler.priority = priority;
+    list_insert(&cpu.current_process->threads, &thread->process_threads);
+    scheduler_wakeup(thread);
+    CPU_THREAD_STATE->registers.rax = (uint64_t)thread;
+  } else {
+    CPU_THREAD_STATE->registers.rax = 0;
+  }
   return 0;
 }
 

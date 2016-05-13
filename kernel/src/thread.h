@@ -73,9 +73,8 @@ struct thread {
   } scheduler;
 };
 
-struct thread* thread_create(struct process* process,
-                             uintptr_t entry_point, uintptr_t stack_top,
-                             struct libc_init *libc);
+struct thread* thread_create(struct process* process, uintptr_t stack_top,
+                             uintptr_t entry_point, uintptr_t user_value);
 
 void thread_local_invalidate(size_t pages);
 

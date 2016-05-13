@@ -43,8 +43,14 @@ syscall_log:
   int $SYSCALL_INT
   ret
 
+.global syscall_create_thread
+syscall_create_thread:
+  mov $(8-1), %rax
+  int $SYSCALL_INT
+  ret
+
 .global syscall_unknown
 syscall_unknown:
-  mov $(8-1), %rax
+  mov $(9-1), %rax
   int $SYSCALL_INT
   ret
