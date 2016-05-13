@@ -32,6 +32,7 @@ fs/fat16.o \
 dev/console.o \
 dev/ramdisk.o \
 dev/pci.o \
+dev/ps2.o \
 
 all: coresrv
 

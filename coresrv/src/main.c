@@ -25,6 +25,7 @@ void pci_init();
 void fat16_init();
 void console_init();
 void ramdisk_init();
+void ps2_init();
 
 int main(int argc, char* argv[]) {
   (void)argc;
@@ -106,12 +107,10 @@ int main(int argc, char* argv[]) {
   } else while (wait(0) == -1);
   */
 
-  // test interrupt processing with signals.
+  ps2_init();
+
+  // TODO: funny way to just sleep
+  syscall_log("corsrv", "main", "sleeping for good.");
   syscall_set_signal_mask(~0ull);
-  syscall_set_irq_signal(33, SIGUSR1);
-  syscall_log("coresrv", "main", "waiting for an interrupt signal");
-  for (int signum = 0; !signum; ) {
-    signum = syscall_wait_signal(1<<SIGUSR1);
-  }
-  syscall_log("coresrv", "main", "received the interrupt signal");
+  syscall_wait_signal(1<<SIGINT);
 }

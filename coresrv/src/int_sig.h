@@ -1,0 +1,7 @@
+#ifndef __CORESRV_INT_SIG_H__
+#define __CORESRV_INT_SIG_H__
+
+#define CORESRV_SIGNAL_PS2_PORT1 32
+#define CORESRV_SIGNAL_PS2_PORT2 33
+
+#endif
