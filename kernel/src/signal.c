@@ -123,8 +123,8 @@ int signal_wait(struct thread* thread, uint64_t wait_mask) {
     // is a waited signal already pending?
     int process_signum = __builtin_ffsll(process->signal.pending_mask & wait_mask);
     int thread_signum = __builtin_ffsll(thread->signal.pending_mask & wait_mask);
-    if (process_signum && process_signum < thread_signum) {
-      int signum = process_signum;
+    if (process_signum && (!thread_signum || process_signum < thread_signum)) {
+      int signum = process_signum - 1;
       uint64_t sigbit = 1ull << (signum%SIGNAL_LIMIT);
       struct process_signal_info* sig = process->signal.sig + signum;
       fifo_item_t *fi = fifo_pop(&sig->pending);
@@ -136,7 +136,7 @@ int signal_wait(struct thread* thread, uint64_t wait_mask) {
       heap_free(pending);
     }
     else if (thread_signum) {
-      int signum = thread_signum;
+      int signum = thread_signum - 1;
       uint64_t sigbit = 1ull << (signum%SIGNAL_LIMIT);
       struct thread_signal_info* sig = thread->signal.sig + signum;
       fifo_item_t *fi = fifo_pop(&sig->pending);
@@ -188,8 +188,8 @@ void signal_delivery() {
   // is there a signal that could be delivered?
   int process_signum = __builtin_ffsll(process->signal.pending_mask & accept_mask);
   int thread_signum = __builtin_ffsll(thread->signal.pending_mask & accept_mask);
-  if (process_signum && process_signum < thread_signum) {
-    signum = process_signum;
+  if (process_signum && (!thread_signum || process_signum < thread_signum)) {
+    signum = process_signum - 1;
     sigbit = 1ull << (signum%SIGNAL_LIMIT);
     struct process_signal_info* sig = process->signal.sig + signum;
     fifo_item_t *fi = fifo_pop(&sig->pending);
@@ -197,7 +197,7 @@ void signal_delivery() {
     pending = fifo_container(fi, struct signal_pending, item);
   }
   else if (thread_signum) {
-    signum = thread_signum;
+    signum = thread_signum - 1;
     sigbit = 1ull << (signum%SIGNAL_LIMIT);
     struct thread_signal_info* sig = thread->signal.sig + signum;
     fifo_item_t *fi = fifo_pop(&sig->pending);
