@@ -8,6 +8,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "pic.h"
+#include "pit.h"
 #include "service.h"
 
 #include <string.h>
@@ -55,6 +56,7 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
 
   // initialize interrupt handling.
   pic_init();
+  pit_init();
   vga_putc('N');
   idt_init();
   vga_putc('D');

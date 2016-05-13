@@ -47,6 +47,7 @@ src/service.o \
 src/vga.o \
 src/log.o \
 src/sdt.o \
+src/pit.o \
 
 all: hellbender
 
