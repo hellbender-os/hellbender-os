@@ -49,8 +49,14 @@ syscall_create_thread:
   int $SYSCALL_INT
   ret
 
+.global syscall_timeofday
+syscall_timeofday:
+  mov $(9-1), %rax
+  int $SYSCALL_INT
+  ret
+
 .global syscall_unknown
 syscall_unknown:
-  mov $(9-1), %rax
+  mov $(10-1), %rax
   int $SYSCALL_INT
   ret

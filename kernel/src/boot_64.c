@@ -9,6 +9,7 @@
 #include "idt.h"
 #include "pic.h"
 #include "pit.h"
+#include "rtc.h"
 #include "service.h"
 
 #include <string.h>
@@ -55,10 +56,11 @@ void boot_64(uint32_t magic, uint32_t multiboot) {
   vga_putc('E');
 
   // initialize interrupt handling.
+  idt_init();
+  vga_putc('N');
   pic_init();
   pit_init();
-  vga_putc('N');
-  idt_init();
+  rtc_init();
   vga_putc('D');
 
   // kick-start the core service.

@@ -5,8 +5,10 @@
 #include "service.h"
 #include "log.h"
 #include "scheduler.h"
+#include "rtc.h"
 
 #include <stdint.h>
+#include <sys/time.h>
 
 /* Syscalls return data to user mode by directly modifying the return
  * state usign CPU_THREAD_STATE macro, e.g.
@@ -87,6 +89,19 @@ uint64_t syscall_create_thread(void (*func)(void *data), void *data, int priorit
     list_insert(&cpu.current_process->threads, &thread->process_threads);
     scheduler_wakeup(thread);
     CPU_THREAD_STATE->registers.rax = (uint64_t)thread;
+  } else {
+    CPU_THREAD_STATE->registers.rax = 0;
+  }
+  return 0;
+}
+
+uint64_t syscall_timeofday(struct timeval *tp) {
+  if (tp) {
+    uint64_t nsec = rtc_nsec_since_boot();
+    uint64_t secs = rtc_seconds_at_boot();
+    tp->tv_sec = secs + nsec / 1000000000;
+    tp->tv_usec = (nsec % 1000000000) / 1000;
+    CPU_THREAD_STATE->registers.rax = nsec;
   } else {
     CPU_THREAD_STATE->registers.rax = 0;
   }

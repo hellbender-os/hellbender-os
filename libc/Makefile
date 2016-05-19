@@ -83,6 +83,7 @@ string/strspn.o \
 string/strstr.o \
 string/strtok.o \
 string/strxfrm.o \
+sys/time/gettimeofday.o \
 
 BINARIES=libc.a libg.a libm.a $(CRT_OBJS)
 

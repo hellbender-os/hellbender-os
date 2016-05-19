@@ -2,6 +2,7 @@
 #include "io.h"
 #include "thread.h"
 #include "isr.h"
+#include "rtc.h"
 
 #define PIC1		0x20		/* IO base address for master PIC */
 #define PIC2		0xA0		/* IO base address for slave PIC */
@@ -56,6 +57,7 @@ void pic_isr(struct thread_state* state, unsigned ring, unsigned irq) {
 
   unsigned pirq = irq - 32;
   if (!pic_is_spurious(pirq)) {
+    if (pirq == 8) rtc_update(); // try to keep RTC latency as low as possible.
     pic_eoi(pirq);
     isr_send_signal(irq);
   }

@@ -7,4 +7,5 @@
 .quad syscall_alloc_tables
 .quad syscall_log
 .quad syscall_create_thread
+.quad syscall_timeofday
 .quad syscall_unknown

@@ -15,6 +15,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 void broker_init();
 void vfs_init();
@@ -32,6 +33,12 @@ int main(int argc, char* argv[]) {
   (void)argv;
   struct coresrv_init *data = (struct coresrv_init *)_libc_init_get()->data;
   syscall_log("coresrv", "main", "initializing..");
+
+  struct timeval time;
+  gettimeofday(&time, 0);
+  char msg[128];
+  sprintf(msg, "Current UNIX time is %llu", (unsigned long long)time.tv_sec);
+  syscall_log("coresrc", "main", msg);
 
   broker_init();
 

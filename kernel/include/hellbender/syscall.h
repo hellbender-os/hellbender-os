@@ -11,5 +11,6 @@ uint64_t syscall_register_service(void* func) ;
 uint64_t syscall_alloc_tables(uint64_t n_tables) ;
 uint64_t syscall_log(const char *component, const char *function, const char *message) ;
 uint64_t syscall_create_thread(void (*func)(void *data), void *data, int priority) ;
+uint64_t syscall_timeofday(struct timeval *tp) ;
 uint64_t syscall_unknown() ;
 #endif

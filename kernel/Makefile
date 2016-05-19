@@ -48,6 +48,7 @@ src/vga.o \
 src/log.o \
 src/sdt.o \
 src/pit.o \
+src/rtc.o \
 
 all: hellbender
 
