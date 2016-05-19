@@ -247,10 +247,38 @@ static void free_large(void* ptr) {
   (void)ptr;
 }
 
+
+static void* realloc_first_half(void* ptr, size_t size) {
+  (void)ptr;
+  (void)size;
+  return 0;
+}
+
+static void* realloc_second_half(void* ptr, size_t size) {
+  (void)ptr;
+  (void)size;
+  return 0;
+}
+
+static void* realloc_large(void* ptr, size_t size) {
+  (void)ptr;
+  (void)size;
+  return 0;
+}
+
+
 void _heap_free(void* ptr) {
   uintptr_t address = (uintptr_t)ptr;
   uintptr_t rem = address % REGION_SIZE;
   if (rem == 0) free_first_half(ptr);
   else if (rem == 16) free_large(ptr);
   else free_second_half(ptr);
+}
+
+void* _heap_realloc(void* ptr, size_t size) {
+  uintptr_t address = (uintptr_t)ptr;
+  uintptr_t rem = address % REGION_SIZE;
+  if (rem == 0) return realloc_first_half(ptr, size);
+  else if (rem == 16) return realloc_large(ptr, size);
+  else return realloc_second_half(ptr, size);
 }

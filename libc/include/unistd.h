@@ -8,265 +8,265 @@
 
 // The Open Group Base Specifications Issue 7
 
-//_POSIX_VERSION
+#define _POSIX_VERSION 200809L
 // Integer value indicating version of this standard (C-language binding) to which the implementation conforms. For implementations conforming to POSIX.1-2008, the value shall be 200809L.
 
-//_POSIX2_VERSION
+#define _POSIX2_VERSION -1
 // Integer value indicating version of the Shell and Utilities volume of POSIX.1 to which the implementation conforms. For implementations conforming to POSIX.1-2008, the value shall be 200809L. For profile implementations that define _POSIX_SUBPROFILE (see Subprofiling Considerations) in <unistd.h>, POSIX2_VERSION may be left undefined or be defined with the value -1 to indicate that the Shell and Utilities volume of POSIX.1 is not supported. In this case, a call to sysconf(_SC_2_VERSION) shall return either 200809L or -1 indicating that the Shell and Utilities volume of POSIX.1 is or is not, respectively, supported at runtime.
 
-//_XOPEN_VERSION
-// Integer value indicating version of the X/Open Portability Guide to which the implementation conforms. The value shall be 700. [Option End]
+#define _XOPEN_VERSION 700
+// Integer value indicating version of the X/Open Portability Guide to which the implementation conforms. The value shall be 700.
 
-//_POSIX_ADVISORY_INFO
-// The implementation supports the Advisory Information option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_ADVISORY_INFO -1
+// The implementation supports the Advisory Information option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_ASYNCHRONOUS_IO
+#define _POSIX_ASYNCHRONOUS_IO 200809L
 // The implementation supports asynchronous input and output. This symbol shall always be set to the value 200809L.
 
-//_POSIX_BARRIERS
+#define _POSIX_BARRIERS 200809L
 // The implementation supports barriers. This symbol shall always be set to the value 200809L.
 
-//_POSIX_CHOWN_RESTRICTED
+#define _POSIX_CHOWN_RESTRICTED 1
 // The use of chown() and fchown() is restricted to a process with appropriate privileges, and to changing the group ID of a file only to the effective group ID of the process or to one of its supplementary group IDs. This symbol shall be defined with a value other than -1.
 
-//_POSIX_CLOCK_SELECTION
+#define _POSIX_CLOCK_SELECTION 200809L
 // The implementation supports clock selection. This symbol shall always be set to the value 200809L.
 
-//_POSIX_CPUTIME
-// The implementation supports the Process CPU-Time Clocks option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_CPUTIME -1
+// The implementation supports the Process CPU-Time Clocks option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_FSYNC
-// The implementation supports the File Synchronization option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_FSYNC -1
+// The implementation supports the File Synchronization option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_IPV6
+#define _POSIX_IPV6 -1
 // The implementation supports the IPv6 option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_JOB_CONTROL
+#define _POSIX_JOB_CONTROL 200809L
 // The implementation supports job control. This symbol shall always be set to a value greater than zero.
 
-//_POSIX_MAPPED_FILES
+#define _POSIX_MAPPED_FILES 200809L
 // The implementation supports memory mapped Files. This symbol shall always be set to the value 200809L.
 
-//_POSIX_MEMLOCK
-// The implementation supports the Process Memory Locking option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_MEMLOCK -1
+// The implementation supports the Process Memory Locking option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_MEMLOCK_RANGE
-// The implementation supports the Range Memory Locking option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_MEMLOCK_RANGE -1
+// The implementation supports the Range Memory Locking option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_MEMORY_PROTECTION
+#define _POSIX_MEMORY_PROTECTION 200809L
 // The implementation supports memory protection. This symbol shall always be set to the value 200809L.
 
-//_POSIX_MESSAGE_PASSING
-// The implementation supports the Message Passing option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_MESSAGE_PASSING -1
+// The implementation supports the Message Passing option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_MONOTONIC_CLOCK
-// The implementation supports the Monotonic Clock option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_MONOTONIC_CLOCK -1
+// The implementation supports the Monotonic Clock option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_NO_TRUNC
+#define _POSIX_NO_TRUNC 200809L
 // Pathname components longer than {NAME_MAX} generate an error. This symbol shall be defined with a value other than -1.
 
-//_POSIX_PRIORITIZED_IO
-// The implementation supports the Prioritized Input and Output option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_PRIORITIZED_IO -1
+// The implementation supports the Prioritized Input and Output option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_PRIORITY_SCHEDULING
-// The implementation supports the Process Scheduling option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_PRIORITY_SCHEDULING -1
+// The implementation supports the Process Scheduling option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_RAW_SOCKETS
-// The implementation supports the Raw Sockets option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_RAW_SOCKETS -1
+// The implementation supports the Raw Sockets option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_READER_WRITER_LOCKS
+#define _POSIX_READER_WRITER_LOCKS 200809L
 // The implementation supports read-write locks. This symbol shall always be set to the value 200809L.
 
-//_POSIX_REALTIME_SIGNALS
+#define _POSIX_REALTIME_SIGNALS 200809L
 // The implementation supports realtime signals. This symbol shall always be set to the value 200809L.
 
-//_POSIX_REGEXP
+#define _POSIX_REGEXP 200809L
 // The implementation supports the Regular Expression Handling option. This symbol shall always be set to a value greater than zero.
 
-//_POSIX_SAVED_IDS
+#define _POSIX_SAVED_IDS 200809L
 // Each process has a saved set-user-ID and a saved set-group-ID. This symbol shall always be set to a value greater than zero.
 
-//_POSIX_SEMAPHORES
+#define _POSIX_SEMAPHORES 200809L
 // The implementation supports semaphores. This symbol shall always be set to the value 200809L.
 
-//_POSIX_SHARED_MEMORY_OBJECTS
-// The implementation supports the Shared Memory Objects option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_SHARED_MEMORY_OBJECTS -1
+// The implementation supports the Shared Memory Objects option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_SHELL
+#define _POSIX_SHELL 200809L
 // The implementation supports the POSIX shell. This symbol shall always be set to a value greater than zero.
 
-//_POSIX_SPAWN
-// The implementation supports the Spawn option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_SPAWN -1
+// The implementation supports the Spawn option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_SPIN_LOCKS
+#define _POSIX_SPIN_LOCKS 200809L
 // The implementation supports spin locks. This symbol shall always be set to the value 200809L.
 
-//_POSIX_SPORADIC_SERVER
-// The implementation supports the Process Sporadic Server option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_SPORADIC_SERVER -1
+// The implementation supports the Process Sporadic Server option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_SYNCHRONIZED_IO
-// The implementation supports the Synchronized Input and Output option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_SYNCHRONIZED_IO -1
+// The implementation supports the Synchronized Input and Output option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_ATTR_STACKADDR
-// The implementation supports the Thread Stack Address Attribute option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_ATTR_STACKADDR -1
+// The implementation supports the Thread Stack Address Attribute option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_ATTR_STACKSIZE
-// The implementation supports the Thread Stack Size Attribute option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_ATTR_STACKSIZE -1
+// The implementation supports the Thread Stack Size Attribute option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_CPUTIME
-// The implementation supports the Thread CPU-Time Clocks option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_CPUTIME -1
+// The implementation supports the Thread CPU-Time Clocks option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. 
 
-//_POSIX_THREAD_PRIO_INHERIT
-// The implementation supports the Non-Robust Mutex Priority Inheritance option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_PRIO_INHERIT -1
+// The implementation supports the Non-Robust Mutex Priority Inheritance option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_PRIO_PROTECT
-//The implementation supports the Non-Robust Mutex Priority Protection option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_PRIO_PROTECT -1
+//The implementation supports the Non-Robust Mutex Priority Protection option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_PRIORITY_SCHEDULING
-// The implementation supports the Thread Execution Scheduling option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_PRIORITY_SCHEDULING -1
+// The implementation supports the Thread Execution Scheduling option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_PROCESS_SHARED
-// The implementation supports the Thread Process-Shared Synchronization option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_PROCESS_SHARED -1
+// The implementation supports the Thread Process-Shared Synchronization option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_ROBUST_PRIO_INHERIT
-// The implementation supports the Robust Mutex Priority Inheritance option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_ROBUST_PRIO_INHERIT -1
+// The implementation supports the Robust Mutex Priority Inheritance option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_ROBUST_PRIO_PROTECT
-// The implementation supports the Robust Mutex Priority Protection option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_ROBUST_PRIO_PROTECT -1
+// The implementation supports the Robust Mutex Priority Protection option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREAD_SAFE_FUNCTIONS
+#define _POSIX_THREAD_SAFE_FUNCTIONS 200809L
 // The implementation supports thread-safe functions. This symbol shall always be set to the value 200809L.
 
-//_POSIX_THREAD_SPORADIC_SERVER
-// The implementation supports the Thread Sporadic Server option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_THREAD_SPORADIC_SERVER -1
+// The implementation supports the Thread Sporadic Server option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_THREADS
+#define _POSIX_THREADS 200809L
 // The implementation supports threads. This symbol shall always be set to the value 200809L.
 
-//_POSIX_TIMEOUTS
+#define _POSIX_TIMEOUTS 200809L
 // The implementation supports timeouts. This symbol shall always be set to the value 200809L.
 
-//_POSIX_TIMERS
+#define _POSIX_TIMERS 200809L
 // The implementation supports timers. This symbol shall always be set to the value 200809L.
 
-//_POSIX_TRACE
-// The implementation supports the Trace option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_TRACE -1
+// The implementation supports the Trace option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_TRACE_EVENT_FILTER
-// The implementation supports the Trace Event Filter option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_TRACE_EVENT_FILTER -1
+// The implementation supports the Trace Event Filter option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_TRACE_INHERIT
-// The implementation supports the Trace Inherit option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_TRACE_INHERIT -1
+// The implementation supports the Trace Inherit option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_TRACE_LOG
-// The implementation supports the Trace Log option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_TRACE_LOG -1
+// The implementation supports the Trace Log option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_TYPED_MEMORY_OBJECTS
-// The implementation supports the Typed Memory Objects option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX_TYPED_MEMORY_OBJECTS -1
+// The implementation supports the Typed Memory Objects option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX_V6_ILP32_OFF32
-// The implementation provides a C-language compilation environment with 32-bit int, long, pointer, and off_t types. [Option End]
-
-//_POSIX_V6_ILP32_OFFBIG
-// The implementation provides a C-language compilation environment with 32-bit int, long, and pointer types and an off_t type using at least 64 bits. [Option End]
-
-//_POSIX_V6_LP64_OFF64
-// The implementation provides a C-language compilation environment with 32-bit int and 64-bit long, pointer, and off_t types. [Option End]
-
-//_POSIX_V6_LPBIG_OFFBIG
-// The implementation provides a C-language compilation environment with an int type using at least 32 bits and long, pointer, and off_t types using at least 64 bits. [Option End]
-
-//_POSIX_V7_ILP32_OFF32
+#define _POSIX_V6_ILP32_OFF32 -1
 // The implementation provides a C-language compilation environment with 32-bit int, long, pointer, and off_t types.
 
-//_POSIX_V7_ILP32_OFFBIG
+#define _POSIX_V6_ILP32_OFFBIG -1
 // The implementation provides a C-language compilation environment with 32-bit int, long, and pointer types and an off_t type using at least 64 bits.
 
-//_POSIX_V7_LP64_OFF64
-//The implementation provides a C-language compilation environment with 32-bit int and 64-bit long, pointer, and off_t types.
+#define _POSIX_V6_LP64_OFF64 -1
+// The implementation provides a C-language compilation environment with 32-bit int and 64-bit long, pointer, and off_t types.
 
-//_POSIX_V7_LPBIG_OFFBIG
+#define _POSIX_V6_LPBIG_OFFBIG -1
 // The implementation provides a C-language compilation environment with an int type using at least 32 bits and long, pointer, and off_t types using at least 64 bits.
 
-//_POSIX2_C_BIND
+#define _POSIX_V7_ILP32_OFF32 -1
+// The implementation provides a C-language compilation environment with 32-bit int, long, pointer, and off_t types.
+
+#define _POSIX_V7_ILP32_OFFBIG -1
+// The implementation provides a C-language compilation environment with 32-bit int, long, and pointer types and an off_t type using at least 64 bits.
+
+#define _POSIX_V7_LP64_OFF64 200809L
+//The implementation provides a C-language compilation environment with 32-bit int and 64-bit long, pointer, and off_t types.
+
+#define _POSIX_V7_LPBIG_OFFBIG -1
+// The implementation provides a C-language compilation environment with an int type using at least 32 bits and long, pointer, and off_t types using at least 64 bits.
+
+#define _POSIX2_C_BIND 200809L
 // The implementation supports the C-Language Binding option. This symbol shall always have the value 200809L.
 
-//_POSIX2_C_DEV
-//  The implementation supports the C-Language Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_C_DEV -1
+//  The implementation supports the C-Language Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_CHAR_TERM
+#define _POSIX2_CHAR_TERM -1
 // The implementation supports the Terminal Characteristics option. The value of this symbol reported by sysconf() shall either be -1 or a value greater than zero.
 
-//_POSIX2_FORT_DEV
-// The implementation supports the FORTRAN Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_FORT_DEV -1
+// The implementation supports the FORTRAN Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_FORT_RUN
-// The implementation supports the FORTRAN Runtime Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_FORT_RUN -1
+// The implementation supports the FORTRAN Runtime Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_LOCALEDEF
+#define _POSIX2_LOCALEDEF -1
 // The implementation supports the creation of locales by the localedef utility. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS
-// The implementation supports the Batch Environment Services and Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS -1
+// The implementation supports the Batch Environment Services and Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS_ACCOUNTING
-// The implementation supports the Batch Accounting option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS_ACCOUNTING -1
+// The implementation supports the Batch Accounting option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS_CHECKPOINT
-// The implementation supports the Batch Checkpoint/Restart option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS_CHECKPOINT -1
+// The implementation supports the Batch Checkpoint/Restart option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS_LOCATE
-// The implementation supports the Locate Batch Job Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS_LOCATE -1
+// The implementation supports the Locate Batch Job Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS_MESSAGE
-// The implementation supports the Batch Job Message Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS_MESSAGE -1
+// The implementation supports the Batch Job Message Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_PBS_TRACK
-// The implementation supports the Track Batch Job Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_PBS_TRACK -1
+// The implementation supports the Track Batch Job Request option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_SW_DEV
-// The implementation supports the Software Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_SW_DEV -1
+// The implementation supports the Software Development Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_POSIX2_UPE
-// The implementation supports the User Portability Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L. [Option End]
+#define _POSIX2_UPE -1
+// The implementation supports the User Portability Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall either be -1 or 200809L.
 
-//_XOPEN_CRYPT
+#define _XOPEN_CRYPT -1
 // The implementation supports the X/Open Encryption Option Group.
 
-//_XOPEN_ENH_I18N
+#define _XOPEN_ENH_I18N 200809L
 // The implementation supports the Issue 4, Version 2 Enhanced Internationalization Option Group. This symbol shall always be set to a value other than -1.
 
-//_XOPEN_REALTIME
+#define _XOPEN_REALTIME -1
 // The implementation supports the X/Open Realtime Option Group.
 
-//_XOPEN_REALTIME_THREADS
+#define _XOPEN_REALTIME_THREADS -1
 // The implementation supports the X/Open Realtime Threads Option Group.
 
-//_XOPEN_SHM
-// The implementation supports the Issue 4, Version 2 Shared Memory Option Group. This symbol shall always be set to a value other than -1. [Option End]
+#define _XOPEN_SHM 200809L
+// The implementation supports the Issue 4, Version 2 Shared Memory Option Group. This symbol shall always be set to a value other than -1.
 
-//_XOPEN_STREAMS
-// The implementation supports the XSI STREAMS Option Group. [Option End]
+#define _XOPEN_STREAMS -1
+// The implementation supports the XSI STREAMS Option Group.
 
-//_XOPEN_UNIX
-// The implementation supports the XSI option. [Option End]
+#define _XOPEN_UNIX 200809L
+// The implementation supports the XSI option.
 
-//_XOPEN_UUCP
-// The implementation supports the UUCP Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall be either -1 or 200809L. [Option End]
+#define _XOPEN_UUCP -1
+// The implementation supports the UUCP Utilities option. If this symbol is defined in <unistd.h>, it shall be defined to be -1, 0, or 200809L. The value of this symbol reported by sysconf() shall be either -1 or 200809L.
 
-//_POSIX_ASYNC_IO
+#define _POSIX_ASYNC_IO
 // Asynchronous input or output operations may be performed for the associated file.
 
-//_POSIX_PRIO_IO
+#define _POSIX_PRIO_IO
 // Prioritized input or output operations may be performed for the associated file.
 
-//_POSIX_SYNC_IO
+#define _POSIX_SYNC_IO
 // Synchronized input or output operations may be performed for the associated file.
 
-//_POSIX_TIMESTAMP_RESOLUTION
+#define _POSIX_TIMESTAMP_RESOLUTION 1000
 // The resolution in nanoseconds for all file timestamps.
 
-//_POSIX2_SYMLINKS
+#define _POSIX2_SYMLINKS
 // Symbolic links can be created.
 
 #define F_OK 0
@@ -281,7 +281,7 @@
 #define X_OK 0x01000
 // Test for execute (search) permission.
 
-//_CS_PATH
+#define _CS_PATH "/bin"
 // This is the value for the PATH environment variable that finds all standard utilities.
 
 //_CS_POSIX_V7_ILP32_OFF32_CFLAGS
@@ -302,13 +302,13 @@
 //_CS_POSIX_V7_ILP32_OFFBIG_LIBS
 // If sysconf(_SC_V7_ILP32_OFFBIG) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of libraries to be given to the c99 utility to build an application using a programming model with 32-bit int, long, and pointer types, and an off_t type using at least 64 bits.
 
-//_CS_POSIX_V7_LP64_OFF64_CFLAGS
+#define _CS_POSIX_V7_LP64_OFF64_CFLAGS ""
 // If sysconf(_SC_V7_LP64_OFF64) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of initial options to be given to the c99 utility to build an application using a programming model with 32-bit int and 64-bit long, pointer, and off_t types.
 
-//_CS_POSIX_V7_LP64_OFF64_LDFLAGS
+#define _CS_POSIX_V7_LP64_OFF64_LDFLAGS ""
 // If sysconf(_SC_V7_LP64_OFF64) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of final options to be given to the c99 utility to build an application using a programming model with 32-bit int and 64-bit long, pointer, and off_t types.
 
-//_CS_POSIX_V7_LP64_OFF64_LIBS
+#define _CS_POSIX_V7_LP64_OFF64_LIBS ""
 // If sysconf(_SC_V7_LP64_OFF64) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of libraries to be given to the c99 utility to build an application using a programming model with 32-bit int and 64-bit long, pointer, and off_t types.
 
 //_CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS
@@ -320,16 +320,16 @@
 //_CS_POSIX_V7_LPBIG_OFFBIG_LIBS
 // If sysconf(_SC_V7_LPBIG_OFFBIG) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of libraries to be given to the c99 utility to build an application using a programming model with an int type using at least 32 bits and long, pointer, and off_t types using at least 64 bits.
 
-//_CS_POSIX_V7_THREADS_CFLAGS
+#define _CS_POSIX_V7_THREADS_CFLAGS ""
 // If sysconf(_SC_POSIX_THREADS) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of initial options to be given to the c99 utility to build a multi-threaded application. These flags are in addition to those associated with any of the other _CS_POSIX_V7_*_CFLAGS values used to specify particular type size programing environments.
 
-//_CS_POSIX_V7_THREADS_LDFLAGS
+#define _CS_POSIX_V7_THREADS_LDFLAGS "-lpthread"
 // If sysconf(_SC_POSIX_THREADS) returns -1, the meaning of this value is unspecified. Otherwise, this value is the set of final options to be given to the c99 utility to build a multi-threaded application. These flags are in addition to those associated with any of the other _CS_POSIX_V7_*_LDFLAGS values used to specify particular type size programing environments.
 
-//_CS_POSIX_V7_WIDTH_RESTRICTED_ENVS
+#define _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS "blksize_t\ncc_t\nmode_t\nnfds_t\npid_t\nptrdiff_t\nsize_t\nspeed_t\nssize_t\nsuseconds_t\ntcflag_t\nwchar_t\nwint_t"
 // This value is a <newline>-separated list of names of programming environments supported by the implementation in which the widths of the blksize_t, cc_t, mode_t, nfds_t, pid_t, ptrdiff_t, size_t, speed_t, ssize_t, suseconds_t, tcflag_t, wchar_t, and wint_t types are no greater than the width of type long. The format of each name shall be suitable for use with the getconf -v option.
 
-//_CS_V7_ENV
+#define _CS_V7_ENV ""
 // This is the value that provides the environment variable information (other than that provided by _CS_PATH) that is required by the implementation to create a conforming environment, as described in the implementation's conformance documentation.
 
 /*
@@ -520,7 +520,7 @@ _CS_V6_ENV
 #define STDOUT_FILENO 1
 //File number of stdout; 1.
 
-//_POSIX_VDISABLE
+#define _POSIX_VDISABLE ((unsigned char)255)
 // This symbol shall be defined to be the value of a character that shall disable terminal special character handling as described in Special Control Characters. This symbol shall always be set to a value other than -1.
 
 int          access(const char *, int);

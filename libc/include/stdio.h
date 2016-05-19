@@ -3,21 +3,14 @@
 
 #include <stdarg.h> // nonconforming: for va_args
 #include <sys/types.h> // nonconforming for off_t, ssize_t
+#include <hellbender/list.h>
+#include <hellbender/stdio_impl.h>
 
 // The Open Group Base Specifications Issue 7
 
 #include <stddef.h>
 
-typedef struct {
-  char *buffer;
-  size_t buf_size;
-  unsigned buf_bytes;
-  unsigned buf_offset;
-  int fd;
-  int row; // Read Or Write: 0 == write, 1 == read.
-  int eof;
-  int error;
-} FILE;
+typedef struct _FILE FILE;
 // A structure containing information about a file.
 
 typedef unsigned fpos_t;
@@ -65,11 +58,11 @@ typedef unsigned fpos_t;
 #define P_tmpdir "tmp"
 //Default directory prefix for tempnam().
 
-extern FILE* stderr;
+#define stderr (&_stdio._stderr)
 //Standard error output stream.
-extern FILE* stdin;
+#define stdin (&_stdio._stdin)
 //Standard input stream.
-extern FILE* stdout;
+#define stdout (&_stdio._stdout)
 //Standard output stream.
 
 void     clearerr(FILE *);

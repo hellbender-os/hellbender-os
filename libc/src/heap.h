@@ -5,5 +5,6 @@
 
 void* _heap_alloc(size_t size);
 void _heap_free(void *ptr);
+void* _heap_realloc(void *ptr, size_t size);
 
 #endif

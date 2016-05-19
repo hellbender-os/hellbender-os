@@ -3,7 +3,7 @@
 
 // The Open Group Base Specifications Issue 7
 
-extern int errno;
+extern __thread int errno;
 
 #define E2BIG 1
 // Argument list too long.

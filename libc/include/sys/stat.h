@@ -136,6 +136,8 @@ Test macro for a typed memory object.
 /*
 The <sys/stat.h> header shall define the following symbolic constants as distinct integer values outside of the range [0,999999999], for use with the futimens() and utimensat() functions: UTIME_NOW UTIME_OMIT
 */
+#define UTIME_NOW   0x40000000
+#define UTIME_OMIT  0x40000001
 
 int    chmod(const char *, mode_t);
 int    fchmod(int, mode_t);
