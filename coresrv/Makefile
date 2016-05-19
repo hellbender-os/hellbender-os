@@ -13,7 +13,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+CFLAGS:=$(CFLAGS) -fPIC -std=gnu11 -mcmodel=large -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 #-s
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_coresrv -Iinclude
 LDFLAGS:=$(LDFLAGS) -z max-page-size=0x1000 -Wl,--build-id=none
@@ -50,7 +50,7 @@ coresrv: $(OBJS)
 	$(CC) -c $< -o $@ $(CFLAGS) -DASM
 
 clean:
-	rm $(OBJS) coresrv.map coresrv.elf64 coresrv
+	rm -f $(OBJS) coresrv.map coresrv.elf64 coresrv
 
 install: coresrv
 	mkdir -p $(DESTDIR)$(BOOTDIR)

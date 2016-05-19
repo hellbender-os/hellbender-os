@@ -83,7 +83,7 @@ include/hellbender/syscall.h: src/syscall.c src/syscall.h.in
 	echo "#endif" >> $@
 
 clean:
-	rm $(OBJS) src/struct2asm.inc src/syscall_resolve.inc include/hellbender/syscall.h hellbender.map hellbender.elf64 hellbender
+	rm -f $(OBJS) src/struct2asm.inc src/syscall_resolve.inc include/hellbender/syscall.h hellbender.map hellbender.elf64 hellbender
 
 install: hellbender
 	mkdir -p $(DESTDIR)$(BOOTDIR)

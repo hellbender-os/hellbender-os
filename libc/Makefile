@@ -12,17 +12,16 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=small -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=large -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 # -s
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude -Isrc
 
 CRT_OBJS:=\
-startfiles/crt0.o \
-startfiles/crti.o \
-startfiles/crtn.o \
+startfiles/crt0S.o \
+startfiles/crtiS.o \
+startfiles/crtnS.o \
 
 OBJS:=\
-$(CRT_OBJS) \
 src/libc.o \
 src/libc_init.o \
 src/heap.o \
@@ -85,7 +84,9 @@ string/strtok.o \
 string/strxfrm.o \
 sys/time/gettimeofday.o \
 
-BINARIES=libc.a libg.a libm.a $(CRT_OBJS)
+S_OBJS := $(OBJS:.o=S.o)
+
+BINARIES=libc.a libcG.a libcS.a libcSG.a $(CRT_OBJS)
 
 all: $(BINARIES)
 
@@ -95,11 +96,21 @@ libc.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 	strip -g $@
 
-libg.a: $(OBJS)
+libcG.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 
-libm.a:
-	$(AR) rcs $@
+libcS.a: $(S_OBJS)
+	$(AR) rcs $@ $(S_OBJS)
+	strip -g $@
+
+libcSG.a: $(S_OBJS)
+	$(AR) rcs $@ $(S_OBJS)
+
+%S.o: %.c
+	$(CC) -c $< -o $@ -fPIC $(CFLAGS) $(CPPFLAGS)
+
+%S.o: %.S src/struct2asm.inc src/syscall.inc
+	$(CC) -c $< -o $@ -fPIC $(CFLAGS) $(CPPFLAGS) -DASM
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
@@ -116,7 +127,7 @@ src/syscall.inc: $(DESTDIR)$(INCLUDEDIR)/hellbender/syscall.h src/syscall.S
 	grep " syscall_" $< | perl -ne '++$$i;/^uint64_t\s+([^(]+)/; print "\n.global $$1\n$$1:\n  mov \$$($$i-1), %rax\n  int \$$SYSCALL_INT\n  ret\n";' >> $@
 
 clean:
-	rm -f src/syscall.inc $(BINARIES) $(OBJS)
+	rm -f src/syscall.inc $(BINARIES) $(CRT_OBJS) $(OBJS) $(S_OBJS)
 
 install: $(BINARIES)
 	mkdir -p $(DESTDIR)$(LIBDIR)

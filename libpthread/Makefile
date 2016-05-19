@@ -12,13 +12,15 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=small -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
+CFLAGS:=$(CFLAGS) -std=gnu11 -mcmodel=large -Wall -Wextra -Werror -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables
 # -s
 CPPFLAGS:=$(CPPFLAGS) -D__is_hellbender_libc -Iinclude -Isrc
 
 OBJS:=\
 
-BINARIES=libpthread.a
+S_OBJS := $(OBJS:.o=S.o)
+
+BINARIES=libpthread.a libpthreadG.a libpthreadS.a libpthreadSG.a
 
 all: $(BINARIES)
 
@@ -27,6 +29,22 @@ all: $(BINARIES)
 libpthread.a: $(OBJS)
 	$(AR) rcs $@ $(OBJS)
 	strip -g $@
+
+libpthreadG.a: $(OBJS)
+	$(AR) rcs $@ $(OBJS)
+
+libpthreadS.a: $(S_OBJS)
+	$(AR) rcs $@ $(S_OBJS)
+	strip -g $@
+
+libpthreadSG.a: $(S_OBJS)
+	$(AR) rcs $@ $(S_OBJS)
+
+%S.o: %.c
+	$(CC) -c $< -o $@ -fPIC $(CFLAGS) $(CPPFLAGS)
+
+%S.o: %.S
+	$(CC) -c $< -o $@ -fPIC $(CFLAGS) $(CPPFLAGS) -DASM
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)

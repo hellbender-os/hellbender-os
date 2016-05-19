@@ -5,6 +5,7 @@ kernel/hellbender*
 libc/*.a
 libk/*.a
 libk/build/
+libpthread/*.a
 **/*.o
 hellbender.iso
 coresrv/coresrv*
