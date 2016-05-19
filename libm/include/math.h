@@ -33,75 +33,97 @@ int signbit(real-floating x);
 
 /*
 The <math.h> header shall define the following symbolic constants. The values shall have type double and shall be accurate within the precision of the double type.
-
-M_E
-[XSI] [Option Start] Value of e [Option End]
-M_LOG2E
-[XSI] [Option Start] Value of log2e  [Option End]
-M_LOG10E
-[XSI] [Option Start] Value of log10e[Option End]
-M_LN2
-[XSI] [Option Start] Value of loge2 [Option End]
-M_LN10
-[XSI] [Option Start] Value of loge10 [Option End]
-M_PI
-[XSI] [Option Start] Value of  [Option End]
-M_PI_2
-[XSI] [Option Start] Value of /2 [Option End]
-M_PI_4
-[XSI] [Option Start] Value of /4 [Option End]
-M_1_PI
-[XSI] [Option Start] Value of 1/[Option End]
-M_2_PI
-[XSI] [Option Start] Value of 2/ [Option End]
-M_2_SQRTPI
-[XSI] [Option Start] Value of 2/   [Option End]
-M_SQRT2
-[XSI] [Option Start] Value of  2 [Option End]
-M_SQRT1_2
-[XSI] [Option Start] Value of 1/ 2 [Option End]
-The <math.h> header shall define the following symbolic constant:
 */
 
-// MAXFLOAT Same value as FLT_MAX in <float.h>.
+#define M_E 2.7182818284590452354
+//[XSI] [Option Start] Value of e [Option End]
+
+#define M_LOG2E 1.4426950408889634074
+//[XSI] [Option Start] Value of log2e  [Option End]
+
+#define M_LOG10E 0.43429448190325182765
+//[XSI] [Option Start] Value of log10e[Option End]
+
+#define M_LN2 0.69314718055994530942
+//[XSI] [Option Start] Value of loge2 [Option End]
+
+#define M_LN10 2.30258509299404568402
+//[XSI] [Option Start] Value of loge10 [Option End]
+
+#define M_PI 3.14159265358979323846
+//[XSI] [Option Start] Value of  [Option End]
+
+#define M_PI_2 1.57079632679489661923
+//[XSI] [Option Start] Value of /2 [Option End]
+
+#define M_PI_4 0.78539816339744830962
+//[XSI] [Option Start] Value of /4 [Option End]
+
+#define M_1_PI 0.31830988618379067154
+//[XSI] [Option Start] Value of 1/[Option End]
+
+#define M_2_PI 0.63661977236758134308
+//[XSI] [Option Start] Value of 2/ [Option End]
+
+#define M_2_SQRTPI 1.12837916709551257390
+//[XSI] [Option Start] Value of 2/   [Option End]
+
+#define M_SQRT2 1.41421356237309504880
+//[XSI] [Option Start] Value of  2 [Option End]
+
+#define M_SQRT1_2 0.70710678118654752440
+//[XSI] [Option Start] Value of 1/ 2 [Option End]
 
 /*
-HUGE_VAL
-A positive double constant expression, not necessarily representable as a float. Used as an error value returned by the mathematics library. HUGE_VAL evaluates to +infinity on systems supporting IEEE Std 754-1985.
-HUGE_VALF
-A positive float constant expression. Used as an error value returned by the mathematics library. HUGE_VALF evaluates to +infinity on systems supporting IEEE Std 754-1985.
-HUGE_VALL
-A positive long double constant expression. Used as an error value returned by the mathematics library. HUGE_VALL evaluates to +infinity on systems supporting IEEE Std 754-1985.
-INFINITY
-A constant expression of type float representing positive or unsigned infinity, if available; else a positive constant of type float that overflows at translation time.
-NAN
-A constant expression of type float representing a quiet NaN. This macro is only defined if the implementation supports quiet NaNs for the float type.
+The <math.h> header shall define the following symbolic constant:
+*/
+#define MAXFLOAT __FLT_MAX__
 
+#define HUGE_VAL (__builtin_huge_val())
+//A positive double constant expression, not necessarily representable as a float. Used as an error value returned by the mathematics library. HUGE_VAL evaluates to +infinity on systems supporting IEEE Std 754-1985.
+
+#define HUGE_VALF (__builtin_huge_valf())
+//A positive float constant expression. Used as an error value returned by the mathematics library. HUGE_VALF evaluates to +infinity on systems supporting IEEE Std 754-1985.
+
+#define HUGE_VALL (__builtin_huge_vall())
+//A positive long double constant expression. Used as an error value returned by the mathematics library. HUGE_VALL evaluates to +infinity on systems supporting IEEE Std 754-1985.
+
+#define INFINITY (__builtin_inff())
+//A constant expression of type float representing positive or unsigned infinity, if available; else a positive constant of type float that overflows at translation time.
+
+#define NAN (__builtin_nanf(""))
+//A constant expression of type float representing a quiet NaN. This macro is only defined if the implementation supports quiet NaNs for the float type.
+
+/*
 The following macros shall be defined for number classification. They represent the mutually-exclusive kinds of floating-point values. They expand to integer constant expressions with distinct values. Additional implementation-defined floating-point classifications, with macro definitions beginning with FP_ and an uppercase letter, may also be specified by the implementation.
+*/
 
-FP_INFINITE
-FP_NAN
-FP_NORMAL
-FP_SUBNORMAL
-FP_ZERO
+#define FP_INFINITE  1
+#define FP_NAN       2
+#define FP_NORMAL    3
+#define FP_SUBNORMAL 4
+#define FP_ZERO      5
 
-The following optional macros indicate whether the fma() family of functions are fast compared with direct code:
+/*The following optional macros indicate whether the fma() family of functions are fast compared with direct code:
 
-FP_FAST_FMA
-FP_FAST_FMAF
-FP_FAST_FMAL
+#define FP_FAST_FMA
+#define FP_FAST_FMAF
+#define FP_FAST_FMAL
+*/
+//If defined, the FP_FAST_FMA macro shall expand to the integer constant 1 and shall indicate that the fma() function generally executes about as fast as, or faster than, a multiply and an add of double operands. If undefined, the speed of execution is unspecified. The other macros have the equivalent meaning for the float and long double versions.
 
-If defined, the FP_FAST_FMA macro shall expand to the integer constant 1 and shall indicate that the fma() function generally executes about as fast as, or faster than, a multiply and an add of double operands. If undefined, the speed of execution is unspecified. The other macros have the equivalent meaning for the float and long double versions.
-
+/*
 The following macros shall expand to integer constant expressions whose values are returned by ilogb(x) if x is zero or NaN, respectively. The value of FP_ILOGB0 shall be either {INT_MIN} or - {INT_MAX}. The value of FP_ILOGBNAN shall be either {INT_MAX} or {INT_MIN}.
 
 FP_ILOGB0
 FP_ILOGBNAN
+*/
 
+/*
 The following macros shall expand to the integer constants 1 and 2, respectively;
 
-MATH_ERRNO
-MATH_ERREXCEPT
+#define MATH_ERRNO 1
+#define MATH_ERREXCEPT 2
 
 The following macro shall expand to an expression that has type int and the value MATH_ERRNO, MATH_ERREXCEPT, or the bitwise-inclusive OR of both:
 

@@ -3,6 +3,7 @@ sysroot/
 isodir/
 kernel/hellbender*
 libc/*.a
+libm/*.a
 libk/*.a
 libk/build/
 libpthread/*.a
